@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarFlow</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--bg2:#1a1d27;--bg3:#222536;--bg4:#2a2e42;
+  --border:#333650;--border2:#444870;
+  --text:#e8eaf6;--text2:#9fa8c7;--text3:#5c6490;
+  --green:#1db97a;--blue:#378ADD;--orange:#f59e0b;--red:#ef4444;
+  --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
+  --r:8px;--r2:12px;
+}
+html,body{font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#0f1117,#1a1d27)}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px}
+.login-logo{text-align:center;margin-bottom:28px}
+.logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--green),var(--blue));border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.login-logo h1{font-size:20px;font-weight:700}
+.login-logo p{font-size:12px;color:var(--text2);margin-top:3px}
+.inp-g{margin-bottom:12px}
+.inp-g label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.inp-g input{width:100%;padding:9px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none}
+.inp-g input:focus{border-color:var(--blue)}
+.login-hint{font-size:11px;color:var(--text3);margin-bottom:18px}
+.btn-login{width:100%;padding:11px;background:linear-gradient(135deg,var(--green),var(--blue));border:none;border-radius:var(--r);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+#app{display:none;height:100vh;flex-direction:column}
+.topbar{height:var(--topbar);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0}
+.topbar-logo{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px;width:calc(var(--sidebar) - 14px);flex-shrink:0}
+.logo-dot{width:7px;height:7px;background:var(--green);border-radius:50%}
+.topbar-user{display:flex;align-items:center;gap:8px;margin-left:auto}
+.av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.btn-sm{font-size:11px;color:var(--text3);background:none;border:1px solid var(--border);border-radius:6px;padding:4px 9px;cursor:pointer}
+.body-row{flex:1;display:flex;overflow:hidden}
+.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sb-sec{padding:10px 12px 4px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 11px;margin:1px 6px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:.15s}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:rgba(55,138,221,.15);color:var(--blue)}
+.sb-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-badge{margin-left:auto;font-size:10px;background:var(--red);color:#fff;padding:1px 6px;border-radius:8px;font-weight:700;display:none}
+.sb-div{height:1px;background:var(--border);margin:6px 10px}
+.sb-bottom{margin-top:auto;padding-bottom:12px}
+.sb-user{margin:6px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;display:flex;align-items:center;gap:8px}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tabs{height:var(--tabs);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;padding:0 10px;flex-shrink:0;overflow-x:auto}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:0 14px;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.views{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.view{display:none;flex:1;overflow:auto;padding:14px;flex-direction:column}
+.view.active{display:flex}
+.action-area{height:var(--action);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 14px;flex-shrink:0}
+.action-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.action-chips{display:flex;gap:7px;overflow-x:auto;flex:1}
+.action-chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid transparent}
+.chip-red{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5}
+.chip-orange{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fcd34d}
+.chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.chip-red .chip-dot{background:var(--red)}
+.chip-orange .chip-dot{background:var(--orange)}
+.side-panel{display:none;flex:1;overflow:auto;padding:16px;flex-direction:column;gap:14px}
+.side-panel.open{display:flex}
+.panel-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.panel-sub{font-size:13px;color:var(--text2)}
+.panel-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.panel-card h3{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;color:var(--blue)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.toggle{width:38px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;position:relative;transition:.2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:.2s}
+.toggle.on::after{left:18px}
+.log-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.log-row:last-child{border-bottom:none}
+.log-time{color:var(--text3);font-size:10px;width:90px;flex-shrink:0}
+.log-user{color:var(--blue);font-weight:600;width:64px;flex-shrink:0}
+.member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.member-row:last-child{border-bottom:none}
+.m-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.closed-chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:16px;font-size:12px;color:var(--text2);margin:3px;cursor:pointer;background:var(--bg3);border:1px solid var(--border)}
+.closed-chip.active{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.kanban-wrap{display:flex;gap:12px;min-width:max-content;height:100%;align-items:flex-start}
+.k-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);width:230px;flex-shrink:0;display:flex;flex-direction:column;max-height:100%}
+.k-col-hdr{padding:11px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.k-col-dot{width:8px;height:8px;border-radius:50%}
+.k-col-title{font-size:13px;font-weight:600;flex:1}
+.k-col-count{font-size:11px;color:var(--text3);background:var(--bg3);padding:2px 7px;border-radius:8px}
+.k-cards{padding:7px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;min-height:40px}
+.k-cards.drag-over{background:rgba(55,138,221,.07);border-radius:6px}
+.car-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:grab;transition:.15s;user-select:none;overflow:hidden}
+.car-card:hover{border-color:var(--border2);box-shadow:0 3px 12px rgba(0,0,0,.35)}
+.car-card.dragging{opacity:.35}
+.cc-thumb{width:100%;height:115px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden}
+.cc-thumb img{width:100%;height:100%;object-fit:cover}
+.cc-body{padding:11px 12px 12px}
+.cc-maker{font-size:11px;color:var(--text3);margin-bottom:2px}
+.cc-model{font-size:16px;font-weight:700;line-height:1.2;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-price{font-size:18px;font-weight:700;color:var(--green);margin-bottom:9px}
+.cc-mid{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px}
+.cc-pct{font-size:22px;font-weight:700}
+.cc-pct-label{font-size:10px;color:var(--text3);margin-top:1px}
+.cc-dots{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.cc-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--border2)}
+.cc-dot.done{background:var(--green);border-color:var(--green)}
+.cc-dot.partial{background:var(--orange);border-color:var(--orange)}
+.cc-foot{display:flex;align-items:center;gap:5px}
+.cc-tag{font-size:11px;color:var(--text3);background:var(--bg4);padding:2px 7px;border-radius:4px}
+.cc-days{font-size:11px;margin-left:auto;font-weight:600}
+.dg{color:var(--green)}.dw{color:var(--orange)}
+.pill{font-size:11px;padding:3px 8px;border-radius:8px;font-weight:600;display:inline-block}
+.pill-blue{background:rgba(55,138,221,.2);color:#93c5fd}
+.pill-green{background:rgba(29,185,122,.2);color:#6ee7b7}
+.pill-orange{background:rgba(245,158,11,.2);color:#fcd34d}
+.pill-purple{background:rgba(139,92,246,.2);color:#c4b5fd}
+.pill-gray{background:rgba(156,163,175,.15);color:#9ca3af}
+.pbar{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:var(--green);border-radius:2px;transition:.3s}
+/* CALENDAR WHITE THEME */
+.cal-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.cal-nav-btn{background:#fff;border:1px solid #ddd;border-radius:var(--r);padding:6px 12px;cursor:pointer;color:#333;font-size:13px}
+.cal-month-title{font-size:16px;font-weight:600;color:#222}
+.cal-add-btn{margin-left:auto;padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:12px;cursor:pointer}
+.cal-holiday-form{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-bottom:14px;display:none}
+.cal-wrap{background:#fff;border-radius:var(--r2);overflow:hidden;border:1px solid #ddd}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid #ddd;border-top:1px solid #ddd}
+.cal-dl{background:#f8f8f8;padding:8px 6px;font-size:11px;font-weight:700;text-align:center;border-right:1px solid #ddd;border-bottom:1px solid #ddd}
+.cal-dl.sun{color:#e53935}.cal-dl.sat{color:#1565c0}.cal-dl.wkd{color:#555}
+.cal-cell{background:#fff;min-height:100px;padding:3px 0 4px;border-right:1px solid #ddd;border-bottom:1px solid #ddd;position:relative;overflow:hidden}
+.cal-cell.today{background:#fffde7}
+.cal-cell.closed-day{background:#fafafa}
+.cal-cell.hol-day{background:#fff8f8}
+.cal-cell.drag-target{outline:2px solid var(--green);outline-offset:-2px}
+.cal-cell-header{display:flex;align-items:center;gap:4px;padding:3px 5px 2px;min-height:22px}
+.cal-cell-num{font-size:12px;font-weight:600}
+.cal-cell-num.sun-col,.cal-cell-num.hol-col{color:#e53935}
+.cal-cell-num.sat-col{color:#1565c0}
+.cal-cell-num.nor-col{color:#333}
+.cal-cell-tag{font-size:9px;padding:1px 4px;border-radius:3px;white-space:nowrap}
+.cal-cell-tag.hol-tag{background:#ffebee;color:#c62828}
+.cal-cell-tag.closed-tag{background:#f5f5f5;color:#999}
+/* イベント行 - Googleカレンダー風 */
+.cal-ev-row{height:18px;margin-bottom:1px;padding:0;position:relative}
+.cal-ev-bar{position:absolute;top:1px;height:16px;border-radius:3px;display:flex;align-items:center;padding:0 5px;font-size:10px;white-space:nowrap;overflow:hidden;cursor:pointer;transition:.1s}
+.cal-ev-bar:hover{filter:brightness(.93)}
+.cal-ev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:4px}
+/* カウントダウンカード */
+.cal-countdown{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.countdown-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;cursor:pointer}
+.countdown-card:hover{border-color:var(--border2)}
+.countdown-num{font-size:28px;font-weight:700;line-height:1}
+.countdown-label{font-size:11px;color:var(--text3);margin-top:2px}
+.countdown-car{font-size:12px;font-weight:600;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.countdown-type{font-size:10px;color:var(--text2);margin-top:2px}
+.gtable{border-collapse:collapse;width:100%}
+.gtable th{background:var(--bg2);padding:8px 10px;font-size:11px;color:var(--text2);border:1px solid var(--border);white-space:nowrap;font-weight:600}
+.gtable td{border:1px solid var(--border);padding:7px 10px;font-size:12px;background:var(--bg2)}
+.gtable tr:hover td{background:var(--bg3);cursor:pointer}
+.pv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.pv-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:.15s}
+.pv-card:hover{border-color:var(--border2)}
+.pv-head{padding:13px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.pv-thumb{width:52px;height:42px;border-radius:6px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden}
+.pv-thumb img{width:100%;height:100%;object-fit:cover}
+.pv-body{padding:13px}
+.pv-btn{margin:0 13px 13px;padding:8px;background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.25);border-radius:var(--r);color:var(--blue);font-size:12px;cursor:pointer;text-align:center}
+.dtable{width:100%;border-collapse:collapse;min-width:800px}
+.dtable th{background:var(--bg2);padding:9px 11px;font-size:11px;color:var(--text2);border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap}
+.dtable td{border:1px solid var(--border);padding:8px 11px;font-size:12px;background:var(--bg2);vertical-align:middle}
+.dtable tr:hover td{background:var(--bg3);cursor:pointer}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:9px}
+.inv-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer}
+.inv-card:hover{border-color:var(--border2)}
+.inv-thumb{height:95px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;overflow:hidden}
+.inv-thumb img{width:100%;height:100%;object-fit:cover}
+.inv-badge{position:absolute;top:5px;right:5px;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700}
+.inv-body{padding:9px}
+.inv-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-cols{display:flex;gap:10px;overflow-x:auto;flex:1}
+.ex-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);min-width:185px;flex:1}
+.ex-col-hdr{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2)}
+.ex-col-body{padding:7px;display:flex;flex-direction:column;gap:7px}
+.ex-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;cursor:pointer}
+.ex-card:hover{border-color:var(--border2)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;width:520px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.modal-wide{width:660px}
+.mhdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.mhdr-title{font-size:15px;font-weight:600}
+.mclose{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;line-height:1}
+.mbody{padding:20px}
+.mfooter{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg2)}
+.fg{margin-bottom:13px}
+.fg label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.fg input,.fg select,.fg textarea{width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue)}
+.fg select option{background:var(--bg3)}
+.fg textarea{min-height:56px;resize:vertical}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fsec{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:12px 0 8px;border-top:1px solid var(--border);margin-top:4px}
+.photo-drop{border:1.5px dashed var(--border);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;font-size:12px;color:var(--text3)}
+.photo-drop:hover{border-color:var(--blue);color:var(--blue)}
+.btn-cancel{padding:8px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:13px;cursor:pointer}
+.btn-save{padding:8px 20px;background:var(--green);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.detail-photo{width:100%;height:150px;background:var(--bg3);border-radius:var(--r2);display:flex;align-items:center;justify-content:center;font-size:52px;overflow:hidden;margin-bottom:16px;position:relative}
+.detail-photo img{width:100%;height:100%;object-fit:cover}
+.detail-photo-edit{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:11px;padding:4px 9px;border-radius:6px;cursor:pointer}
+.task-items{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.task-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.task-item-row{display:flex;align-items:center;gap:11px;padding:12px 14px}
+.task-chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+.task-chk.done{background:var(--green);border-color:var(--green)}
+.task-chk.partial{background:var(--orange);border-color:var(--orange)}
+.task-item-name{flex:1;font-size:14px;font-weight:600}
+.task-item-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.task-item-pct{font-size:13px;font-weight:700;color:var(--text2);margin-right:4px}
+.task-open-btn{font-size:12px;color:var(--blue);background:rgba(55,138,221,.12);border:1px solid rgba(55,138,221,.25);border-radius:6px;padding:5px 11px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.task-open-btn:hover{background:rgba(55,138,221,.22)}
+.detail-overall{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:4px}
+.detail-overall-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:7px}
+.detail-overall-bar{height:8px;background:var(--bg4);border-radius:4px;overflow:hidden}
+.detail-overall-fill{height:100%;background:var(--green);border-radius:4px;transition:.4s}
+#wf-page{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column}
+#wf-page.open{display:flex}
+.wf-topbar{height:var(--topbar);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0}
+.wf-back{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text2);font-size:13px;padding:6px 12px;border-radius:var(--r);border:1px solid var(--border)}
+.wf-back:hover{color:var(--text)}
+.wf-vehicle{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.wf-thumb{width:54px;height:42px;border-radius:7px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0}
+.wf-thumb img{width:100%;height:100%;object-fit:cover}
+.wf-pb-track{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:6px}
+.wf-pb-fill{height:100%;background:var(--green);border-radius:3px;transition:.4s}
+.wf-body{flex:1;overflow-y:auto;padding:14px}
+.wf-sec-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:12px 0 6px}
+.wf-step{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+.wf-step-row{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer}
+.wf-step-row:hover{background:rgba(255,255,255,.02)}
+.wf-chk{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s}
+.wf-chk.done{background:var(--green);border-color:var(--green)}
+.wf-step-name{flex:1;font-size:13px}
+.wf-step-name.done{color:var(--text3);text-decoration:line-through}
+.wf-step-sub{font-size:11px;color:var(--text3);margin-right:6px}
+.wf-chev{color:var(--text3);font-size:15px;transition:transform .2s}
+.wf-chev.open{transform:rotate(90deg)}
+.wf-det{display:none;background:var(--bg3);border-top:1px solid var(--border);padding:13px 14px}
+.wf-det.open{display:block}
+.wf-det p{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:9px}
+.wf-det ul{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.wf-det ul li{font-size:12px;color:var(--text2);display:flex;gap:7px}
+.wf-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:5px}
+.wf-cbtn{padding:7px 14px;border:1px solid var(--green);background:none;color:var(--green);border-radius:var(--r);font-size:12px;cursor:pointer}
+.wf-cbtn.done{background:rgba(29,185,122,.12);color:#6ee7b7;border-color:#6ee7b7}
+.wf-footer{padding:13px 16px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:flex-end}
+.wf-done-btn{padding:11px 26px;background:var(--green);border:none;border-radius:var(--r);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.wf-done-btn:disabled{opacity:.4;cursor:not-allowed}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;display:none;align-items:center;justify-content:center}
+.confirm-overlay.open{display:flex}
+.confirm-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:30px;width:370px;max-width:94vw;text-align:center}
+.confirm-icon{font-size:38px;margin-bottom:12px}
+.confirm-title{font-size:17px;font-weight:700;margin-bottom:8px}
+.confirm-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px}
+.confirm-date-row{margin:0 0 18px;text-align:left}
+.confirm-date-row label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.confirm-date-row input{width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none}
+.confirm-btns{display:flex;gap:10px;justify-content:center}
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:9px 16px;font-size:13px;z-index:9999;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+      <h1>CarFlow</h1><p>車両管理システム</p>
+    </div>
+    <div class="inp-g"><label>ユーザー名</label><input type="text" id="login-user" placeholder="例：yamada"></div>
+    <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
+    <div class="login-hint">デモ：任意のユーザー名 / パスワード 1234</div>
+    <button class="btn-login" onclick="doLogin()">ログイン</button>
+  </div>
+</div>
+
+<div id="app" style="display:none;flex-direction:column;height:100vh">
+  <div class="topbar">
+    <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.6</span>
+    <div class="topbar-user">
+      <div class="av" id="u-av">YM</div>
+      <span style="font-size:13px;color:var(--text2)" id="u-name">山田</span>
+      <button class="btn-sm" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+  <div class="body-row">
+    <div class="sidebar">
+      <div style="padding:8px 6px 4px">
+        <div class="sb-sec">メイン</div>
+        <div class="sb-item active" id="si-dashboard" onclick="showPanel('dashboard',this)"><span class="sb-icon">🏠</span>ダッシュボード</div>
+        <div class="sb-item" onclick="openCarModal(null)"><span class="sb-icon">➕</span>新規車両登録</div>
+        <div class="sb-div"></div>
+        <div class="sb-sec">管理</div>
+        <div class="sb-item" id="si-log" onclick="showPanel('log',this)"><span class="sb-icon">📋</span>操作ログ<span class="sb-badge" id="log-badge">NEW</span></div>
+        <div class="sb-item" id="si-members" onclick="showPanel('members',this)"><span class="sb-icon">👥</span>メンバー</div>
+        <div class="sb-sec">システム</div>
+        <div class="sb-item" id="si-settings" onclick="showPanel('settings',this)"><span class="sb-icon">⚙️</span>設定</div>
+        <div class="sb-item" id="si-notif" onclick="showPanel('notif',this)"><span class="sb-icon">🔔</span>通知設定</div>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-div"></div>
+        <div class="sb-user">
+          <div class="av" id="sb-av" style="width:30px;height:30px;font-size:11px">YM</div>
+          <div><div style="font-size:12px;font-weight:600" id="sb-name">山田</div><div style="font-size:10px;color:var(--text3)">スタッフ</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('kanban',this)">📋 タスク管理</div>
+        <div class="tab" onclick="switchTab('calendar',this)">📅 カレンダー</div>
+        <div class="tab" onclick="switchTab('exhibit',this)">🏪 展示</div>
+        <div class="tab" onclick="switchTab('gantt',this)">📊 ガント</div>
+        <div class="tab" onclick="switchTab('progress',this)">⚡ 進捗</div>
+        <div class="tab" onclick="switchTab('table',this)">📑 全体一覧</div>
+        <div class="tab" onclick="switchTab('inventory',this)">📦 在庫日数</div>
+      </div>
+      <div class="views">
+        <div id="panel-dashboard" class="side-panel open">
+          <div><div class="panel-title">ダッシュボード</div><div class="panel-sub">車両管理の概要</div></div>
+          <div class="stat-grid" id="stat-grid"></div>
+          <div class="panel-card"><h3>🚨 要対応アクション</h3><div id="dash-actions"></div></div>
+          <div class="panel-card"><h3>📈 ステータス別内訳</h3><div id="dash-status"></div></div>
+        </div>
+        <div id="panel-log" class="side-panel">
+          <div><div class="panel-title">操作ログ</div><div class="panel-sub">全車両への操作履歴</div></div>
+          <div class="panel-card"><h3>最新ログ</h3><div id="log-list"></div></div>
+        </div>
+        <div id="panel-members" class="side-panel">
+          <div><div class="panel-title">メンバー</div></div>
+          <div class="panel-card"><h3>登録メンバー</h3><div id="member-list"></div></div>
+        </div>
+        <div id="panel-settings" class="side-panel">
+          <div><div class="panel-title">設定</div></div>
+          <div class="panel-card"><h3>定休日設定</h3>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px">定休日にする曜日を選択</div>
+            <div id="closed-days-picker"></div>
+          </div>
+          <div class="panel-card"><h3>表示設定</h3>
+            <div class="setting-row"><div><div style="font-size:13px">在庫警告日数</div><div style="font-size:11px;color:var(--text3)">この日数を超えたら警告</div></div><input type="number" value="30" id="warn-days" style="width:64px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px"></div>
+          </div>
+          <div class="panel-card"><h3>データ管理</h3>
+            <div class="setting-row"><div><div style="font-size:13px">データをエクスポート</div></div><button class="btn-sm" onclick="exportData()">書き出し</button></div>
+          </div>
+        </div>
+        <div id="panel-notif" class="side-panel">
+          <div><div class="panel-title">通知設定</div></div>
+          <div class="panel-card"><h3>アラート条件</h3>
+            <div class="setting-row"><div><div style="font-size:13px">納車直前アラート</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="setting-row"><div><div style="font-size:13px">長期在庫アラート</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+            <div class="setting-row"><div><div style="font-size:13px">作業停滞アラート</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          </div>
+        </div>
+        <div id="view-kanban" class="view" style="flex-direction:row;overflow-x:auto;align-items:flex-start">
+          <div class="kanban-wrap" id="kanban-wrap"></div>
+        </div>
+        <div id="view-calendar" class="view">
+          <div class="cal-hdr">
+            <button class="cal-nav-btn" onclick="calPrev()">◀</button>
+            <div class="cal-month-title" id="cal-title"></div>
+            <button class="cal-nav-btn" onclick="calNext()">▶</button>
+            <button class="cal-add-btn" onclick="toggleHolidayForm()">＋ 休業日を追加</button>
+          </div>
+          <div class="cal-holiday-form" id="cal-holiday-form">
+            <div style="font-size:13px;font-weight:600;margin-bottom:12px">休業日を追加</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px">
+              <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:600">開始日</div><input type="date" id="h-start" style="width:100%;padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;outline:none"></div>
+              <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:600">終了日（省略可）</div><input type="date" id="h-end" style="width:100%;padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;outline:none"></div>
+              <div><div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:600">名称</div><input type="text" id="h-name" placeholder="例：夏季休暇" style="width:100%;padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:12px;outline:none"></div>
+              <button onclick="saveHolidayRange()" style="padding:8px 16px;background:var(--green);border:none;border-radius:var(--r);color:#fff;font-size:12px;font-weight:600;cursor:pointer">追加</button>
+            </div>
+            <div id="holiday-mini-list"></div>
+          </div>
+          <div class="cal-wrap">
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div class="cal-countdown" id="cal-countdown"></div>
+        </div>
+        <div id="view-exhibit" class="view" style="flex-direction:row">
+          <div class="ex-cols" id="ex-cols"></div>
+        </div>
+        <div id="view-gantt" class="view">
+          <div style="overflow-x:auto"><table class="gtable" id="gtable"></table></div>
+        </div>
+        <div id="view-progress" class="view">
+          <div class="pv-grid" id="pv-grid"></div>
+        </div>
+        <div id="view-table" class="view">
+          <div style="overflow-x:auto"><table class="dtable" id="dtable"></table></div>
+        </div>
+        <div id="view-inventory" class="view">
+          <div class="inv-grid" id="inv-grid"></div>
+        </div>
+      </div>
+      <div class="action-area">
+        <div class="action-label">⚠ 要確認</div>
+        <div class="action-chips" id="action-chips"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="wf-page">
+  <div class="wf-topbar">
+    <div class="wf-back" onclick="closeWorkflow()">← ボードに戻る</div>
+    <div style="font-size:15px;font-weight:600;flex:1" id="wf-title">作業ワークフロー</div>
+  </div>
+  <div class="wf-vehicle" id="wf-vehicle"></div>
+  <div class="wf-body" id="wf-body"></div>
+  <div class="wf-footer"><button class="wf-done-btn" id="wf-done-btn" onclick="finishWorkflow()">この作業を完了にして戻る</button></div>
+</div>
+
+<div class="overlay" id="modal-detail">
+  <div class="modal modal-wide">
+    <div class="mhdr"><div class="mhdr-title" id="detail-title">車両詳細</div><button class="mclose" onclick="closeModal('modal-detail')">✕</button></div>
+    <div class="mbody" id="detail-body"></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-car">
+  <div class="modal">
+    <div class="mhdr"><div class="mhdr-title" id="car-modal-title">新規車両登録</div><button class="mclose" onclick="closeModal('modal-car')">✕</button></div>
+    <div class="mbody">
+      <div class="fsec" style="border-top:none;padding-top:0">基本情報</div>
+      <div class="frow">
+        <div class="fg"><label>管理番号</label><input type="text" id="inp-num" placeholder="CAR-2025-006"></div>
+        <div class="fg"><label>メーカー</label><input type="text" id="inp-maker" placeholder="トヨタ"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>車種・グレード</label><input type="text" id="inp-model" placeholder="プリウス Z"></div>
+        <div class="fg"><label>年式</label><input type="text" id="inp-year" placeholder="2023"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>車体色</label><input type="text" id="inp-color" placeholder="パールホワイト"></div>
+        <div class="fg"><label>ボディサイズ</label>
+          <select id="inp-size"><option>軽自動車</option><option>コンパクト</option><option>ミニバン</option><option>SUV</option><option>セダン</option><option>トラック</option></select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>走行距離 (km)</label><input type="text" id="inp-km" placeholder="35000"></div>
+        <div class="fg"><label>仕入れ日</label><input type="date" id="inp-purchase"></div>
+      </div>
+      <div class="fsec">販売情報</div>
+      <div class="frow">
+        <div class="fg"><label>販売金額 (円)</label><input type="text" id="inp-price" placeholder="1480000"></div>
+        <div class="fg"><label>納車予定日</label><input type="date" id="inp-delivery"></div>
+      </div>
+      <div class="fsec">その他</div>
+      <div class="fg"><label>備考</label><textarea id="inp-memo" placeholder="特記事項..."></textarea></div>
+      <div class="fg">
+        <label>車両写真</label>
+        <div class="photo-drop" onclick="document.getElementById('inp-photo').click()">📷 写真を選択</div>
+        <input type="file" id="inp-photo" accept="image/*" style="display:none" onchange="onFormPhoto(this)">
+        <div id="inp-photo-prev"></div>
+      </div>
+    </div>
+    <div class="mfooter">
+      <button class="btn-cancel" onclick="closeModal('modal-car')">キャンセル</button>
+      <button class="btn-save" id="car-save-btn" onclick="saveCarModal()">登録する</button>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirm-sell">
+  <div class="confirm-box">
+    <div class="confirm-icon">🤝</div>
+    <div class="confirm-title">この車両を売約にしますか？</div>
+    <div class="confirm-sub">展示中 → 納車準備へ移動します。</div>
+    <div class="confirm-date-row"><label>納車予定日</label><input type="date" id="sell-date"></div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeSellConfirm(false)">売約なしで移動</button>
+      <button class="btn-save" onclick="closeSellConfirm(true)">売約にして移動</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONSTANTS =====
+const COLS=[
+  {id:'purchase',label:'仕入れ',color:'#8b5cf6'},
+  {id:'regen',label:'再生中',color:'#f59e0b'},
+  {id:'exhibit',label:'展示中',color:'#378ADD'},
+  {id:'delivery',label:'納車準備',color:'#1db97a'},
+  {id:'done',label:'納車完了',color:'#6b7280'},
+];
+const SIZES=['軽自動車','コンパクト','ミニバン','SUV','セダン','トラック'];
+const MEMBERS=[{name:'山田 太郎',init:'山田',role:'店長'},{name:'佐藤 花子',init:'佐藤',role:'スタッフ'},{name:'鈴木 一郎',init:'鈴木',role:'整備担当'},{name:'田中 美咲',init:'田中',role:'スタッフ'}];
+const pillMap={purchase:'pill-purple',regen:'pill-orange',exhibit:'pill-blue',delivery:'pill-green',done:'pill-gray'};
+const WEEK=['日','月','火','水','木','金','土'];
+
+// スケジュールポイント定義（重複なし）
+const SCHED_POINTS=[
+  {offset:0, label:'🚗 納車日',       bg:'#388e3c',color:'#fff',bold:true},
+  {offset:1, label:'✅ 完全完成',     bg:'#1565c0',color:'#fff',bold:false},
+  {offset:2, label:'📝 登録完了',     bg:'#6a1b9a',color:'#fff',bold:false},
+  {offset:3, label:'🔧 整備完了',     bg:'#e65100',color:'#fff',bold:false},
+  {offset:5, label:'📄 書類作成完了', bg:'#f9a825',color:'#333',bold:false},
+];
+
+const REGEN_TASKS=[
+  {id:'t_equip',name:'装備品チェック',icon:'🔍',type:'workflow',sections:[
+    {title:'01 外装確認',items:[
+      {id:'e1',name:'ボディ全周チェック',sub:'傷・へこみ・錆',detail:'ボディ全周を目視確認し板金カルテに記入します。',points:['ルーフ・ピラーも確認','フレーム歪みの有無']},
+      {id:'e2',name:'タイヤ・ホイール確認',sub:'溝・偏摩耗・傷',detail:'タイヤ4本の溝・製造年・偏摩耗を確認します。',points:['溝1.6mm以下は交換']},
+    ]},
+    {title:'02 内装確認',items:[
+      {id:'e3',name:'シート・内張り確認',sub:'破れ・汚れ・臭い',detail:'シート・天井・カーペットを確認します。',points:['シートの破れ・沈み込み']},
+      {id:'e4',name:'電装品確認',sub:'スイッチ・ナビ・エアコン',detail:'全電装系スイッチ類の動作を確認します。',points:['エアコン冷暖房の効き']},
+    ]},
+    {title:'03 付属品',items:[
+      {id:'e5',name:'付属品確認',sub:'スペアキー・取説等',detail:'付属品がすべて揃っているか確認します。',points:['スペアキーの有無']},
+    ]},
+  ]},
+  {id:'t_regen',name:'再生',icon:'🔧',type:'workflow',sections:[
+    {title:'01 エンジン・機関',items:[
+      {id:'r1',name:'エンジンオイル交換',sub:'量・色・漏れ確認',detail:'オイル量・色・漏れを確認し交換します。',points:['交換推奨距離確認']},
+      {id:'r2',name:'下回り点検',sub:'ブレーキ・足回り',detail:'リフトアップして下回りを確認します。',points:['パッド残量3mm以下は交換']},
+      {id:'r3',name:'消耗品交換',sub:'バッテリー・ワイパー',detail:'バッテリー電圧・ワイパーゴムを確認し交換。',points:['12.4V以下は交換']},
+    ]},
+    {title:'02 板金・塗装',items:[
+      {id:'r4',name:'板金・塗装',sub:'へこみ・傷修理',detail:'板金カルテに基づき修理を実施します。',points:['優先度の高い箇所から']},
+    ]},
+  ]},
+  {id:'t_photo',name:'写真撮影',icon:'📷',type:'toggle'},
+  {id:'t_webup',name:'webUP',icon:'🌐',type:'toggle'},
+  {id:'t_exhibit',name:'展示',icon:'🏪',type:'workflow',sections:[
+    {title:'01 クリーニング',items:[
+      {id:'ex1',name:'外装洗車・下地処理',sub:'高圧洗浄・脱脂',detail:'高圧洗浄後、脱脂処理します。',points:['エンブレム周りも入念に']},
+      {id:'ex2',name:'磨き・コーティング',sub:'バフ掛け・ガラスコート',detail:'コンパウンドで傷除去後ガラスコーティング施工。',points:['粗目→細目→仕上げ']},
+      {id:'ex3',name:'内装クリーニング',sub:'スチーム洗浄・消臭',detail:'スチーム洗浄と消臭剤を施工します。',points:['シートレール下の清掃']},
+    ]},
+    {title:'02 展示準備',items:[
+      {id:'ex4',name:'展示位置・POP設置',sub:'プライスカード',detail:'展示スペースに配置しPOPを設置。',points:['見やすい角度に配置']},
+    ]},
+  ]},
+];
+const DELIVERY_TASKS=[
+  {id:'d_prep',name:'納車準備',icon:'📦',type:'workflow',sections:[
+    {title:'01 最終確認',items:[
+      {id:'dp1',name:'最終外観チェック',sub:'傷・汚れの最終確認',detail:'納車前の最終外観チェックを実施します。',points:['新たな傷がないか確認']},
+      {id:'dp2',name:'室内最終クリーニング',sub:'納車前清掃',detail:'室内を最終クリーニングします。',points:['フロアマットの清掃']},
+    ]},
+  ]},
+  {id:'d_maint',name:'納車整備',icon:'🔧',type:'workflow',sections:[
+    {title:'01 納車前点検',items:[
+      {id:'dm1',name:'オイル・液量最終確認',sub:'各液量確認',detail:'各液量を最終確認します。',points:['エンジンオイル量','冷却水']},
+      {id:'dm2',name:'タイヤ空気圧調整',sub:'規定値に調整',detail:'4輪のタイヤ空気圧を規定値に調整します。',points:['車両の指定空気圧を確認']},
+      {id:'dm3',name:'試乗・動作確認',sub:'走行テスト',detail:'近隣を試乗し異常がないか確認します。',points:['ブレーキの効き']},
+    ]},
+  ]},
+  {id:'d_docs',name:'書類',icon:'📄',type:'toggle'},
+  {id:'d_reg',name:'登録',icon:'📝',type:'toggle'},
+];
+
+// ===== STATE =====
+let currentUser='';
+let formPhotoData=null;
+let editingCarId=null;
+let calYear,calMonth;
+let dragCard=null,dragDeliveryCarId=null;
+let pendingDragCar=null,pendingTargetCol=null;
+let globalLogs=[];
+let activeDetailCarId=null;
+let wfState={carId:null,taskId:null,isDelivery:false};
+let closedDays=[3];
+let customHolidays=[];
+let jpHolidays={};
+
+// ===== HELPERS =====
+function mkTaskState(tasks){
+  const s={};
+  tasks.forEach(t=>{
+    if(t.type==='toggle')s[t.id]=false;
+    else{s[t.id]={};t.sections.forEach(sec=>sec.items.forEach(i=>s[t.id][i.id]=false));}
+  });
+  return s;
+}
+function dateAddDays(str,n){
+  const d=new Date(str);d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];
+}
+const todayStr=()=>new Date().toISOString().split('T')[0];
+const uid=()=>'c'+Date.now();
+const fmtDate=s=>{if(!s)return'—';const d=new Date(s);return`${d.getMonth()+1}/${d.getDate()}`};
+const daysSince=s=>{if(!s)return 0;return Math.floor((new Date()-new Date(s))/86400000)};
+const daysDiff=s=>{if(!s)return null;return Math.ceil((new Date(s)-new Date())/86400000)};
+const carEmoji=s=>({軽自動車:'🚙',コンパクト:'🚗',ミニバン:'🚐',SUV:'🛻',セダン:'🚘',トラック:'🚚'}[s]||'🚗');
+const fmtPrice=p=>{if(!p)return'価格未設定';return`${(Number(p)/10000).toFixed(1)}万円`;};
+const showToast=msg=>{const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)};
+const closeModal=id=>document.getElementById(id).classList.remove('open');
+const addLog=(carId,action)=>{
+  const car=cars.find(c=>c.id===carId);if(!car)return;
+  const now=new Date();
+  const time=`${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const entry={time,user:currentUser,action,carNum:car.num};
+  car.logs.push(entry);globalLogs.unshift(entry);
+  document.getElementById('log-badge').style.display='inline';
+};
+
+// ===== SAMPLE DATA (今日基準) =====
+function makeSampleCars(){
+  const t=todayStr();
+  return [
+    {id:'c1',num:'CAR-2025-001',maker:'トヨタ',model:'プリウス Z',year:'2023',color:'パールホワイト',size:'コンパクト',km:'28000',price:'1580000',purchaseDate:dateAddDays(t,-20),contract:1,deliveryDate:dateAddDays(t,10),memo:'',photo:null,col:'regen',regenTasks:{...mkTaskState(REGEN_TASKS),t_equip:{e1:true,e2:true,e3:false,e4:false,e5:false}},deliveryTasks:mkTaskState(DELIVERY_TASKS),logs:[]},
+    {id:'c2',num:'CAR-2025-002',maker:'ホンダ',model:'N-BOX G',year:'2022',color:'ブルー',size:'軽自動車',km:'15000',price:'980000',purchaseDate:dateAddDays(t,-15),contract:0,deliveryDate:'',memo:'',photo:null,col:'exhibit',regenTasks:{...mkTaskState(REGEN_TASKS),t_photo:true,t_webup:true},deliveryTasks:mkTaskState(DELIVERY_TASKS),logs:[]},
+    {id:'c3',num:'CAR-2025-003',maker:'日産',model:'セレナ e-Power',year:'2021',color:'ブラック',size:'ミニバン',km:'45000',price:'2180000',purchaseDate:dateAddDays(t,-30),contract:1,deliveryDate:dateAddDays(t,7),memo:'',photo:null,col:'delivery',regenTasks:{t_equip:{e1:true,e2:true,e3:true,e4:true,e5:true},t_regen:{r1:true,r2:true,r3:true,r4:true},t_photo:true,t_webup:true,t_exhibit:{ex1:true,ex2:true,ex3:true,ex4:true}},deliveryTasks:{...mkTaskState(DELIVERY_TASKS),d_docs:true},logs:[]},
+    {id:'c4',num:'CAR-2025-004',maker:'スズキ',model:'ジムニー XC',year:'2020',color:'カーキ',size:'軽自動車',km:'32000',price:'1280000',purchaseDate:dateAddDays(t,-5),contract:0,deliveryDate:'',memo:'',photo:null,col:'purchase',regenTasks:mkTaskState(REGEN_TASKS),deliveryTasks:mkTaskState(DELIVERY_TASKS),logs:[]},
+    {id:'c5',num:'CAR-2025-005',maker:'マツダ',model:'CX-5 25S',year:'2022',color:'ソウルレッド',size:'SUV',km:'22000',price:'2480000',purchaseDate:dateAddDays(t,-18),contract:1,deliveryDate:dateAddDays(t,18),memo:'',photo:null,col:'exhibit',regenTasks:{t_equip:{e1:true,e2:true,e3:true,e4:false,e5:false},t_regen:{r1:true,r2:true,r3:false,r4:false},t_photo:false,t_webup:false,t_exhibit:{ex1:false,ex2:false,ex3:false,ex4:false}},deliveryTasks:mkTaskState(DELIVERY_TASKS),logs:[]},
+  ];
+}
+let cars=makeSampleCars();
+
+// ===== PROGRESS =====
+function calcProg(car){
+  const isD=car.col==='delivery'||car.col==='done';
+  const tasks=isD?DELIVERY_TASKS:REGEN_TASKS;
+  const state=isD?car.deliveryTasks:car.regenTasks;
+  let total=0,done=0;
+  tasks.forEach(t=>{
+    if(t.type==='toggle'){total++;if(state[t.id])done++;}
+    else t.sections.forEach(s=>s.items.forEach(i=>{total++;if(state[t.id]&&state[t.id][i.id])done++;}));
+  });
+  return{pct:total?Math.round(done/total*100):0,done,total};
+}
+function calcSingleProg(car,taskId,tasks){
+  const isD=car.col==='delivery'||car.col==='done';
+  const state=isD?car.deliveryTasks:car.regenTasks;
+  const task=tasks.find(t=>t.id===taskId);
+  if(!task)return{pct:0,done:0,total:0};
+  if(task.type==='toggle')return{pct:state[taskId]?100:0,done:state[taskId]?1:0,total:1};
+  let total=0,done=0;
+  task.sections.forEach(s=>s.items.forEach(i=>{total++;if(state[taskId]&&state[taskId][i.id])done++;}));
+  return{pct:total?Math.round(done/total*100):0,done,total};
+}
+
+// ===== HOLIDAYS =====
+async function fetchJpHolidays(){
+  try{
+    const res=await fetch('https://holidays-jp.github.io/api/v1/date.json');
+    if(res.ok)jpHolidays=await res.json();else throw new Error();
+  }catch(e){
+    jpHolidays={
+      '2025-01-01':'元日','2025-01-13':'成人の日','2025-02-11':'建国記念の日','2025-02-23':'天皇誕生日',
+      '2025-03-20':'春分の日','2025-04-29':'昭和の日','2025-05-03':'憲法記念日','2025-05-04':'みどりの日',
+      '2025-05-05':'こどもの日','2025-07-21':'海の日','2025-08-11':'山の日','2025-09-15':'敬老の日',
+      '2025-09-23':'秋分の日','2025-10-13':'スポーツの日','2025-11-03':'文化の日','2025-11-23':'勤労感謝の日',
+      '2026-01-01':'元日','2026-01-12':'成人の日','2026-02-11':'建国記念の日','2026-02-23':'天皇誕生日',
+      '2026-03-20':'春分の日','2026-04-29':'昭和の日','2026-05-03':'憲法記念日','2026-05-04':'みどりの日',
+      '2026-05-05':'こどもの日','2026-07-20':'海の日','2026-08-11':'山の日','2026-09-21':'敬老の日',
+      '2026-09-23':'秋分の日','2026-10-12':'スポーツの日','2026-11-03':'文化の日','2026-11-23':'勤労感謝の日',
+    };
+  }
+  if(document.querySelector('.tab.active')?.textContent.includes('カレンダー'))renderCalendar();
+}
+function toggleHolidayForm(){
+  const f=document.getElementById('cal-holiday-form');
+  f.style.display=f.style.display==='block'?'none':'block';
+  renderHolidayMiniList();
+}
+function saveHolidayRange(){
+  const start=document.getElementById('h-start').value;
+  const end=document.getElementById('h-end').value||start;
+  const name=document.getElementById('h-name').value.trim()||'休業日';
+  if(!start){showToast('開始日を選択してください');return;}
+  if(new Date(start)>new Date(end)){showToast('終了日は開始日以降にしてください');return;}
+  let added=0;
+  for(let d=new Date(start);d<=new Date(end);d.setDate(d.getDate()+1)){
+    const ds=d.toISOString().split('T')[0];
+    if(!customHolidays.find(h=>h.date===ds)){customHolidays.push({date:ds,name});added++;}
+  }
+  document.getElementById('h-start').value='';
+  document.getElementById('h-end').value='';
+  document.getElementById('h-name').value='';
+  renderHolidayMiniList();renderCalendar();
+  showToast(`${added}日間の休業日を追加しました`);
+}
+function renderHolidayMiniList(){
+  const el=document.getElementById('holiday-mini-list');if(!el)return;
+  if(!customHolidays.length){el.innerHTML='<div style="font-size:11px;color:var(--text3)">登録済みの休業日はありません</div>';return;}
+  const sorted=[...customHolidays].sort((a,b)=>a.date.localeCompare(b.date));
+  const groups=[];let cur=null;
+  sorted.forEach(h=>{
+    if(cur&&cur.name===h.name){
+      const nxt=dateAddDays(cur.end,1);
+      if(nxt===h.date){cur.end=h.date;return;}
+    }
+    cur={name:h.name,start:h.date,end:h.date};groups.push(cur);
+  });
+  el.innerHTML='<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px">登録済み休業日</div>'+
+    groups.map(g=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="font-weight:600">${g.name}</span>
+      <span style="color:var(--text3)">${g.start===g.end?g.start:`${g.start} ～ ${g.end}`}</span>
+      <button onclick="removeHolidayGroup('${g.name}','${g.start}','${g.end}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+}
+function removeHolidayGroup(name,start,end){
+  const s=new Date(start),e=new Date(end);
+  customHolidays=customHolidays.filter(h=>{const d=new Date(h.date);return!(h.name===name&&d>=s&&d<=e);});
+  renderHolidayMiniList();renderCalendar();showToast('削除しました');
+}
+function renderClosedDaysPicker(){
+  const el=document.getElementById('closed-days-picker');if(!el)return;
+  el.innerHTML=WEEK.map((d,i)=>`<span class="closed-chip${closedDays.includes(i)?' active':''}" onclick="toggleClosedDay(${i})">${d}</span>`).join('');
+}
+function toggleClosedDay(i){
+  closedDays=closedDays.includes(i)?closedDays.filter(d=>d!==i):[...closedDays,i];
+  renderClosedDaysPicker();
+  if(document.querySelector('.tab.active')?.textContent.includes('カレンダー'))renderCalendar();
+}
+
+// ===== LOGIN =====
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  if(!u){showToast('ユーザー名を入力してください');return}
+  if(document.getElementById('login-pass').value!=='1234'){showToast('パスワードが違います');return}
+  currentUser=u;
+  const init=u.slice(0,2).toUpperCase();
+  document.getElementById('u-av').textContent=init;
+  document.getElementById('sb-av').textContent=init;
+  document.getElementById('u-name').textContent=u;
+  document.getElementById('sb-name').textContent=u;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  calYear=new Date().getFullYear();calMonth=new Date().getMonth();
+  fetchJpHolidays();
+  renderAll();renderDashboard();
+}
+function doLogout(){document.getElementById('login-screen').style.display='flex';document.getElementById('app').style.display='none';}
+
+// ===== PANELS / TABS =====
+function showPanel(name,el){
+  document.querySelectorAll('.side-panel,.view').forEach(v=>{v.classList.remove('open','active');v.style.display='none';});
+  document.querySelectorAll('.sb-item').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const p=document.getElementById('panel-'+name);
+  if(p){p.style.display='flex';p.classList.add('open');}
+  if(name==='log')renderLogPanel();
+  if(name==='members')renderMembers();
+  if(name==='dashboard')renderDashboard();
+  if(name==='settings')renderClosedDaysPicker();
+}
+function switchTab(name,el){
+  document.querySelectorAll('.side-panel,.view').forEach(v=>{v.classList.remove('open','active');v.style.display='none';});
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  const v=document.getElementById('view-'+name);
+  if(v){v.style.display='flex';v.classList.add('active');}
+  if(name==='kanban')renderKanban();
+  if(name==='calendar')renderCalendar();
+  if(name==='exhibit')renderExhibit();
+  if(name==='gantt')renderGantt();
+  if(name==='progress')renderProgress();
+  if(name==='table')renderTable();
+  if(name==='inventory')renderInventory();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard(){
+  const total=cars.length,active=cars.filter(c=>c.col!=='done').length;
+  const contracted=cars.filter(c=>c.contract).length,done=cars.filter(c=>c.col==='done').length;
+  document.getElementById('stat-grid').innerHTML=`
+    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-label">総車両数</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--orange)">${active}</div><div class="stat-label">管理中</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--green)">${contracted}</div><div class="stat-label">成約済み</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:var(--text3)">${done}</div><div class="stat-label">納車完了</div></div>`;
+  const chips=[];
+  cars.forEach(car=>{
+    if(car.col==='done')return;
+    if(car.contract&&car.deliveryDate){const d=daysDiff(car.deliveryDate);if(d!==null&&d<=3&&d>=0)chips.push(`<div class="chip chip-red" onclick="openDetail('${car.id}')"><span class="chip-dot"></span>🚨 ${car.maker} ${car.model} 納車${d===0?'本日':d+'日後'}</div>`);}
+    if(daysSince(car.purchaseDate)>30)chips.push(`<div class="chip chip-orange"><span class="chip-dot"></span>📦 ${car.maker} ${car.model} 在庫${daysSince(car.purchaseDate)}日</div>`);
+  });
+  document.getElementById('dash-actions').innerHTML=chips.length?`<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px">${chips.join('')}</div>`:'<div style="font-size:13px;color:var(--text3);padding:8px 0">要対応アクションなし ✓</div>';
+  document.getElementById('dash-status').innerHTML=COLS.map(col=>{
+    const n=cars.filter(c=>c.col===col.id).length;const pct=total?Math.round(n/total*100):0;
+    return`<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border)"><div style="width:8px;height:8px;border-radius:50%;background:${col.color};flex-shrink:0"></div><div style="flex:1;font-size:13px">${col.label}</div><div style="width:80px"><div class="pbar"><div class="pfill" style="width:${pct}%;background:${col.color}"></div></div></div><div style="font-size:12px;color:var(--text2);width:28px;text-align:right">${n}台</div></div>`;
+  }).join('');
+}
+function renderLogPanel(){
+  document.getElementById('log-badge').style.display='none';
+  document.getElementById('log-list').innerHTML=globalLogs.length
+    ?globalLogs.map(l=>`<div class="log-row"><span class="log-time">${l.time}</span><span class="log-user">${l.user}</span><span style="color:var(--text2)">${l.carNum} — ${l.action}</span></div>`).join('')
+    :'<div style="font-size:13px;color:var(--text3)">ログなし</div>';
+}
+function renderMembers(){
+  document.getElementById('member-list').innerHTML=MEMBERS.map(m=>`<div class="member-row"><div class="m-av">${m.init.slice(0,2)}</div><div><div style="font-size:13px;font-weight:500">${m.name}</div><div style="font-size:11px;color:var(--text3)">${m.role}</div></div><span class="pill pill-green" style="margin-left:auto">在席</span></div>`).join('');
+}
+
+// ===== ACTION =====
+function renderActions(){
+  const chips=document.getElementById('action-chips');chips.innerHTML='';let any=false;
+  cars.forEach(car=>{
+    if(car.col==='done')return;
+    if(car.contract&&car.deliveryDate){const d=daysDiff(car.deliveryDate);if(d!==null&&d<=3&&d>=0){const c=document.createElement('div');c.className='chip chip-red';c.innerHTML=`<span class="chip-dot"></span>🚨 ${car.maker} ${car.model} 納車${d===0?'本日':d+'日後'}`;c.onclick=()=>openDetail(car.id);chips.appendChild(c);any=true;}}
+    if(daysSince(car.purchaseDate)>30){const c=document.createElement('div');c.className='chip chip-orange';c.innerHTML=`<span class="chip-dot"></span>📦 ${car.maker} ${car.model} 在庫${daysSince(car.purchaseDate)}日`;chips.appendChild(c);any=true;}
+  });
+  if(!any)chips.innerHTML='<div style="font-size:12px;color:var(--text3)">緊急アクションなし ✓</div>';
+}
+
+// ===== KANBAN =====
+function renderKanban(){
+  const wrap=document.getElementById('kanban-wrap');wrap.innerHTML='';
+  COLS.forEach(col=>{
+    const colCars=cars.filter(c=>c.col===col.id);
+    const div=document.createElement('div');div.className='k-col';
+    div.innerHTML=`<div class="k-col-hdr"><div class="k-col-dot" style="background:${col.color}"></div><div class="k-col-title">${col.label}</div><div class="k-col-count">${colCars.length}</div></div><div class="k-cards" id="kc-${col.id}" data-col="${col.id}"></div>`;
+    wrap.appendChild(div);
+    const cd=div.querySelector('.k-cards');
+    colCars.forEach(car=>cd.appendChild(makeCarCard(car)));
+    cd.addEventListener('dragover',e=>{e.preventDefault();cd.classList.add('drag-over')});
+    cd.addEventListener('dragleave',()=>cd.classList.remove('drag-over'));
+    cd.addEventListener('drop',e=>{
+      e.preventDefault();cd.classList.remove('drag-over');
+      if(!dragCard||dragCard.col===col.id)return;
+      if(dragCard.col==='exhibit'&&col.id==='delivery'){
+        pendingDragCar=dragCard;pendingTargetCol=col.id;
+        document.getElementById('sell-date').value='';
+        document.getElementById('confirm-sell').classList.add('open');
+      } else {
+        addLog(dragCard.id,`ステータス変更: ${COLS.find(c=>c.id===dragCard.col)?.label}→${col.label}`);
+        dragCard.col=col.id;renderAll();showToast('ステータスを更新しました');
+      }
+    });
+  });
+}
+function makeCarCard(car){
+  const isD=car.col==='delivery'||car.col==='done';
+  const tasks=isD?DELIVERY_TASKS:REGEN_TASKS;
+  const prog=calcProg(car);
+  const inv=daysSince(car.purchaseDate);
+  const dots=tasks.map(t=>{const p=calcSingleProg(car,t.id,tasks);const cls=p.pct===100?'done':p.pct>0?'partial':'';return`<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;}).join('');
+  const div=document.createElement('div');div.className='car-card';div.draggable=true;
+  div.innerHTML=`
+    <div class="cc-thumb">${car.photo?`<img src="${car.photo}">`:(carEmoji(car.size))}</div>
+    <div class="cc-body">
+      <div class="cc-maker">${car.maker} · ${car.num}</div>
+      <div class="cc-model">${car.model}</div>
+      <div class="cc-price">${fmtPrice(car.price)}</div>
+      <div class="cc-mid">
+        <div><div class="cc-pct">${prog.pct}%</div><div class="cc-pct-label">${isD?'納車準備':'再生'}進捗</div></div>
+        <div class="cc-dots">${dots}</div>
+      </div>
+      <div class="cc-foot"><div class="cc-tag">${car.size}</div><div class="cc-tag">${car.year}年</div><div class="cc-days ${inv>30?'dw':'dg'}">在庫${inv}日</div></div>
+    </div>`;
+  div.addEventListener('dragstart',()=>{dragCard=car;div.classList.add('dragging')});
+  div.addEventListener('dragend',()=>{dragCard=null;div.classList.remove('dragging')});
+  div.addEventListener('click',()=>openDetail(car.id));
+  return div;
+}
+
+// ===== SELL CONFIRM =====
+function closeSellConfirm(sell){
+  document.getElementById('confirm-sell').classList.remove('open');
+  if(!pendingDragCar)return;
+  const car=pendingDragCar;
+  if(sell){car.contract=1;car.deliveryDate=document.getElementById('sell-date').value||'';addLog(car.id,'売約設定・納車準備へ移動');}
+  else addLog(car.id,'ステータス変更: 展示中→納車準備');
+  car.col=pendingTargetCol;pendingDragCar=null;pendingTargetCol=null;
+  renderAll();showToast(sell?'売約にしました！':'ステータスを更新しました');
+}
+
+// ===== DETAIL =====
+function openDetail(carId){
+  activeDetailCarId=carId;
+  const car=cars.find(c=>c.id===carId);if(!car)return;
+  document.getElementById('detail-title').textContent=`${car.maker} ${car.model}`;
+  renderDetailBody(car);
+  document.getElementById('modal-detail').classList.add('open');
+}
+function renderDetailBody(car){
+  const isD=car.col==='delivery'||car.col==='done';
+  const tasks=isD?DELIVERY_TASKS:REGEN_TASKS;
+  const prog=calcProg(car);
+  let html=`
+    <div class="detail-photo">
+      ${car.photo?`<img src="${car.photo}">`:(carEmoji(car.size))}
+      <div class="detail-photo-edit" onclick="document.getElementById('dp-inp').click()">📷 変更</div>
+    </div>
+    <input type="file" id="dp-inp" accept="image/*" style="display:none" onchange="onDetailPhoto(this)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      ${car.deliveryDate?`<span style="font-size:12px;color:var(--text2)">納車予定: ${fmtDate(car.deliveryDate)}</span>`:''}
+      ${car.price?`<span style="font-size:15px;font-weight:700;color:var(--green);margin-left:auto">${fmtPrice(car.price)}</span>`:''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">管理番号</div><div style="font-size:13px;font-weight:600">${car.num}</div></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">年式</div><div style="font-size:13px;font-weight:600">${car.year}年</div></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">車体色</div><div style="font-size:13px;font-weight:600">${car.color}</div></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">走行距離</div><div style="font-size:13px;font-weight:600">${Number(car.km||0).toLocaleString()}km</div></div>
+    </div>
+    <button onclick="openCarModal('${car.id}')" style="width:100%;padding:9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:16px">✏️ 車両詳細を編集</button>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${isD?'納車準備':'再生'}チェック</div>
+    <div class="detail-overall">
+      <div class="detail-overall-label"><span>全体進捗</span><span>${prog.done}/${prog.total} (${prog.pct}%)</span></div>
+      <div class="detail-overall-bar"><div class="detail-overall-fill" style="width:${prog.pct}%"></div></div>
+    </div>
+    <div class="task-items">`;
+  tasks.forEach(task=>{
+    const p=calcSingleProg(car,task.id,tasks);
+    const isDone=p.pct===100,isPartial=p.pct>0&&p.pct<100;
+    const state=isD?car.deliveryTasks:car.regenTasks;
+    if(task.type==='toggle'){
+      const checked=!!state[task.id];
+      html+=`<div class="task-item"><div class="task-item-row">
+        <div class="task-chk${checked?' done':''}" onclick="toggleTaskToggle('${car.id}','${task.id}',${isD})">
+          ${checked?'<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </div>
+        <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${checked?'完了':'未完了'}</div></div>
+        <div class="task-item-pct" style="margin-left:auto">${checked?'100':'0'}%</div>
+      </div></div>`;
+    }else{
+      html+=`<div class="task-item"><div class="task-item-row">
+        <div class="task-chk${isDone?' done':isPartial?' partial':''}">
+          ${isDone?'<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':isPartial?'<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>':''}
+        </div>
+        <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${p.done}/${p.total} 完了</div></div>
+        <div class="task-item-pct">${p.pct}%</div>
+        <button class="task-open-btn" onclick="openWorkflow('${car.id}','${task.id}',${isD})">開く →</button>
+      </div></div>`;
+    }
+  });
+  html+=`</div>`;
+  document.getElementById('detail-body').innerHTML=html;
+}
+function onDetailPhoto(inp){
+  const car=cars.find(c=>c.id===activeDetailCarId);if(!car)return;
+  const file=inp.files[0];if(!file)return;
+  const r=new FileReader();r.onload=e=>{car.photo=e.target.result;renderDetailBody(car);renderAll();showToast('写真を更新しました');};r.readAsDataURL(file);
+}
+function toggleTaskToggle(carId,taskId,isD){
+  const car=cars.find(c=>c.id===carId);if(!car)return;
+  const state=isD?car.deliveryTasks:car.regenTasks;
+  state[taskId]=!state[taskId];
+  addLog(carId,`「${taskId}」を${state[taskId]?'完了':'未完了に戻す'}`);
+  renderDetailBody(car);renderAll();
+  showToast(state[taskId]?'✓ 完了しました':'未完了に戻しました');
+}
+
+// ===== CAR MODAL =====
+function openCarModal(carId){
+  editingCarId=carId||null;
+  formPhotoData=null;
+  const car=carId?cars.find(c=>c.id===carId):null;
+  document.getElementById('inp-num').value=car?.num||'';
+  document.getElementById('inp-maker').value=car?.maker||'';
+  document.getElementById('inp-model').value=car?.model||'';
+  document.getElementById('inp-year').value=car?.year||'';
+  document.getElementById('inp-color').value=car?.color||'';
+  document.getElementById('inp-size').value=car?.size||'コンパクト';
+  document.getElementById('inp-km').value=car?.km||'';
+  document.getElementById('inp-price').value=car?.price||'';
+  document.getElementById('inp-purchase').value=car?.purchaseDate||todayStr();
+  document.getElementById('inp-delivery').value=car?.deliveryDate||'';
+  document.getElementById('inp-memo').value=car?.memo||'';
+  document.getElementById('inp-photo-prev').innerHTML=car?.photo?`<img src="${car.photo}" style="width:100%;max-height:110px;object-fit:cover;border-radius:7px;margin-top:7px">`:'';
+  document.getElementById('car-modal-title').textContent=car?'車両情報を編集':'新規車両登録';
+  document.getElementById('car-save-btn').textContent=car?'更新する':'登録する';
+  document.getElementById('modal-car').classList.add('open');
+}
+function onFormPhoto(inp){
+  const file=inp.files[0];if(!file)return;
+  const r=new FileReader();r.onload=e=>{formPhotoData=e.target.result;document.getElementById('inp-photo-prev').innerHTML=`<img src="${formPhotoData}" style="width:100%;max-height:110px;object-fit:cover;border-radius:7px;margin-top:7px">`;};r.readAsDataURL(file);
+}
+function saveCarModal(){
+  const num=document.getElementById('inp-num').value.trim();
+  const maker=document.getElementById('inp-maker').value.trim();
+  const model=document.getElementById('inp-model').value.trim();
+  if(!num||!maker||!model){showToast('管理番号・メーカー・車種は必須です');return;}
+  const deliveryDate=document.getElementById('inp-delivery').value||'';
+  if(editingCarId){
+    const car=cars.find(c=>c.id===editingCarId);if(!car)return;
+    car.num=num;car.maker=maker;car.model=model;
+    car.year=document.getElementById('inp-year').value||car.year;
+    car.color=document.getElementById('inp-color').value||car.color;
+    car.size=document.getElementById('inp-size').value;
+    car.km=document.getElementById('inp-km').value||car.km;
+    car.price=document.getElementById('inp-price').value||'';
+    car.purchaseDate=document.getElementById('inp-purchase').value||car.purchaseDate;
+    car.deliveryDate=deliveryDate;car.contract=deliveryDate?1:0;
+    car.memo=document.getElementById('inp-memo').value;
+    if(formPhotoData)car.photo=formPhotoData;
+    addLog(editingCarId,'車両情報を編集');
+    closeModal('modal-car');
+    if(document.getElementById('modal-detail').classList.contains('open'))renderDetailBody(car);
+  }else{
+    const car={id:uid(),num,maker,model,
+      year:document.getElementById('inp-year').value||'—',
+      color:document.getElementById('inp-color').value||'—',
+      size:document.getElementById('inp-size').value,
+      km:document.getElementById('inp-km').value||'0',
+      price:document.getElementById('inp-price').value||'',
+      purchaseDate:document.getElementById('inp-purchase').value||todayStr(),
+      contract:deliveryDate?1:0,deliveryDate,
+      memo:document.getElementById('inp-memo').value,
+      photo:formPhotoData,col:'purchase',
+      regenTasks:mkTaskState(REGEN_TASKS),deliveryTasks:mkTaskState(DELIVERY_TASKS),logs:[]};
+    addLog(car.id,'新規登録');cars.push(car);
+    closeModal('modal-car');renderDashboard();
+  }
+  renderAll();showToast(editingCarId?'情報を更新しました':`${maker} ${model} を登録しました`);
+}
+
+// ===== WORKFLOW =====
+function openWorkflow(carId,taskId,isD){
+  const car=cars.find(c=>c.id===carId);if(!car)return;
+  const tasks=isD?DELIVERY_TASKS:REGEN_TASKS;
+  const task=tasks.find(t=>t.id===taskId);if(!task)return;
+  wfState={carId,taskId,isDelivery:isD};
+  document.getElementById('wf-title').textContent=`${task.icon} ${task.name}`;
+  const prog=calcProg(car);
+  document.getElementById('wf-vehicle').innerHTML=`
+    <div class="wf-thumb">${car.photo?`<img src="${car.photo}">`:(carEmoji(car.size))}</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600">${car.maker} ${car.model} <span style="font-size:11px;color:var(--text3)">${car.num}</span></div>
+      <div class="wf-pb-track"><div class="wf-pb-fill" id="wf-ob" style="width:${prog.pct}%"></div></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">全体進捗 ${prog.pct}%</div>
+    </div>`;
+  renderWfBody(car,task,isD);
+  document.getElementById('wf-page').classList.add('open');
+  closeModal('modal-detail');
+}
+function renderWfBody(car,task,isD){
+  const state=isD?car.deliveryTasks:car.regenTasks;
+  const taskState=state[task.id]||{};
+  const body=document.getElementById('wf-body');body.innerHTML='';
+  const p=calcSingleProg(car,task.id,isD?DELIVERY_TASKS:REGEN_TASKS);
+  const pd=document.createElement('div');
+  pd.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:14px';
+  pd.innerHTML=`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:7px"><span>このタスクの進捗</span><span>${p.done}/${p.total}</span></div><div class="pbar" style="height:7px"><div class="pfill" id="wf-tb" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);margin-top:4px">${p.pct}%</div>`;
+  body.appendChild(pd);
+  task.sections.forEach(sec=>{
+    const sl=document.createElement('div');sl.className='wf-sec-lbl';sl.textContent=sec.title;body.appendChild(sl);
+    sec.items.forEach(item=>{
+      const isDone=!!taskState[item.id];
+      const el=document.createElement('div');el.className='wf-step';
+      el.innerHTML=`
+        <div class="wf-step-row" onclick="toggleWfDet('${item.id}')">
+          <div class="wf-chk${isDone?' done':''}" id="wfc-${item.id}">${isDone?'<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}</div>
+          <div class="wf-step-name${isDone?' done':''}" id="wfn-${item.id}">${item.name}</div>
+          <div class="wf-step-sub">${item.sub}</div>
+          <span class="wf-chev" id="wfv-${item.id}">›</span>
+        </div>
+        <div class="wf-det" id="wfd-${item.id}">
+          <p>${item.detail}</p>
+          <ul>${(item.points||[]).map(pt=>`<li><span class="wf-dot"></span>${pt}</li>`).join('')}</ul>
+          <button class="wf-cbtn${isDone?' done':''}" id="wfb-${item.id}" onclick="toggleWfStep('${item.id}')">${isDone?'完了済み ✓':'このステップを完了にする'}</button>
+        </div>`;
+      body.appendChild(el);
+    });
+  });
+  updateWfBtn(car,task,isD);
+}
+function toggleWfDet(id){
+  const det=document.getElementById('wfd-'+id),chv=document.getElementById('wfv-'+id);const open=det.classList.contains('open');
+  document.querySelectorAll('.wf-det.open').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.wf-chev.open').forEach(d=>d.classList.remove('open'));
+  if(!open){det.classList.add('open');chv.classList.add('open');}
+}
+function toggleWfStep(itemId){
+  const{carId,taskId,isDelivery}=wfState;
+  const car=cars.find(c=>c.id===carId);if(!car)return;
+  const state=isDelivery?car.deliveryTasks:car.regenTasks;
+  if(!state[taskId])state[taskId]={};
+  state[taskId][itemId]=!state[taskId][itemId];
+  const tasks=isDelivery?DELIVERY_TASKS:REGEN_TASKS;
+  const task=tasks.find(t=>t.id===taskId);
+  const itemName=task.sections.flatMap(s=>s.items).find(i=>i.id===itemId)?.name||itemId;
+  addLog(carId,`[${task.name}]「${itemName}」を${state[taskId][itemId]?'完了':'未完了に戻す'}`);
+  const isDone=state[taskId][itemId];
+  const chk=document.getElementById('wfc-'+itemId);const nm=document.getElementById('wfn-'+itemId);const btn=document.getElementById('wfb-'+itemId);
+  if(chk){chk.className='wf-chk'+(isDone?' done':'');chk.innerHTML=isDone?'<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';}
+  if(nm)nm.className='wf-step-name'+(isDone?' done':'');
+  if(btn){btn.className='wf-cbtn'+(isDone?' done':'');btn.textContent=isDone?'完了済み ✓':'このステップを完了にする';}
+  const p=calcSingleProg(car,taskId,tasks);
+  const tb=document.getElementById('wf-tb');if(tb)tb.style.width=p.pct+'%';
+  const op=calcProg(car);const ob=document.getElementById('wf-ob');if(ob)ob.style.width=op.pct+'%';
+  updateWfBtn(car,task,isDelivery);renderAll();showToast(isDone?'✓ 完了':'未完了に戻しました');
+}
+function updateWfBtn(car,task,isD){
+  const p=calcSingleProg(car,task.id,isD?DELIVERY_TASKS:REGEN_TASKS);
+  const btn=document.getElementById('wf-done-btn');
+  btn.disabled=p.pct<100;
+  btn.textContent=p.pct===100?'✓ 全完了！ボードに戻る':'全ステップを完了してから戻る';
+}
+function finishWorkflow(){addLog(wfState.carId,'ワークフロー完了');closeWorkflow();showToast('作業を完了しました！');}
+function closeWorkflow(){document.getElementById('wf-page').classList.remove('open');if(wfState.carId)openDetail(wfState.carId);}
+
+// ===== CALENDAR =====
+function renderCalendar(){
+  const ts=todayStr();
+  document.getElementById('cal-title').textContent=`${calYear}年 ${calMonth+1}月`;
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+
+  WEEK.forEach((d,i)=>{
+    const e=document.createElement('div');e.className='cal-dl';
+    if(i===0)e.classList.add('sun');else if(i===6)e.classList.add('sat');else e.classList.add('wkd');
+    e.textContent=d;grid.appendChild(e);
+  });
+
+  const sd=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+
+  // 納車準備中(delivery)かつ納車日がある車両のみ
+  const targetCars=cars.filter(c=>c.col==='delivery'&&c.deliveryDate);
+
+  // バーイベント構築
+  // 1. 今日〜納車日の進行バー（車ごとに1本）
+  // 2. マイルストーンは単日バー
+  const barEvents=[];
+  targetCars.forEach(car=>{
+    const del=car.deliveryDate;
+
+    // 今日〜納車日の進行バー
+    if(ts<=del){
+      barEvents.push({
+        car, label:car.model,
+        bg:'#43a047', color:'#fff',
+        startDate:ts, endDate:del,
+        isRange:true, isDelivery:false
+      });
+    }
+
+    // マイルストーン（単日）
+    SCHED_POINTS.forEach(sp=>{
+      const date=dateAddDays(del,-sp.offset);
+      // 今日以降のみ表示
+      if(date>=ts){
+        barEvents.push({
+          car, label:sp.label,
+          bg:sp.bg, color:sp.color,
+          startDate:date, endDate:date,
+          isRange:false, isDelivery:sp.offset===0
+        });
+      }
+    });
+  });
+
+  // 週ごとに描画
+  const totalWeeks=Math.ceil((sd+dim)/7);
+  for(let week=0;week<totalWeeks;week++){
+    const weekCells=[];
+    for(let col=0;col<7;col++){
+      const dayNum=week*7+col-sd+1;
+      if(dayNum<1||dayNum>dim){weekCells.push(null);continue;}
+      const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+      weekCells.push({dayNum,ds,col});
+    }
+    const validCells=weekCells.filter(c=>c);
+    if(!validCells.length)continue;
+    const weekStart=validCells[0].ds;
+    const weekEnd=validCells[validCells.length-1].ds;
+
+    // この週にかかるイベント
+    const weekEvs=barEvents.filter(ev=>ev.endDate>=weekStart&&ev.startDate<=weekEnd);
+
+    // セルDOM生成
+    const cellEls=[];
+    weekCells.forEach((cell,colIdx)=>{
+      if(!cell){
+        const e=document.createElement('div');e.className='cal-cell';e.style.background='#f8f8f8';
+        grid.appendChild(e);cellEls.push(null);return;
+      }
+      const{dayNum,ds}=cell;
+      const dow=colIdx;
+      const isSun=dow===0,isSat=dow===6;
+      const jpHol=jpHolidays[ds]||null;
+      const custHol=customHolidays.find(h=>h.date===ds)||null;
+      const isClosed=closedDays.includes(dow);
+      const isHol=isSun||!!jpHol||!!custHol;
+      let cls='cal-cell';
+      if(ds===ts)cls+=' today';
+      else if(isHol)cls+=' hol-day';
+      else if(isClosed)cls+=' closed-day';
+      const cellEl=document.createElement('div');cellEl.className=cls;cellEl.dataset.date=ds;
+
+      cellEl.addEventListener('dragover',e=>{e.preventDefault();cellEl.classList.add('drag-target');});
+      cellEl.addEventListener('dragleave',()=>cellEl.classList.remove('drag-target'));
+      cellEl.addEventListener('drop',e=>{
+        e.preventDefault();cellEl.classList.remove('drag-target');
+        if(!dragDeliveryCarId)return;
+        const car=cars.find(c=>c.id===dragDeliveryCarId);if(!car)return;
+        const old=car.deliveryDate;car.deliveryDate=ds;car.contract=1;
+        addLog(car.id,`納車日変更: ${old}→${ds}`);
+        dragDeliveryCarId=null;renderCalendar();renderAll();
+        showToast(`納車日を ${fmtDate(ds)} に変更しました`);
+      });
+
+      // 日付ヘッダー
+      const hdr=document.createElement('div');hdr.className='cal-cell-header';
+      const numEl=document.createElement('span');
+      numEl.className='cal-cell-num '+(isHol?'hol-col':isSat?'sat-col':'nor-col');
+      numEl.textContent=dayNum;hdr.appendChild(numEl);
+      const holName=jpHol||custHol?.name||null;
+      if(holName){const t=document.createElement('span');t.className='cal-cell-tag hol-tag';t.textContent=holName;hdr.appendChild(t);}
+      else if(isClosed){const t=document.createElement('span');t.className='cal-cell-tag closed-tag';t.textContent='定休日';hdr.appendChild(t);}
+      cellEl.appendChild(hdr);
+      grid.appendChild(cellEl);cellEls.push(cellEl);
+    });
+
+    // レーン割り当て
+    const laneEndCol=[];
+    weekEvs.forEach(ev=>{
+      const sIdx=weekCells.findIndex(c=>c&&c.ds>=ev.startDate);
+      const eIdx=weekCells.findLastIndex(c=>c&&c.ds<=ev.endDate);
+      ev._s=sIdx<0?weekCells.findIndex(c=>c!==null):sIdx;
+      ev._e=eIdx<0?weekCells.findLastIndex(c=>c!==null):eIdx;
+      let lane=0;
+      while(laneEndCol[lane]!==undefined&&laneEndCol[lane]>=ev._s)lane++;
+      laneEndCol[lane]=ev._e;
+      ev._lane=lane;
+    });
+
+    // イベント行をセルに追加
+    const maxLane=weekEvs.length?Math.max(...weekEvs.map(e=>e._lane)):0;
+    cellEls.forEach(el=>{
+      if(!el)return;
+      for(let i=0;i<=maxLane;i++){
+        const row=document.createElement('div');row.className='cal-ev-row';el.appendChild(row);
+      }
+    });
+
+    // バー描画
+    weekEvs.forEach(ev=>{
+      for(let col=ev._s;col<=ev._e;col++){
+        const cellEl=cellEls[col];if(!cellEl)continue;
+        const rows=cellEl.querySelectorAll('.cal-ev-row');
+        const row=rows[ev._lane];if(!row)continue;
+        const bar=document.createElement('div');bar.className='cal-ev-bar';
+        const isFirst=col===ev._s,isLast=col===ev._e;
+        bar.style.background=ev.bg;bar.style.color=ev.color;
+        bar.style.left=isFirst?'2px':'-1px';
+        bar.style.right=isLast?'2px':'-1px';
+        bar.style.borderRadius=isFirst&&isLast?'3px':isFirst?'3px 0 0 3px':isLast?'0 3px 3px 0':'0';
+        if(isFirst){
+          bar.textContent=ev.label;
+          bar.title=`${ev.car.maker} ${ev.car.model} — ${ev.label}`;
+        }
+        if(ev.isDelivery){
+          bar.draggable=true;bar.style.cursor='grab';
+          bar.addEventListener('dragstart',()=>{dragDeliveryCarId=ev.car.id;});
+          bar.addEventListener('dragend',()=>{dragDeliveryCarId=null;});
+        }
+        bar.addEventListener('click',()=>openDetail(ev.car.id));
+        row.appendChild(bar);
+      }
+    });
+  }
+  renderCountdown();
+}
+
+function renderCountdown(){
+  const el=document.getElementById('cal-countdown');if(!el)return;
+  const ts=todayStr();
+  const items=[];
+  cars.filter(c=>c.col==='delivery'&&c.deliveryDate).forEach(car=>{
+    SCHED_POINTS.forEach(sp=>{
+      const date=dateAddDays(car.deliveryDate,-sp.offset);
+      const diff=Math.ceil((new Date(date)-new Date(ts))/86400000);
+      if(diff>=0)items.push({car,label:sp.label,date,diff,bg:sp.bg,color:sp.color});
+    });
+  });
+  items.sort((a,b)=>a.diff-b.diff);
+  if(!items.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0">納車準備中の車両がありません</div>';return;
+  }
+  el.innerHTML=items.map(it=>`
+    <div class="countdown-card" onclick="openDetail('${it.car.id}')">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <div style="width:9px;height:9px;border-radius:50%;background:${it.bg};flex-shrink:0"></div>
+        <div style="font-size:11px;color:var(--text2)">${it.label}</div>
+      </div>
+      <div class="countdown-num" style="color:${it.diff===0?'var(--red)':it.diff<=3?'var(--orange)':it.diff<=7?'var(--blue)':'var(--text)'}">${it.diff===0?'本日！':it.diff+'日後'}</div>
+      <div class="countdown-label">${fmtDate(it.date)}</div>
+      <div class="countdown-car">${it.car.model}</div>
+      <div class="countdown-type" style="color:var(--text3)">${it.car.maker} · ${it.car.num}</div>
+    </div>`).join('');
+}
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--}renderCalendar()}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++}renderCalendar()}
+
+// ===== OTHER VIEWS =====
+function renderExhibit(){
+  const active=cars.filter(c=>['purchase','regen','exhibit'].includes(c.col));
+  const cols=document.getElementById('ex-cols');cols.innerHTML='';
+  SIZES.forEach(size=>{
+    const sized=active.filter(c=>c.size===size);if(!sized.length)return;
+    const col=document.createElement('div');col.className='ex-col';
+    col.innerHTML=`<div class="ex-col-hdr">${size} <span style="color:var(--text3)">(${sized.length}台)</span></div><div class="ex-col-body"></div>`;
+    cols.appendChild(col);const body=col.querySelector('.ex-col-body');
+    sized.forEach(car=>{
+      const inv=daysSince(car.purchaseDate);const dc=inv>30?'var(--red)':inv>14?'var(--orange)':'var(--green)';
+      const card=document.createElement('div');card.className='ex-card';
+      card.innerHTML=`<div style="font-size:12px;font-weight:600;margin-bottom:3px">${car.maker} ${car.model}</div><div style="font-size:10px;color:var(--text3)">${car.num}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span class="pill ${pillMap[car.col]||'pill-gray'}">${COLS.find(c=>c.id===car.col)?.label||car.col}</span><span style="color:${dc};font-size:12px;font-weight:600">${inv}日</span></div>`;
+      card.onclick=()=>openDetail(car.id);body.appendChild(card);
+    });
+  });
+}
+function renderGantt(){
+  const contracted=cars.filter(c=>c.contract&&c.deliveryDate);const days=14;const now=new Date();now.setHours(0,0,0,0);
+  let ths='<th>車両</th><th>ステータス</th><th>進捗</th>';
+  for(let i=0;i<days;i++){const d=new Date(now);d.setDate(d.getDate()+i);ths+=`<th style="min-width:32px;text-align:center;font-size:10px">${d.getMonth()+1}/${d.getDate()}</th>`;}
+  let rows='';
+  contracted.forEach(car=>{
+    const prog=calcProg(car);const colLabel=COLS.find(c=>c.id===car.col)?.label||car.col;
+    let cells='';for(let i=0;i<days;i++){const d=new Date(now);d.setDate(d.getDate()+i);cells+=`<td style="text-align:center;padding:3px">${car.deliveryDate===d.toISOString().split('T')[0]?'🚗':''}</td>`;}
+    rows+=`<tr onclick="openDetail('${car.id}')" style="cursor:pointer"><td><div style="font-size:12px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:10px;color:var(--text3)">${car.num}</div></td><td><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></td><td><div class="pbar" style="width:72px"><div class="pfill" style="width:${prog.pct}%"></div></div><div style="font-size:10px;color:var(--text3)">${prog.pct}%</div></td>${cells}</tr>`;
+  });
+  document.getElementById('gtable').innerHTML=`<thead><tr>${ths}</tr></thead><tbody>${rows}</tbody>`;
+}
+function renderProgress(){
+  const active=cars.filter(c=>['regen','delivery'].includes(c.col));
+  const grid=document.getElementById('pv-grid');grid.innerHTML='';
+  active.forEach(car=>{
+    const isD=car.col==='delivery';const tasks=isD?DELIVERY_TASKS:REGEN_TASKS;const prog=calcProg(car);const colLabel=COLS.find(c=>c.id===car.col)?.label||car.col;
+    const card=document.createElement('div');card.className='pv-card';
+    const taskRows=tasks.map(t=>{const p=calcSingleProg(car,t.id,tasks);return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${t.icon}</span><div style="flex:1;font-size:12px">${t.name}</div><div class="pbar" style="width:52px"><div class="pfill" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);width:30px;text-align:right">${p.pct}%</div></div>`;}).join('');
+    card.innerHTML=`<div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:(carEmoji(car.size))}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${car.year}年式</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:9px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
+    grid.appendChild(card);
+  });
+  if(!active.length)grid.innerHTML='<div style="color:var(--text3);font-size:13px">再生中・納車準備の車両がありません</div>';
+}
+function renderTable(){
+  const tbl=document.getElementById('dtable');
+  tbl.innerHTML=`<thead><tr><th>管理番号</th><th>メーカー/車種</th><th>年式</th><th>ボディ</th><th>走行距離</th><th>販売金額</th><th>仕入日</th><th>ステータス</th><th>成約</th><th>納車予定</th><th>進捗</th></tr></thead>`;
+  const tbody=document.createElement('tbody');
+  cars.forEach(car=>{
+    const prog=calcProg(car);const colLabel=COLS.find(c=>c.id===car.col)?.label||car.col;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:600;color:var(--blue)">${car.num}</td><td>${car.maker} ${car.model}</td><td>${car.year}年</td><td>${car.size}</td><td>${Number(car.km||0).toLocaleString()}km</td><td style="color:var(--green);font-weight:600">${fmtPrice(car.price)}</td><td>${fmtDate(car.purchaseDate)}</td><td><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></td><td>${car.contract?'<span class="pill pill-green">成約</span>':'<span class="pill pill-gray">未成約</span>'}</td><td>${car.deliveryDate?fmtDate(car.deliveryDate):'—'}</td><td><div style="display:flex;align-items:center;gap:5px"><div class="pbar" style="width:56px"><div class="pfill" style="width:${prog.pct}%"></div></div><span style="font-size:11px;color:var(--text3)">${prog.pct}%</span></div></td>`;
+    tr.onclick=()=>openDetail(car.id);tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
+}
+function renderInventory(){
+  const sorted=cars.filter(c=>c.col!=='done').sort((a,b)=>daysSince(b.purchaseDate)-daysSince(a.purchaseDate));
+  const grid=document.getElementById('inv-grid');grid.innerHTML='';
+  sorted.forEach(car=>{
+    const inv=daysSince(car.purchaseDate);const dc=inv>30?'#ef4444':inv>14?'#f59e0b':'#1db97a';const dbg=inv>30?'rgba(239,68,68,.2)':inv>14?'rgba(245,158,11,.2)':'rgba(29,185,122,.2)';
+    const card=document.createElement('div');card.className='inv-card';
+    card.innerHTML=`<div class="inv-thumb">${car.photo?`<img src="${car.photo}">`:(carEmoji(car.size))}<div class="inv-badge" style="background:${dbg};color:${dc}">${inv}日</div></div><div class="inv-body"><div class="inv-name">${car.maker} ${car.model}</div><div style="font-size:10px;color:var(--text3);margin-top:2px">${car.num}</div><span class="pill ${pillMap[car.col]||'pill-gray'}" style="margin-top:5px;display:inline-block">${COLS.find(c=>c.id===car.col)?.label||car.col}</span></div>`;
+    card.onclick=()=>openDetail(car.id);grid.appendChild(card);
+  });
+}
+function exportData(){const b=new Blob([JSON.stringify(cars,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='carflow.json';a.click();showToast('エクスポートしました')}
+function renderAll(){
+  renderActions();
+  const activeTab=document.querySelector('.tab.active');
+  if(activeTab){
+    const t=activeTab.textContent;
+    if(t.includes('タスク'))renderKanban();
+    if(t.includes('カレンダー'))renderCalendar();
+    if(t.includes('展示'))renderExhibit();
+    if(t.includes('ガント'))renderGantt();
+    if(t.includes('進捗'))renderProgress();
+    if(t.includes('全体'))renderTable();
+    if(t.includes('在庫'))renderInventory();
+  }
+}
+</script>
+</body>
+</html>
