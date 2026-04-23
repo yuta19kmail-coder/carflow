@@ -3,25 +3,41 @@
 // カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売却確認
 // ========================================
 
+// 小表示モードへ切り替える列内の枚数しきい値
+const COMPACT_THRESHOLD = 4;
+
+// 現在一時展開中のカード（小表示モード時に1枚だけ大表示にする用）
+// { colId: cardElement } のマップ。列ごとに1枚のみ展開可。
+let expandedCards = {};
+
 // カンバン全体を描画
 function renderKanban() {
+  // 再描画時は展開状態をクリア
+  expandedCards = {};
+
   const wrap = document.getElementById('kanban-wrap');
   wrap.innerHTML = '';
   COLS.forEach(col => {
     const colCars = cars.filter(c => c.col === col.id);
+    const isCompact = colCars.length >= COMPACT_THRESHOLD;
     const div = document.createElement('div');
     div.className = 'k-col';
     div.innerHTML = `<div class="k-col-hdr"><div class="k-col-dot" style="background:${col.color}"></div><div class="k-col-title">${col.label}</div><div class="k-col-count">${colCars.length}</div></div><div class="k-cards" id="kc-${col.id}" data-col="${col.id}"></div>`;
     wrap.appendChild(div);
     const cd = div.querySelector('.k-cards');
-    colCars.forEach(car => cd.appendChild(makeCarCard(car)));
+    colCars.forEach(car => cd.appendChild(makeCarCard(car, isCompact)));
+
+    // 最下段の下に将来カンバン追加用の空行スペース
+    const spacer = document.createElement('div');
+    spacer.className = 'k-col-spacer';
+    cd.appendChild(spacer);
+
     cd.addEventListener('dragover', e => { e.preventDefault(); cd.classList.add('drag-over'); });
     cd.addEventListener('dragleave', () => cd.classList.remove('drag-over'));
     cd.addEventListener('drop', e => {
       e.preventDefault();
       cd.classList.remove('drag-over');
       if (!dragCard || dragCard.col === col.id) return;
-      // 展示中→納車準備の場合は売却確認
       if (dragCard.col === 'exhibit' && col.id === 'delivery') {
         pendingDragCar = dragCard;
         pendingTargetCol = col.id;
@@ -38,7 +54,7 @@ function renderKanban() {
 }
 
 // 車両カード1枚を生成
-function makeCarCard(car) {
+function makeCarCard(car, isCompact) {
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
   const prog = calcProg(car);
@@ -49,8 +65,10 @@ function makeCarCard(car) {
     return `<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;
   }).join('');
   const div = document.createElement('div');
-  div.className = 'car-card';
+  div.className = 'car-card' + (isCompact ? ' compact' : '');
   div.draggable = true;
+  div.dataset.carId = car.id;
+  div.dataset.col = car.col;
   div.innerHTML = `
     <div class="cc-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
     <div class="cc-body">
@@ -65,7 +83,24 @@ function makeCarCard(car) {
     </div>`;
   div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
   div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
-  div.addEventListener('click', () => openDetail(car.id));
+
+  // クリック挙動
+  //   通常モード：即 車両詳細を開く
+  //   小表示モード：
+  //     未展開→1枚だけ一時大表示（同列の別展開は閉じる）
+  //     展開中→車両詳細を開く
+  div.addEventListener('click', () => {
+    if (!isCompact) { openDetail(car.id); return; }
+    const colId = car.col;
+    const currentExpanded = expandedCards[colId];
+    if (currentExpanded === div) {
+      openDetail(car.id);
+    } else {
+      if (currentExpanded) currentExpanded.classList.remove('expanded');
+      div.classList.add('expanded');
+      expandedCards[colId] = div;
+    }
+  });
   return div;
 }
 
