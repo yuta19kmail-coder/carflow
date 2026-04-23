@@ -30,13 +30,40 @@
 .cc-pct-label{font-size:10px;color:var(--text3);margin-top:1px}
 .cc-dots{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .cc-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--border2)}
-.cc-dot.done{background:var(--green);border-color:var(--green)}
+.cc-dot.done{background:var(--orange);border-color:var(--orange)}
 .cc-dot.partial{background:var(--orange);border-color:var(--orange)}
 .cc-foot{display:flex;align-items:center;gap:5px}
 .cc-tag{font-size:11px;color:var(--text3);background:var(--bg4);padding:2px 7px;border-radius:4px}
 .cc-days{font-size:11px;margin-left:auto;font-weight:600}
 .dg{color:var(--green)}
 .dw{color:var(--orange)}
+
+/* ---- 小表示モード（列内4枚以上で自動適用） ---- */
+.car-card.compact{cursor:pointer}
+.car-card.compact .cc-thumb{height:44px;font-size:20px}
+.car-card.compact .cc-body{padding:7px 10px 8px}
+.car-card.compact .cc-maker{display:none}
+.car-card.compact .cc-model{font-size:13px;margin-bottom:3px}
+.car-card.compact .cc-price{font-size:14px;margin-bottom:5px}
+.car-card.compact .cc-mid{margin-bottom:0}
+.car-card.compact .cc-pct{font-size:16px}
+.car-card.compact .cc-pct-label{display:none}
+.car-card.compact .cc-dot{width:7px;height:7px;border-width:1px}
+.car-card.compact .cc-foot{display:none}
+/* compact中に一時展開された1枚はフルサイズで見せる */
+.car-card.compact.expanded .cc-thumb{height:115px;font-size:38px}
+.car-card.compact.expanded .cc-body{padding:11px 12px 12px}
+.car-card.compact.expanded .cc-maker{display:block}
+.car-card.compact.expanded .cc-model{font-size:16px;margin-bottom:6px}
+.car-card.compact.expanded .cc-price{font-size:18px;margin-bottom:9px}
+.car-card.compact.expanded .cc-mid{margin-bottom:8px}
+.car-card.compact.expanded .cc-pct{font-size:22px}
+.car-card.compact.expanded .cc-pct-label{display:block}
+.car-card.compact.expanded .cc-dot{width:10px;height:10px;border-width:1.5px}
+.car-card.compact.expanded .cc-foot{display:flex}
+
+/* 最下段の下の空きスペース（将来の新カンバン追加用） */
+.k-col-spacer{flex-shrink:0;height:80px;margin-top:4px;border:1px dashed transparent}
 
 /* ガントテーブル */
 .gtable{border-collapse:collapse;width:100%}
