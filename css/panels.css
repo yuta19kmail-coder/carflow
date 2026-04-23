@@ -1,0 +1,32 @@
+/* ========================================
+   panels.css
+   右サイドパネル（ダッシュボード、ログ、メンバー、設定、通知）
+   ======================================== */
+
+.side-panel{display:none;flex:1;overflow:auto;padding:16px;flex-direction:column;gap:14px}
+.side-panel.open{display:flex}
+.panel-title{font-size:17px;font-weight:700;margin-bottom:4px}
+.panel-sub{font-size:13px;color:var(--text2)}
+.panel-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.panel-card h3{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2)}
+
+/* ダッシュボード統計ボックス */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;color:var(--blue)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* 設定画面の行 */
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+
+/* 操作ログの行 */
+.log-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.log-row:last-child{border-bottom:none}
+.log-time{color:var(--text3);font-size:10px;width:90px;flex-shrink:0}
+.log-user{color:var(--blue);font-weight:600;width:64px;flex-shrink:0}
+
+/* メンバー一覧の行 */
+.member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.member-row:last-child{border-bottom:none}
+.m-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}

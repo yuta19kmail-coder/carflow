@@ -1,0 +1,29 @@
+/* ========================================
+   base.css
+   共通基礎スタイル（CSS変数、リセット、body）
+   ここを変えると全画面のテーマカラーが変わります
+   ======================================== */
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* 背景色（暗い順） */
+  --bg:#0f1117;--bg2:#1a1d27;--bg3:#222536;--bg4:#2a2e42;
+  /* ボーダー */
+  --border:#333650;--border2:#444870;
+  /* 文字色（明るい順） */
+  --text:#e8eaf6;--text2:#9fa8c7;--text3:#5c6490;
+  /* アクセントカラー */
+  --green:#1db97a;--blue:#378ADD;--orange:#f59e0b;--red:#ef4444;
+  /* レイアウトサイズ */
+  --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
+  /* 角丸 */
+  --r:8px;--r2:12px;
+}
+
+html,body{font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+
+/* スクロールバー */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
