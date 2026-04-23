@@ -16,10 +16,10 @@
 .k-cards.drag-over{background:rgba(55,138,221,.07);border-radius:6px}
 
 /* 車両カード */
-.car-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:grab;transition:.15s;user-select:none;overflow:hidden}
+.car-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:grab;transition:.15s;user-select:none;overflow:hidden;flex-shrink:0}
 .car-card:hover{border-color:var(--border2);box-shadow:0 3px 12px rgba(0,0,0,.35)}
 .car-card.dragging{opacity:.35}
-.cc-thumb{width:100%;height:115px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden}
+.cc-thumb{width:100%;height:115px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden;flex-shrink:0}
 .cc-thumb img{width:100%;height:100%;object-fit:cover}
 .cc-body{padding:11px 12px 12px}
 .cc-maker{font-size:11px;color:var(--text3);margin-bottom:2px}
