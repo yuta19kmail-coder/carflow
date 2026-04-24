@@ -64,6 +64,11 @@ function makeCarCard(car, isCompact) {
     const cls = p.pct === 100 ? 'done' : p.pct > 0 ? 'partial' : '';
     return `<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;
   }).join('');
+  // 売約ONなら「売約◯日」、それ以外は「在庫◯日」
+  const contractedDays = daysSinceContract(car);
+  const dayTag = car.contract
+    ? `<div class="cc-days dg" style="background:rgba(29,185,122,.18);color:#6ee7b7">売約${contractedDays}日</div>`
+    : `<div class="cc-days ${inv>30?'dw':'dg'}">在庫${inv}日</div>`;
   const div = document.createElement('div');
   div.className = 'car-card' + (isCompact ? ' compact' : '');
   div.draggable = true;
@@ -79,7 +84,7 @@ function makeCarCard(car, isCompact) {
         <div><div class="cc-pct">${prog.pct}%</div><div class="cc-pct-label">${isD?'納車準備':'再生'}進捗</div></div>
         <div class="cc-dots">${dots}</div>
       </div>
-      <div class="cc-foot"><div class="cc-tag">${car.size}</div><div class="cc-tag">${car.year}年</div><div class="cc-days ${inv>30?'dw':'dg'}">在庫${inv}日</div></div>
+      <div class="cc-foot"><div class="cc-tag">${car.size}</div><div class="cc-tag">${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div>${dayTag}</div>
     </div>`;
   div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
   div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
@@ -111,6 +116,7 @@ function closeSellConfirm(sell) {
   const car = pendingDragCar;
   if (sell) {
     car.contract = 1;
+    if (!car.contractDate) car.contractDate = todayStr();
     car.deliveryDate = document.getElementById('sell-date').value || '';
     addLog(car.id, '売約設定・納車準備へ移動');
   } else {

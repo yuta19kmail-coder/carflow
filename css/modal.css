@@ -25,11 +25,10 @@
 .fg textarea{min-height:56px;resize:vertical}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 
-/* 直接入力＋プルダウン選択の複合フィールド */
-.fg-combo{display:flex;gap:6px}
-.fg-combo input{flex:1;min-width:0}
-.fg-combo select{width:92px;flex-shrink:0;padding:8px 6px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:12px;outline:none;cursor:pointer}
-.fg-combo select:focus{border-color:var(--blue)}
+/* 販売情報ブロック（売約スイッチ・日付） */
+.sell-block{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;margin-bottom:8px}
+.sell-switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.fg input:disabled,.fg select:disabled{opacity:.38;cursor:not-allowed;background:var(--bg4)}
 .fsec{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:12px 0 8px;border-top:1px solid var(--border);margin-top:4px}
 
 /* 写真ドロップ */

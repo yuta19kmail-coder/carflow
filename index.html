@@ -211,10 +211,8 @@
       <div class="frow">
         <div class="fg"><label>車種・グレード</label><input type="text" id="inp-model" placeholder="プリウス Z"></div>
         <div class="fg"><label>年式</label>
-          <div class="fg-combo">
-            <input type="text" id="inp-year" placeholder="2023">
-            <select id="inp-year-sel" onchange="onYearSelect(this)"><option value="">▼選択</option></select>
-          </div>
+          <input type="text" id="inp-year" list="dl-year" placeholder="例：令和5｜2023" onblur="onYearBlur(this)">
+          <datalist id="dl-year"></datalist>
         </div>
       </div>
       <div class="frow">
@@ -225,34 +223,28 @@
       </div>
       <div class="frow">
         <div class="fg"><label>走行距離 (km)</label>
-          <div class="fg-combo">
-            <input type="text" id="inp-km" placeholder="35000">
-            <select id="inp-km-sel" onchange="onKmSelect(this)">
-              <option value="">▼選択</option>
-              <option value="5000">5千km</option>
-              <option value="10000">1万km</option>
-              <option value="15000">1.5万km</option>
-              <option value="20000">2万km</option>
-              <option value="30000">3万km</option>
-              <option value="40000">4万km</option>
-              <option value="50000">5万km</option>
-              <option value="60000">6万km</option>
-              <option value="70000">7万km</option>
-              <option value="80000">8万km</option>
-              <option value="90000">9万km</option>
-              <option value="100000">10万km</option>
-              <option value="120000">12万km</option>
-              <option value="150000">15万km</option>
-              <option value="200000">20万km</option>
-            </select>
-          </div>
+          <input type="text" id="inp-km" list="dl-km" placeholder="例：35000 または候補から選択" onblur="onKmBlur(this)">
+          <datalist id="dl-km"></datalist>
         </div>
         <div class="fg"><label>仕入れ日</label><input type="date" id="inp-purchase"></div>
       </div>
-      <div class="fsec">販売情報</div>
       <div class="frow">
         <div class="fg"><label>販売金額 (円)</label><input type="text" id="inp-price" placeholder="1480000"></div>
-        <div class="fg"><label>納車予定日</label><input type="date" id="inp-delivery"></div>
+        <div class="fg"></div>
+      </div>
+      <div class="fsec">販売情報</div>
+      <div class="sell-block">
+        <div class="sell-switch-row">
+          <div>
+            <div style="font-size:13px;font-weight:600">売約ステータス</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="sell-switch-hint">OFF：未成約／ON：売約済み</div>
+          </div>
+          <div class="toggle" id="sell-switch" onclick="onSellSwitchClick()"></div>
+        </div>
+        <div class="frow" style="margin-top:12px">
+          <div class="fg"><label>売約日</label><input type="date" id="inp-contract-date" disabled></div>
+          <div class="fg"><label>納車予定日</label><input type="date" id="inp-delivery" disabled></div>
+        </div>
       </div>
       <div class="fsec">その他</div>
       <div class="fg"><label>備考</label><textarea id="inp-memo" placeholder="特記事項..."></textarea></div>
@@ -279,6 +271,22 @@
     <div class="confirm-btns">
       <button class="btn-cancel" onclick="closeSellConfirm(false)">売約なしで移動</button>
       <button class="btn-save" onclick="closeSellConfirm(true)">売約にして移動</button>
+    </div>
+  </div>
+</div>
+
+<!-- 手動売約ON時の警告（納車準備より前） -->
+<div class="confirm-overlay" id="confirm-early-sell">
+  <div class="confirm-box">
+    <div class="confirm-icon">🤝</div>
+    <div class="confirm-title">この車両を売約にしますか？</div>
+    <div class="confirm-sub" id="early-sell-sub">まだ「仕入れ」ステータスです。<br>早めに売約フラグを立てますか？</div>
+    <div style="font-size:11px;color:var(--text3);background:var(--bg3);border-radius:7px;padding:10px 12px;margin-bottom:18px;text-align:left">
+      💡 ステータスは変更されません。<br>売約フラグのみONになり、売約日が本日で登録されます。
+    </div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeEarlySellConfirm(false)">キャンセル</button>
+      <button class="btn-save" onclick="closeEarlySellConfirm(true)">売約にする</button>
     </div>
   </div>
 </div>

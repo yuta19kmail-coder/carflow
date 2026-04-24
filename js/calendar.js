@@ -112,7 +112,10 @@ function renderCalendar() {
         if (!car) return;
         const old = car.deliveryDate;
         car.deliveryDate = ds;
-        car.contract = 1;
+        if (!car.contract) {
+          car.contract = 1;
+          if (!car.contractDate) car.contractDate = todayStr();
+        }
         addLog(car.id, `納車日変更: ${old}→${ds}`);
         dragDeliveryCarId = null;
         renderCalendar();
