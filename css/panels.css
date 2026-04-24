@@ -66,3 +66,42 @@
 .dash-detail-btn:hover{color:var(--text);border-color:var(--text3)}
 .dash-detail{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 .dash-detail.open{display:block}
+
+/* ========================================
+   ダッシュボード：着地予測バー（land-bar）
+   ======================================== */
+.land-bar{display:flex;height:32px;width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin:8px 0 14px}
+.land-bar > div{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;transition:width .3s;white-space:nowrap;overflow:hidden}
+.land-fixed{background:var(--green)}
+.land-likely{background:var(--blue)}
+.land-possible{background:var(--orange);color:#1a1d27}
+.land-remain{background:var(--bg4);color:var(--text3);font-weight:600}
+
+/* 着地予測の凡例（任意で使用） */
+.land-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--text2);margin-top:6px}
+.land-legend-item{display:flex;align-items:center;gap:6px}
+.land-legend-dot{width:10px;height:10px;border-radius:3px}
+
+/* ========================================
+   ダッシュボード：KPIグリッド
+   ======================================== */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px}
+.kpi-label{font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600}
+.kpi-value{font-size:22px;font-weight:700;color:var(--text);line-height:1.2}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.kpi-positive{color:var(--green)}
+.kpi-negative{color:var(--red)}
+
+/* ========================================
+   ダッシュボード：警告サマリー行
+   ======================================== */
+.wr-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.wr-label{flex:1;font-size:12px;color:var(--text2)}
+.warn-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.warn-row:last-child{border-bottom:none}
+.warn-row input[type="number"]{width:64px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;text-align:right;outline:none}
+.toggle{width:36px;height:20px;background:var(--bg4);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;transition:.2s}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;background:var(--text2);border-radius:50%;top:2px;left:2px;transition:.2s}
+.toggle.on{background:rgba(29,185,122,.3);border-color:var(--green)}
+.toggle.on::after{background:var(--green);left:18px}
