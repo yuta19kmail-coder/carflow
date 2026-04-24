@@ -33,18 +33,22 @@
 
 
 /* ========================================
-   アコーディオン（設定画面用） - !important で他CSSに負けないよう強化
+   アコーディオン（設定画面用）
+   ★flex-shrink:0 で「全カードが縮む」現象を防止
+   ★side-panel自体がスクロールするため、中身がはみ出してもOK
    ======================================== */
-.acc-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;opacity:1 !important}
+.side-panel > *{flex-shrink:0 !important}
+
+.acc-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;flex-shrink:0 !important}
 .acc-head{display:flex !important;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s}
 .acc-head:hover{background:var(--bg3)}
 .acc-head h3{font-size:13px;font-weight:600;color:var(--text);margin:0}
 .acc-chev{font-size:14px;color:var(--text3);transition:transform .2s;display:inline-block}
 .acc-card[data-acc-open="1"] .acc-chev{transform:rotate(180deg);color:var(--blue)}
 
-/* デフォルト＝閉じる：絶対に非表示 */
+/* デフォルト＝閉じる */
 .acc-body{display:none !important;padding:0 16px 16px;border-top:1px solid var(--border)}
-/* 明示的に開いた時だけ＝全表示。max-height制限なし、画面側でスクロール */
+/* 開いた時＝全表示。max-height制限なし、画面側でスクロール */
 .acc-card[data-acc-open="1"] > .acc-body{display:block !important;padding-top:14px}
 
 /* ========================================
