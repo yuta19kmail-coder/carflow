@@ -6,7 +6,6 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<!-- 読み込み順：変数定義 → レイアウト → 部品 → 画面別 -->
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/login.css">
 <link rel="stylesheet" href="css/layout.css">
@@ -37,7 +36,8 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.6</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.7</span>
+    <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
       <span style="font-size:13px;color:var(--text2)" id="u-name">山田</span>
@@ -52,13 +52,16 @@
         <div class="sb-sec">メイン</div>
         <div class="sb-item active" id="si-dashboard" onclick="showPanel('dashboard',this)"><span class="sb-icon">🏠</span>ダッシュボード</div>
         <div class="sb-item" onclick="openCarModal(null)"><span class="sb-icon">➕</span>新規車両登録</div>
+        <div class="sb-item" id="si-close" onclick="openCloseMonthDialog()"><span class="sb-icon">📦</span>月次集計締め</div>
+        <div class="sb-div"></div>
+        <div class="sb-sec">実績</div>
+        <div class="sb-item" id="si-archive" onclick="showPanel('archive',this)"><span class="sb-icon">📈</span>販売実績</div>
         <div class="sb-div"></div>
         <div class="sb-sec">管理</div>
         <div class="sb-item" id="si-log" onclick="showPanel('log',this)"><span class="sb-icon">📋</span>操作ログ<span class="sb-badge" id="log-badge">NEW</span></div>
         <div class="sb-item" id="si-members" onclick="showPanel('members',this)"><span class="sb-icon">👥</span>メンバー</div>
         <div class="sb-sec">システム</div>
         <div class="sb-item" id="si-settings" onclick="showPanel('settings',this)"><span class="sb-icon">⚙️</span>設定</div>
-        <div class="sb-item" id="si-notif" onclick="showPanel('notif',this)"><span class="sb-icon">🔔</span>通知設定</div>
       </div>
       <div class="sb-bottom">
         <div class="sb-div"></div>
@@ -83,50 +86,145 @@
       </div>
 
       <div class="views">
-        <!-- サイドパネル群 -->
+        <!-- ダッシュボードパネル -->
         <div id="panel-dashboard" class="side-panel open">
-          <div><div class="panel-title">ダッシュボード</div><div class="panel-sub">車両管理の概要</div></div>
+          <div><div class="panel-title">ダッシュボード</div><div class="panel-sub">車両管理と販売実績の概要</div></div>
           <div class="stat-grid" id="stat-grid"></div>
           <div class="panel-card"><h3>🚨 要対応アクション</h3><div id="dash-actions"></div></div>
-          <div class="panel-card"><h3>📈 ステータス別内訳</h3><div id="dash-status"></div></div>
+
+          <!-- 今月の着地予測 -->
+          <div class="panel-card" id="dash-landing-card">
+            <div class="dash-sec-title"><h3>🎯 今月の着地予測</h3>
+              <button class="dash-detail-btn" onclick="toggleDashDetail('landing')">詳細 ▾</button>
+            </div>
+            <div id="dash-landing"></div>
+            <div class="dash-detail" id="dash-detail-landing"></div>
+          </div>
+
+          <!-- 売上・在庫KPI -->
+          <div class="panel-card">
+            <div class="dash-sec-title"><h3>📊 販売・在庫サマリー</h3>
+              <button class="dash-detail-btn" onclick="toggleDashDetail('kpi')">詳細 ▾</button>
+            </div>
+            <div id="dash-kpi"></div>
+            <div class="dash-detail" id="dash-detail-kpi"></div>
+          </div>
+
+          <!-- 警告サマリー -->
+          <div class="panel-card">
+            <div class="dash-sec-title"><h3>⚠️ 警告サマリー</h3></div>
+            <div id="dash-warnings"></div>
+          </div>
         </div>
+
+        <!-- 操作ログ -->
         <div id="panel-log" class="side-panel">
           <div><div class="panel-title">操作ログ</div><div class="panel-sub">全車両への操作履歴</div></div>
           <div class="panel-card"><h3>最新ログ</h3><div id="log-list"></div></div>
         </div>
+
+        <!-- メンバー -->
         <div id="panel-members" class="side-panel">
           <div><div class="panel-title">メンバー</div></div>
           <div class="panel-card"><h3>登録メンバー</h3><div id="member-list"></div></div>
         </div>
+
+        <!-- 設定（アコーディオン7枚） -->
         <div id="panel-settings" class="side-panel">
-          <div><div class="panel-title">設定</div></div>
-          <div class="panel-card"><h3>定休日設定</h3>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:10px">定休日にする曜日を選択</div>
-            <div id="closed-days-picker"></div>
-          </div>
-          <div class="panel-card"><h3>ボディサイズ選択肢</h3>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:10px">車両登録・編集で使う区分名を自社の呼び方に変更できます</div>
-            <div id="size-editor"></div>
-            <div style="display:flex;gap:8px;margin-top:10px">
-              <input type="text" id="size-add-inp" placeholder="例：ハイエース枠" style="flex:1;padding:6px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
-              <button class="btn-sm" onclick="addSizeOption()">＋追加</button>
-              <button class="btn-sm" onclick="resetSizeOptions()" style="color:var(--text3)">初期値に戻す</button>
+          <div><div class="panel-title">設定</div><div class="panel-sub">会社ごとの運用ルールをここで調整します</div></div>
+
+          <!-- 1. 定休日ルール -->
+          <div class="acc-card" data-acc-open="1">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>🗓️ 定休日ルール</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px">毎週の基本定休日。<strong>＋追加</strong>で隔週・第◯週ルールを重ねられます</div>
+              <div id="closed-days-picker"></div>
+              <div id="closed-rules-list" style="margin-top:12px"></div>
+              <button class="btn-sm" onclick="openClosedRuleForm()" style="margin-top:10px">＋ 休業ルールを追加</button>
             </div>
           </div>
-          <div class="panel-card"><h3>表示設定</h3>
-            <div class="setting-row"><div><div style="font-size:13px">在庫警告日数</div><div style="font-size:11px;color:var(--text3)">この日数を超えたら警告</div></div><input type="number" value="30" id="warn-days" style="width:64px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px"></div>
+
+          <!-- 2. ボディサイズ -->
+          <div class="acc-card">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>🚗 ボディサイズ選択肢</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px">車両登録・編集で使う区分名を自社の呼び方に変更できます</div>
+              <div id="size-editor"></div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <input type="text" id="size-add-inp" placeholder="例：ハイエース枠" style="flex:1;padding:6px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+                <button class="btn-sm" onclick="addSizeOption()">＋追加</button>
+                <button class="btn-sm" onclick="resetSizeOptions()" style="color:var(--text3)">初期値に戻す</button>
+              </div>
+            </div>
           </div>
+
+          <!-- 3. 在庫警告 -->
+          <div class="acc-card">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>⚠️ 在庫日数の警告（3段階）</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px">日数を超えた車両に色付けされます。不要な段階はOFFにできます</div>
+              <div id="inv-warn-editor"></div>
+            </div>
+          </div>
+
+          <!-- 4. 納車残日数警告 -->
+          <div class="acc-card">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>🚦 納車残日数の警告（3段階）</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px">納車予定までの残日数がこの日数以下になったら警告します</div>
+              <div id="del-warn-editor"></div>
+            </div>
+          </div>
+
+          <!-- 5. デフォルト納車日 -->
+          <div class="acc-card">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>📅 デフォルト納車日（リードタイム）</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body">
+              <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+                売約動作をした時に自動入力される納車予定日の日数です。<br>
+                <strong>着地予測の「準備リードタイム」</strong>としても同じ値が使われます。
+              </div>
+              <div class="setting-row"><div><div style="font-size:13px">今日から何日後？</div><div style="font-size:11px;color:var(--text3)">売約日=今日、納車予定日=今日+この日数 で仮入力</div></div>
+                <input type="number" min="1" max="90" id="lead-days-inp" value="14" oninput="onLeadDaysChange(this)" style="width:72px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;text-align:right"><span style="margin-left:6px;font-size:12px;color:var(--text3)">日</span></div>
+            </div>
+          </div>
+
+          <!-- 6. 通知設定 -->
+          <div class="acc-card">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>🔔 通知・アラート設定</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body" id="notif-editor"></div>
+          </div>
+
+          <!-- 7. 店舗目標 -->
+          <div class="acc-card">
+            <div class="acc-head" onclick="toggleAcc(this)">
+              <h3>🎯 店舗目標・売上計上モード</h3><span class="acc-chev">▾</span>
+            </div>
+            <div class="acc-body" id="goals-editor"></div>
+          </div>
+
           <div class="panel-card"><h3>データ管理</h3>
             <div class="setting-row"><div><div style="font-size:13px">データをエクスポート</div></div><button class="btn-sm" onclick="exportData()">書き出し</button></div>
           </div>
         </div>
-        <div id="panel-notif" class="side-panel">
-          <div><div class="panel-title">通知設定</div></div>
-          <div class="panel-card"><h3>アラート条件</h3>
-            <div class="setting-row"><div><div style="font-size:13px">納車直前アラート</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="setting-row"><div><div style="font-size:13px">長期在庫アラート</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-            <div class="setting-row"><div><div style="font-size:13px">作業停滞アラート</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-          </div>
+
+        <!-- 販売実績パネル -->
+        <div id="panel-archive" class="side-panel">
+          <div><div class="panel-title">販売実績</div><div class="panel-sub">月次で締めた販売履歴・目標達成率</div></div>
+          <div id="archive-summary"></div>
+          <div id="archive-list"></div>
         </div>
 
         <!-- 各ビュー -->
@@ -192,6 +290,7 @@
 </div>
 
 <!-- ========== モーダル群 ========== -->
+<!-- 車両詳細 -->
 <div class="overlay" id="modal-detail">
   <div class="modal modal-wide">
     <div class="mhdr"><div class="mhdr-title" id="detail-title">車両詳細</div><button class="mclose" onclick="closeModal('modal-detail')">✕</button></div>
@@ -199,6 +298,7 @@
   </div>
 </div>
 
+<!-- 車両登録/編集モーダル -->
 <div class="overlay" id="modal-car">
   <div class="modal">
     <div class="mhdr"><div class="mhdr-title" id="car-modal-title">新規車両登録</div><button class="mclose" onclick="closeModal('modal-car')">✕</button></div>
@@ -232,89 +332,184 @@
         <div class="fg"><label>販売金額 (円)</label><input type="text" id="inp-price" placeholder="1480000"></div>
         <div class="fg"></div>
       </div>
+
       <div class="fsec">販売情報</div>
       <div class="sell-block">
         <div class="sell-switch-row">
           <div>
-            <div style="font-size:13px;font-weight:600">売約ステータス</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px" id="sell-switch-hint">OFF：未成約／ON：売約済み</div>
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">売約スイッチ</div>
+            <div id="sell-switch-hint" style="font-size:11px;color:var(--text3)">OFF：未成約（売約日・納車予定日は編集できません）</div>
           </div>
-          <div class="toggle" id="sell-switch" onclick="onSellSwitchClick()"></div>
+          <div id="sell-switch" class="sell-switch" onclick="onSellSwitchClick()"><div class="sell-switch-knob"></div></div>
         </div>
         <div class="frow" style="margin-top:12px">
           <div class="fg"><label>売約日</label><input type="date" id="inp-contract-date" disabled></div>
           <div class="fg"><label>納車予定日</label><input type="date" id="inp-delivery" disabled></div>
         </div>
       </div>
-      <div class="fsec">その他</div>
-      <div class="fg"><label>備考</label><textarea id="inp-memo" placeholder="特記事項..."></textarea></div>
+
+      <div class="fsec">写真・メモ</div>
       <div class="fg">
-        <label>車両写真</label>
-        <div class="photo-drop" onclick="document.getElementById('inp-photo').click()">📷 写真を選択</div>
-        <input type="file" id="inp-photo" accept="image/*" style="display:none" onchange="onFormPhoto(this)">
-        <div id="inp-photo-prev"></div>
+        <label>写真</label>
+        <input type="file" accept="image/*" onchange="onFormPhoto(event)">
+        <div id="inp-photo-prev" style="margin-top:8px"></div>
       </div>
-    </div>
-    <div class="mfooter">
-      <button class="btn-cancel" onclick="closeModal('modal-car')">キャンセル</button>
-      <button class="btn-save" id="car-save-btn" onclick="saveCarModal()">登録する</button>
+      <div class="fg">
+        <label>メモ</label>
+        <textarea id="inp-memo" rows="3" placeholder="自由記入" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+        <button class="btn-sm" onclick="closeModal('modal-car')">キャンセル</button>
+        <button class="btn-primary" id="car-save-btn" onclick="saveCarModal()">登録する</button>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- ========== 確認ダイアログ ========== -->
+<!-- 売約確認（カンバンドラッグ時） -->
 <div class="confirm-overlay" id="confirm-sell">
   <div class="confirm-box">
     <div class="confirm-icon">🤝</div>
-    <div class="confirm-title">この車両を売約にしますか？</div>
-    <div class="confirm-sub">展示中 → 納車準備へ移動します。</div>
-    <div class="confirm-date-row"><label>納車予定日</label><input type="date" id="sell-date"></div>
+    <div class="confirm-title">この車両を「売約」にしますか？</div>
+    <div class="confirm-sub">納車予定日を入力してください。<br>売約日は本日の日付で記録されます。</div>
+    <div class="confirm-date-row">
+      <label>納車予定日</label>
+      <input type="date" id="sell-date">
+    </div>
     <div class="confirm-btns">
-      <button class="btn-cancel" onclick="closeSellConfirm(false)">売約なしで移動</button>
-      <button class="btn-save" onclick="closeSellConfirm(true)">売約にして移動</button>
+      <button class="btn-sm" onclick="closeSellConfirm(false)">キャンセル</button>
+      <button class="btn-primary" onclick="closeSellConfirm(true)">売約にする</button>
     </div>
   </div>
 </div>
 
-<!-- 手動売約ON時の警告（納車準備より前） -->
+<!-- 早期売約確認（モーダル経由で売約スイッチON） -->
 <div class="confirm-overlay" id="confirm-early-sell">
   <div class="confirm-box">
-    <div class="confirm-icon">🤝</div>
-    <div class="confirm-title">この車両を売約にしますか？</div>
-    <div class="confirm-sub" id="early-sell-sub">まだ「仕入れ」ステータスです。<br>早めに売約フラグを立てますか？</div>
-    <div style="font-size:11px;color:var(--text3);background:var(--bg3);border-radius:7px;padding:10px 12px;margin-bottom:18px;text-align:left">
-      💡 ステータスは変更されません。<br>売約フラグのみONになり、売約日が本日で登録されます。
-    </div>
+    <div class="confirm-icon">⚠️</div>
+    <div class="confirm-title">作業中ですが売約にしますか？</div>
+    <div class="confirm-sub" id="early-sell-sub"></div>
     <div class="confirm-btns">
-      <button class="btn-cancel" onclick="closeEarlySellConfirm(false)">キャンセル</button>
-      <button class="btn-save" onclick="closeEarlySellConfirm(true)">売約にする</button>
+      <button class="btn-sm" onclick="closeEarlySellConfirm(false)">キャンセル</button>
+      <button class="btn-primary" onclick="closeEarlySellConfirm(true)">売約にする</button>
     </div>
   </div>
 </div>
 
+<!-- 月次集計締め -->
+<div class="confirm-overlay" id="confirm-close-month">
+  <div class="confirm-box" style="width:440px">
+    <div class="confirm-icon">📦</div>
+    <div class="confirm-title">月次集計を締める</div>
+    <div class="confirm-sub">対象月の納車済み車両を販売実績にアーカイブします。</div>
+    <div class="confirm-date-row" style="display:flex;gap:10px">
+      <div style="flex:1">
+        <label>年</label>
+        <select id="close-month-year" onchange="updateClosePreview()" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none"></select>
+      </div>
+      <div style="flex:1">
+        <label>月</label>
+        <select id="close-month-month" onchange="updateClosePreview()" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none"></select>
+      </div>
+    </div>
+    <div id="close-month-preview" style="text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:12px;line-height:1.7;max-height:160px;overflow-y:auto"></div>
+    <div class="confirm-btns">
+      <button class="btn-sm" onclick="closeCloseMonth()">キャンセル</button>
+      <button class="btn-primary" onclick="executeCloseMonth()">この月を締める</button>
+    </div>
+  </div>
+</div>
+
+<!-- 定休日ルール追加 -->
+<div class="confirm-overlay" id="confirm-closed-rule">
+  <div class="confirm-box" style="width:440px">
+    <div class="confirm-icon">🗓️</div>
+    <div class="confirm-title">休業ルールを追加</div>
+    <div class="confirm-sub">隔週・第◯週などの繰り返しルールを追加します。</div>
+    <div class="confirm-date-row">
+      <label>パターン</label>
+      <select id="cr-pattern" onchange="onClosedRulePatternChange()" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none">
+        <option value="weekly">毎週</option>
+        <option value="biweekly">隔週</option>
+        <option value="nth">第◯週</option>
+      </select>
+    </div>
+    <div class="confirm-date-row">
+      <label>曜日</label>
+      <select id="cr-dow" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none">
+        <option value="0">日曜</option>
+        <option value="1">月曜</option>
+        <option value="2">火曜</option>
+        <option value="3">水曜</option>
+        <option value="4">木曜</option>
+        <option value="5">金曜</option>
+        <option value="6">土曜</option>
+      </select>
+    </div>
+    <div class="confirm-date-row" id="cr-nth-row" style="display:none">
+      <label>第何週</label>
+      <select id="cr-nth" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none">
+        <option value="1">第1週</option>
+        <option value="2">第2週</option>
+        <option value="3">第3週</option>
+        <option value="4">第4週</option>
+        <option value="5">第5週</option>
+      </select>
+    </div>
+    <div class="confirm-btns">
+      <button class="btn-sm" onclick="closeClosedRuleForm()">キャンセル</button>
+      <button class="btn-primary" onclick="saveClosedRule()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 一括目標入力 -->
+<div class="confirm-overlay" id="confirm-bulk-goal">
+  <div class="confirm-box" style="width:400px">
+    <div class="confirm-icon">🎯</div>
+    <div class="confirm-title">月次目標を一括入力</div>
+    <div class="confirm-sub">未設定の月にこの値をまとめて適用します。</div>
+    <div class="confirm-date-row">
+      <label>台数（台/月）</label>
+      <input type="number" id="bulk-count" min="0" placeholder="例：10">
+    </div>
+    <div class="confirm-date-row">
+      <label>売上（万円/月）</label>
+      <input type="number" id="bulk-sales" min="0" placeholder="例：1500">
+    </div>
+    <div class="confirm-btns">
+      <button class="btn-sm" onclick="closeBulkGoal()">キャンセル</button>
+      <button class="btn-primary" onclick="applyBulkGoal()">一括適用</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト -->
 <div class="toast" id="toast"></div>
 
-<!-- ========== JavaScript ========== -->
-<!-- 読み込み順序が重要！ 依存関係：定数→データ→状態→ヘルパー→機能→描画→起動 -->
-
-<!-- 1. 定数・設定（依存なし） -->
+<!-- ========== JS ========== -->
+<!-- 1. 設定・定数 -->
 <script src="js/config.js"></script>
 <script src="js/tasks-def.js"></script>
-<script src="data/members.js"></script>
 
-<!-- 2. 状態管理（依存なし） -->
+<!-- 2. 状態 -->
 <script src="js/state.js"></script>
 
-<!-- 3. 汎用ヘルパー（state.jsに依存） -->
+<!-- 3. ユーティリティ -->
 <script src="js/helpers.js"></script>
 <script src="js/progress.js"></script>
 
-<!-- 4. 初期データ（ヘルパーに依存） -->
+<!-- 4. サンプル -->
 <script src="js/sample-data.js"></script>
 
 <!-- 5. 機能モジュール -->
 <script src="js/holidays.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/navigation.js"></script>
+<script src="js/archive.js"></script>
+<script src="js/settings.js"></script>
 
 <!-- 6. 描画モジュール -->
 <script src="js/dashboard.js"></script>
@@ -330,7 +525,6 @@
 
 <!-- 8. 起動 -->
 <script>
-  // 祝日データを取得してから初期描画
   fetchJpHolidays().then(() => {
     renderClosedDaysPicker();
     renderHolidayMiniList();

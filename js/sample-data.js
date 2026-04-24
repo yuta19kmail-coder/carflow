@@ -176,3 +176,75 @@ function makeSampleCars() {
 
 // 車両データの実体
 let cars = makeSampleCars();
+
+// ========================================
+// 過去12ヶ月のアーカイブ済みサンプル
+// 月ごとに季節変動（3月・9月ピーク、1月・8月低め）
+// 販売価格も帯をばらして実態に近づける
+// ========================================
+function makeArchivedSamples() {
+  const makers = ['トヨタ','ホンダ','日産','マツダ','スバル','スズキ','ダイハツ','ミツビシ'];
+  const models = {
+    'トヨタ':['プリウス S','ヤリス X','ヴォクシー','アクア','カローラ ツーリング','ライズ Z','アルファード'],
+    'ホンダ':['フィット ホーム','N-BOX カスタム','フリード G','ヴェゼル','ステップワゴン'],
+    '日産':['ノート オーラ','セレナ e-Power','ルークス ハイウェイスター','エクストレイル','デイズ'],
+    'マツダ':['CX-3 XD','CX-5 25S','デミオ','マツダ3','CX-30'],
+    'スバル':['フォレスター X','インプレッサ','レヴォーグ','XV'],
+    'スズキ':['ジムニー XC','スイフト','ハスラー','ワゴンR'],
+    'ダイハツ':['タント カスタム','ムーヴ キャンバス','ミラ トコット','ロッキー'],
+    'ミツビシ':['ekスペース','デリカ D:5','アウトランダー'],
+  };
+  const colors = ['パールホワイト','ブラック','シルバー','ブルー','レッド','ネイビー','カーキ','グレー'];
+  const sizeBands = [
+    {size:'軽自動車', priceMin:800000, priceMax:1600000},
+    {size:'コンパクト', priceMin:1000000, priceMax:2000000},
+    {size:'SUV', priceMin:1500000, priceMax:3500000},
+    {size:'ミニバン', priceMin:1800000, priceMax:4500000},
+    {size:'セダン', priceMin:1500000, priceMax:3800000},
+    {size:'トラック', priceMin:1200000, priceMax:2500000},
+  ];
+  // 月ごとの販売台数（季節変動。3月9月ピーク、1月8月低め）
+  const monthly = {1:9, 2:13, 3:22, 4:15, 5:12, 6:13, 7:14, 8:8, 9:20, 10:14, 11:13, 12:15};
+  const out = [];
+  const now = new Date();
+  let numSeq = 1001;
+  for (let back = 12; back >= 1; back--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+    const y = d.getFullYear(), m = d.getMonth()+1;
+    const dim = new Date(y, m, 0).getDate();
+    const n = monthly[m] || 12;
+    for (let i = 0; i < n; i++) {
+      const maker = makers[Math.floor(Math.random()*makers.length)];
+      const mList = models[maker];
+      const model = mList[Math.floor(Math.random()*mList.length)];
+      const band = sizeBands[Math.floor(Math.random()*sizeBands.length)];
+      const price = Math.round((band.priceMin + Math.random()*(band.priceMax - band.priceMin))/10000)*10000;
+      const delivDay = 1 + Math.floor(Math.random()*dim);
+      const deliveryDate = `${y}-${String(m).padStart(2,'0')}-${String(delivDay).padStart(2,'0')}`;
+      const invDays = 5 + Math.floor(Math.random()*56);
+      const purchaseDate = dateAddDays(deliveryDate, -invDays);
+      const contractDate = dateAddDays(deliveryDate, -(Math.floor(Math.random()*20)+3));
+      const year = 2018 + Math.floor(Math.random()*7);
+      const km = 5000 + Math.floor(Math.random()*90000);
+      out.push({
+        id:'a'+numSeq, num:'KM'+(3000+numSeq),
+        maker, model,
+        year: fmtYearDisplay(year),
+        color: colors[Math.floor(Math.random()*colors.length)],
+        size: band.size, km: String(km),
+        price: String(price),
+        purchaseDate, contractDate, deliveryDate, contract:1,
+        memo:'', photo:null, col:'done',
+        regenTasks:mkTaskState(REGEN_TASKS),
+        deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[],
+        _archivedAt: dateAddDays(`${y}-${String(m).padStart(2,'0')}-${String(dim).padStart(2,'0')}`, 3),
+        _archivedYM: ymKeyFromYM(y, m),
+      });
+      numSeq++;
+    }
+  }
+  return out;
+}
+// 初期アーカイブ投入
+archivedCars = makeArchivedSamples();
+

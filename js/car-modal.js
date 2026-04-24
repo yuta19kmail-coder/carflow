@@ -123,6 +123,11 @@ function updateSellUI() {
     if (!document.getElementById('inp-contract-date').value) {
       document.getElementById('inp-contract-date').value = todayStr();
     }
+    if (!document.getElementById('inp-delivery').value) {
+      // 設定のリードタイム分後をデフォルトで埋める
+      const lead = (typeof appSettings !== 'undefined' && appSettings.deliveryLeadDays) || 14;
+      document.getElementById('inp-delivery').value = dateAddDays(todayStr(), lead);
+    }
   }
 }
 

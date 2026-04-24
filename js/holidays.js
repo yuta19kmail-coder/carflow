@@ -103,9 +103,18 @@ function renderClosedDaysPicker() {
   ).join('');
 }
 
-// 定休日の曜日を切替
+// 定休日の曜日を切替（毎週ルールも同期）
 function toggleClosedDay(i) {
-  closedDays = closedDays.includes(i) ? closedDays.filter(d => d !== i) : [...closedDays, i];
+  const has = closedDays.includes(i);
+  closedDays = has ? closedDays.filter(d => d !== i) : [...closedDays, i];
+  // closedRules 側の weekly ルールを同期
+  if (typeof closedRules !== 'undefined') {
+    if (has) {
+      closedRules = closedRules.filter(r => !(r.pattern === 'weekly' && r.dow === i));
+    } else if (!closedRules.find(r => r.pattern === 'weekly' && r.dow === i)) {
+      closedRules.push({id:'r-w-'+i, pattern:'weekly', dow:i});
+    }
+  }
   renderClosedDaysPicker();
   if (document.querySelector('.tab.active')?.textContent.includes('カレンダー')) renderCalendar();
 }

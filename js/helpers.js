@@ -29,7 +29,7 @@ function dateAddDays(str, n) {
 const todayStr = () => new Date().toISOString().split('T')[0];
 
 // ユニークIDを生成
-const uid = () => 'c' + Date.now();
+const uid = () => 'c' + Date.now() + '-' + Math.floor(Math.random()*1000);
 
 // 日付を M/D 形式で整形
 const fmtDate = s => {
@@ -69,27 +69,54 @@ const fmtPrice = p => {
 // トースト通知
 const showToast = msg => {
   const t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
 };
 
 // モーダルを閉じる
-const closeModal = id => document.getElementById(id).classList.remove('open');
+const closeModal = id => {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+};
+
+// 操作ログ追加
+function addLog(carId, action) {
+  const car = cars.find(c => c.id === carId) || (typeof archivedCars !== 'undefined' ? archivedCars.find(c => c.id === carId) : null);
+  const now = new Date();
+  const time = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const entry = {
+    time,
+    user: currentUser || '—',
+    carNum: car ? car.num : '—',
+    action,
+  };
+  if (car) {
+    if (!car.logs) car.logs = [];
+    car.logs.unshift(entry);
+  }
+  globalLogs.unshift(entry);
+  if (globalLogs.length > 200) globalLogs.length = 200;
+  const badge = document.getElementById('log-badge');
+  if (badge) {
+    const n = Number(badge.textContent||'0') + 1;
+    badge.textContent = String(n);
+    badge.style.display = 'inline-flex';
+  }
+}
 
 // ========================================
 // 年式（西暦↔和暦）変換
 // ========================================
-// 西暦 → 和暦の年号・年を返す
 function seirekiToWareki(y) {
   y = Number(y);
   if (!y) return null;
-  if (y >= 2019) return {era:'令和', n:y - 2018};  // 2019=令和元年
-  if (y >= 1989) return {era:'平成', n:y - 1988};  // 1989=平成元年
+  if (y >= 2019) return {era:'令和', n:y - 2018};
+  if (y >= 1989) return {era:'平成', n:y - 1988};
   if (y >= 1926) return {era:'昭和', n:y - 1925};
   return null;
 }
-// 和暦 → 西暦
 function warekiToSeireki(era, n) {
   n = Number(n);
   if (!n) return null;
@@ -98,31 +125,25 @@ function warekiToSeireki(era, n) {
   if (era === '昭和' || era === 'S' || era === 's') return 1925 + n;
   return null;
 }
-// 入力文字列をパースして西暦（数値）を返す。失敗時はnull
 function parseYearInput(str) {
   if (!str) return null;
   const s = String(str).trim();
-  // 表示形式「令和8｜2026」「令和8|2026」「令和8 2026」等 → 西暦を抽出
   const m1 = s.match(/(\d{4})/);
   if (m1 && Number(m1[1]) >= 1900 && Number(m1[1]) <= 2100) return Number(m1[1]);
-  // 西暦単独
   if (/^\d{2,4}$/.test(s)) {
     const n = Number(s);
     if (n >= 1900 && n <= 2100) return n;
   }
-  // 和暦「令和8」「R8」「h30」「s60」
   const m2 = s.match(/^(令和|平成|昭和|R|r|H|h|S|s)\s*(\d{1,2})年?$/);
   if (m2) return warekiToSeireki(m2[1], m2[2]);
   return null;
 }
-// 西暦から「令和8｜2026」表示文字列
 function fmtYearDisplay(y) {
   const n = Number(y);
   if (!n) return String(y || '');
   const w = seirekiToWareki(n);
   return w ? `${w.era}${w.n}｜${n}` : String(n);
 }
-// 保存値を「令和8｜2026」形式に正規化
 function normalizeYear(input) {
   const y = parseYearInput(input);
   if (!y) return input || '';
@@ -132,23 +153,107 @@ function normalizeYear(input) {
 // ========================================
 // 売約関連ヘルパー
 // ========================================
-// col が 納車準備以降か
 const isDeliveryPhase = col => col === 'delivery' || col === 'done';
-// 売約からの経過日数
 const daysSinceContract = car => {
   if (!car.contract) return 0;
   const base = car.contractDate || car.purchaseDate;
   return daysSince(base);
 };
 
-// 操作ログを追加
-const addLog = (carId, action) => {
-  const car = cars.find(c => c.id === carId);
-  if (!car) return;
-  const now = new Date();
-  const time = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const entry = {time, user:currentUser, action, carNum:car.num};
-  car.logs.push(entry);
-  globalLogs.unshift(entry);
-  document.getElementById('log-badge').style.display = 'inline';
-};
+// ========================================
+// 警告段階の判定
+// ========================================
+// 在庫日数から警告段階（しきい値オブジェクト）を返す。該当なしはnull
+function invWarnTier(days) {
+  const tiers = (appSettings?.invWarn || []).filter(t => t.on).sort((a,b) => b.days - a.days);
+  for (const t of tiers) if (days >= t.days) return t;
+  return null;
+}
+// 納車残日数から警告段階（しきい値オブジェクト）を返す。該当なしはnull
+// 配列の日数は「以下」判定。小さい日数ほど緊急
+function delWarnTier(diff) {
+  if (diff == null || diff < 0) return null;
+  const tiers = (appSettings?.delWarn || []).filter(t => t.on).sort((a,b) => a.days - b.days);
+  for (const t of tiers) if (diff <= t.days) return t;
+  return null;
+}
+
+// ========================================
+// 定休日ルール判定
+// ========================================
+// 指定日（YYYY-MM-DD）が定休日ルールにマッチするか
+function isClosedByRules(dateStr) {
+  if (typeof closedRules === 'undefined' || !closedRules.length) {
+    // 旧方式フォールバック
+    const dow = new Date(dateStr).getDay();
+    return (typeof closedDays !== 'undefined') && closedDays.includes(dow);
+  }
+  const d = new Date(dateStr);
+  const dow = d.getDay();
+  const dom = d.getDate();
+  const nth = Math.ceil(dom / 7); // 第N週
+  for (const r of closedRules) {
+    if (r.dow !== dow) continue;
+    if (r.pattern === 'weekly') return true;
+    if (r.pattern === 'biweekly') {
+      // anchorYM から偶数週/奇数週を判定
+      if (!r.anchorYM) return true;
+      const [ay, am] = r.anchorYM.split('-').map(Number);
+      const anchor = new Date(ay, am-1, 1);
+      const diffDays = Math.floor((d - anchor) / 86400000);
+      const week = Math.floor(diffDays / 7);
+      if (week % 2 === 0) return true;
+    }
+    if (r.pattern === 'nth' && r.nth === nth) return true;
+  }
+  return false;
+}
+
+// ========================================
+// 年月キー関連
+// ========================================
+// Date または 日付文字列 → "YYYY-MM"
+function ymKey(d) {
+  const dt = (d instanceof Date) ? d : new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+}
+// 年月数値 → "YYYY-MM"
+function ymKeyFromYM(y, m) {
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+// 年度キー (e.g. yearStart=4 なら 2026年4月〜2027年3月 は FY2026)
+function fyKey(d) {
+  const dt = (d instanceof Date) ? d : new Date(d);
+  const ys = (appSettings?.goals?.yearStart) || 1;
+  const y = dt.getFullYear();
+  const m = dt.getMonth() + 1;
+  const fy = (m >= ys) ? y : y - 1;
+  return `FY${fy}`;
+}
+// 月次目標を取得（未設定ならデフォルト）
+function monthlyGoal(y, m) {
+  const key = ymKeyFromYM(y, m);
+  const g = appSettings?.goals;
+  if (!g) return {sales: 0, count: 0};
+  if (g.monthly && g.monthly[key]) return g.monthly[key];
+  return g.default || {sales: 0, count: 0};
+}
+
+// ========================================
+// 売上計上日（モード別）
+// ========================================
+// 設定モードに応じて、売上計上日を返す
+function recogDate(car) {
+  const mode = appSettings?.goals?.revRecog || 'delivery';
+  if (mode === 'contract') return car.contract ? car.contractDate : null;
+  // delivery
+  return (car.col === 'done' && car.deliveryDate) ? car.deliveryDate : null;
+}
+// アーカイブ済みも含めた売上計上日（アーカイブはdeliveryDate=売上確定）
+function recogDateAny(car) {
+  const mode = appSettings?.goals?.revRecog || 'delivery';
+  if (mode === 'contract') return car.contractDate || null;
+  // delivery
+  if (car._archivedAt || car.col === 'done') return car.deliveryDate || null;
+  return null;
+}

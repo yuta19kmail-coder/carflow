@@ -41,7 +41,8 @@ function renderKanban() {
       if (dragCard.col === 'exhibit' && col.id === 'delivery') {
         pendingDragCar = dragCard;
         pendingTargetCol = col.id;
-        document.getElementById('sell-date').value = '';
+        const lead = (typeof appSettings !== 'undefined' && appSettings.deliveryLeadDays) || 14;
+        document.getElementById('sell-date').value = dateAddDays(todayStr(), lead);
         document.getElementById('confirm-sell').classList.add('open');
       } else {
         addLog(dragCard.id, `ステータス変更: ${COLS.find(c=>c.id===dragCard.col)?.label}→${col.label}`);
@@ -64,11 +65,20 @@ function makeCarCard(car, isCompact) {
     const cls = p.pct === 100 ? 'done' : p.pct > 0 ? 'partial' : '';
     return `<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;
   }).join('');
-  // 売約ONなら「売約◯日」、それ以外は「在庫◯日」
+  // 売約ONなら「売約◯日」(blue系)、それ以外は「在庫◯日」(3段警告)
   const contractedDays = daysSinceContract(car);
-  const dayTag = car.contract
-    ? `<div class="cc-days dg" style="background:rgba(29,185,122,.18);color:#6ee7b7">売約${contractedDays}日</div>`
-    : `<div class="cc-days ${inv>30?'dw':'dg'}">在庫${inv}日</div>`;
+  let dayTag;
+  if (car.contract) {
+    // 納車残日数の警告色 or 基本blue
+    const diff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
+    const dt = delWarnTier(diff);
+    const extra = (dt && diff != null && diff >= 0) ? `<span style="margin-left:4px;font-size:10px">${diff===0?'納車本日':'納車まで'+diff+'日'}</span>` : '';
+    dayTag = `<div class="cc-days db">売約${contractedDays}日${extra}</div>`;
+  } else {
+    const wt = invWarnTier(inv);
+    const cls = wt ? (wt.days >= 45 ? 'dr' : wt.days >= 30 ? 'dw' : 'dg') : 'dg';
+    dayTag = `<div class="cc-days ${cls}"${wt?` style="background:${wt.bg};color:${wt.color}"`:''}>在庫${inv}日</div>`;
+  }
   const div = document.createElement('div');
   div.className = 'car-card' + (isCompact ? ' compact' : '');
   div.draggable = true;

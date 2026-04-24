@@ -92,7 +92,7 @@ function renderCalendar() {
       const isSun = dow === 0, isSat = dow === 6;
       const jpHol = jpHolidays[ds] || null;
       const custHol = customHolidays.find(h => h.date === ds) || null;
-      const isClosed = closedDays.includes(dow);
+      const isClosed = (typeof isClosedByRules === 'function') ? isClosedByRules(ds) : closedDays.includes(dow);
       const isHol = isSun || !!jpHol || !!custHol;
       let cls = 'cal-cell';
       if (ds === ts) cls += ' today';

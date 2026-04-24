@@ -3,7 +3,7 @@
 // パネル・タブの切り替え
 // ========================================
 
-// サイドバーのパネル（ダッシュボード、ログ、メンバー、設定、通知）表示
+// サイドバーのパネル（ダッシュボード、ログ、メンバー、設定、販売実績）表示
 function showPanel(name, el) {
   document.querySelectorAll('.side-panel,.view').forEach(v => {
     v.classList.remove('open','active');
@@ -17,7 +17,17 @@ function showPanel(name, el) {
   if (name === 'log') renderLogPanel();
   if (name === 'members') renderMembers();
   if (name === 'dashboard') renderDashboard();
-  if (name === 'settings') { renderClosedDaysPicker(); renderSizeEditor(); }
+  if (name === 'archive') renderArchive();
+  if (name === 'settings') {
+    renderClosedDaysPicker();
+    renderSizeEditor();
+    renderInvWarnEditor();
+    renderDelWarnEditor();
+    renderNotifEditor();
+    renderClosedRulesList();
+    renderGoalsEditor();
+    refreshLeadDaysUI();
+  }
 }
 
 // タブ（カンバン、カレンダー、展示、ガント、進捗、一覧、在庫）切替
