@@ -17,7 +17,7 @@ function showPanel(name, el) {
   if (name === 'log') renderLogPanel();
   if (name === 'members') renderMembers();
   if (name === 'dashboard') renderDashboard();
-  if (name === 'settings') renderClosedDaysPicker();
+  if (name === 'settings') { renderClosedDaysPicker(); renderSizeEditor(); }
 }
 
 // タブ（カンバン、カレンダー、展示、ガント、進捗、一覧、在庫）切替

@@ -104,6 +104,15 @@
             <div style="font-size:12px;color:var(--text2);margin-bottom:10px">定休日にする曜日を選択</div>
             <div id="closed-days-picker"></div>
           </div>
+          <div class="panel-card"><h3>ボディサイズ選択肢</h3>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px">車両登録・編集で使う区分名を自社の呼び方に変更できます</div>
+            <div id="size-editor"></div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <input type="text" id="size-add-inp" placeholder="例：ハイエース枠" style="flex:1;padding:6px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+              <button class="btn-sm" onclick="addSizeOption()">＋追加</button>
+              <button class="btn-sm" onclick="resetSizeOptions()" style="color:var(--text3)">初期値に戻す</button>
+            </div>
+          </div>
           <div class="panel-card"><h3>表示設定</h3>
             <div class="setting-row"><div><div style="font-size:13px">在庫警告日数</div><div style="font-size:11px;color:var(--text3)">この日数を超えたら警告</div></div><input type="number" value="30" id="warn-days" style="width:64px;padding:5px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px"></div>
           </div>
@@ -196,21 +205,48 @@
     <div class="mbody">
       <div class="fsec" style="border-top:none;padding-top:0">基本情報</div>
       <div class="frow">
-        <div class="fg"><label>管理番号</label><input type="text" id="inp-num" placeholder="CAR-2025-006"></div>
+        <div class="fg"><label>管理番号</label><input type="text" id="inp-num" placeholder="KM0000"></div>
         <div class="fg"><label>メーカー</label><input type="text" id="inp-maker" placeholder="トヨタ"></div>
       </div>
       <div class="frow">
         <div class="fg"><label>車種・グレード</label><input type="text" id="inp-model" placeholder="プリウス Z"></div>
-        <div class="fg"><label>年式</label><input type="text" id="inp-year" placeholder="2023"></div>
+        <div class="fg"><label>年式</label>
+          <div class="fg-combo">
+            <input type="text" id="inp-year" placeholder="2023">
+            <select id="inp-year-sel" onchange="onYearSelect(this)"><option value="">▼選択</option></select>
+          </div>
+        </div>
       </div>
       <div class="frow">
         <div class="fg"><label>車体色</label><input type="text" id="inp-color" placeholder="パールホワイト"></div>
         <div class="fg"><label>ボディサイズ</label>
-          <select id="inp-size"><option>軽自動車</option><option>コンパクト</option><option>ミニバン</option><option>SUV</option><option>セダン</option><option>トラック</option></select>
+          <select id="inp-size"></select>
         </div>
       </div>
       <div class="frow">
-        <div class="fg"><label>走行距離 (km)</label><input type="text" id="inp-km" placeholder="35000"></div>
+        <div class="fg"><label>走行距離 (km)</label>
+          <div class="fg-combo">
+            <input type="text" id="inp-km" placeholder="35000">
+            <select id="inp-km-sel" onchange="onKmSelect(this)">
+              <option value="">▼選択</option>
+              <option value="5000">5千km</option>
+              <option value="10000">1万km</option>
+              <option value="15000">1.5万km</option>
+              <option value="20000">2万km</option>
+              <option value="30000">3万km</option>
+              <option value="40000">4万km</option>
+              <option value="50000">5万km</option>
+              <option value="60000">6万km</option>
+              <option value="70000">7万km</option>
+              <option value="80000">8万km</option>
+              <option value="90000">9万km</option>
+              <option value="100000">10万km</option>
+              <option value="120000">12万km</option>
+              <option value="150000">15万km</option>
+              <option value="200000">20万km</option>
+            </select>
+          </div>
+        </div>
         <div class="fg"><label>仕入れ日</label><input type="date" id="inp-purchase"></div>
       </div>
       <div class="fsec">販売情報</div>

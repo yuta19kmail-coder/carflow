@@ -13,8 +13,9 @@ const COLS = [
   {id:'done',     label:'納車完了', color:'#6b7280'},
 ];
 
-// ボディサイズの選択肢
-const SIZES = ['軽自動車','コンパクト','ミニバン','SUV','セダン','トラック'];
+// ボディサイズの選択肢（設定画面から編集可能）
+const SIZES_DEFAULT = ['軽自動車','コンパクト','ミニバン','SUV','セダン','トラック'];
+let SIZES = [...SIZES_DEFAULT];
 
 // 列ごとのピル（ラベル）色マッピング
 const pillMap = {
