@@ -6,14 +6,14 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/login.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/components.css">
-<link rel="stylesheet" href="css/panels.css">
-<link rel="stylesheet" href="css/kanban.css">
-<link rel="stylesheet" href="css/calendar.css">
-<link rel="stylesheet" href="css/modal.css">
+<link rel="stylesheet" href="css/base.css?v=071">
+<link rel="stylesheet" href="css/login.css?v=071">
+<link rel="stylesheet" href="css/layout.css?v=071">
+<link rel="stylesheet" href="css/components.css?v=071">
+<link rel="stylesheet" href="css/panels.css?v=071">
+<link rel="stylesheet" href="css/kanban.css?v=071">
+<link rel="stylesheet" href="css/calendar.css?v=071">
+<link rel="stylesheet" href="css/modal.css?v=071">
 </head>
 <body>
 
@@ -36,7 +36,7 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.7</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.7.1</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
@@ -147,7 +147,7 @@
           </div>
 
           <!-- 2. ボディサイズ -->
-          <div class="acc-card">
+          <div class="acc-card" data-acc-open="0">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>🚗 ボディサイズ選択肢</h3><span class="acc-chev">▾</span>
             </div>
@@ -163,7 +163,7 @@
           </div>
 
           <!-- 3. 在庫警告 -->
-          <div class="acc-card">
+          <div class="acc-card" data-acc-open="0">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>⚠️ 在庫日数の警告（3段階）</h3><span class="acc-chev">▾</span>
             </div>
@@ -174,7 +174,7 @@
           </div>
 
           <!-- 4. 納車残日数警告 -->
-          <div class="acc-card">
+          <div class="acc-card" data-acc-open="0">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>🚦 納車残日数の警告（3段階）</h3><span class="acc-chev">▾</span>
             </div>
@@ -185,7 +185,7 @@
           </div>
 
           <!-- 5. デフォルト納車日 -->
-          <div class="acc-card">
+          <div class="acc-card" data-acc-open="0">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>📅 デフォルト納車日（リードタイム）</h3><span class="acc-chev">▾</span>
             </div>
@@ -200,7 +200,7 @@
           </div>
 
           <!-- 6. 通知設定 -->
-          <div class="acc-card">
+          <div class="acc-card" data-acc-open="0">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>🔔 通知・アラート設定</h3><span class="acc-chev">▾</span>
             </div>
@@ -208,7 +208,7 @@
           </div>
 
           <!-- 7. 店舗目標 -->
-          <div class="acc-card">
+          <div class="acc-card" data-acc-open="0">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>🎯 店舗目標・売上計上モード</h3><span class="acc-chev">▾</span>
             </div>
@@ -491,37 +491,37 @@
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js"></script>
-<script src="js/tasks-def.js"></script>
+<script src="js/config.js?v=071"></script>
+<script src="js/tasks-def.js?v=071"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js"></script>
+<script src="js/state.js?v=071"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js"></script>
-<script src="js/progress.js"></script>
+<script src="js/helpers.js?v=071"></script>
+<script src="js/progress.js?v=071"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js"></script>
+<script src="js/sample-data.js?v=071"></script>
 
 <!-- 5. 機能モジュール -->
-<script src="js/holidays.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/navigation.js"></script>
-<script src="js/archive.js"></script>
-<script src="js/settings.js"></script>
+<script src="js/holidays.js?v=071"></script>
+<script src="js/auth.js?v=071"></script>
+<script src="js/navigation.js?v=071"></script>
+<script src="js/archive.js?v=071"></script>
+<script src="js/settings.js?v=071"></script>
 
 <!-- 6. 描画モジュール -->
-<script src="js/dashboard.js"></script>
-<script src="js/kanban.js"></script>
-<script src="js/car-detail.js"></script>
-<script src="js/car-modal.js"></script>
-<script src="js/workflow.js"></script>
-<script src="js/calendar.js"></script>
-<script src="js/views.js"></script>
+<script src="js/dashboard.js?v=071"></script>
+<script src="js/kanban.js?v=071"></script>
+<script src="js/car-detail.js?v=071"></script>
+<script src="js/car-modal.js?v=071"></script>
+<script src="js/workflow.js?v=071"></script>
+<script src="js/calendar.js?v=071"></script>
+<script src="js/views.js?v=071"></script>
 
 <!-- 7. 最終ディスパッチャ -->
-<script src="js/main.js"></script>
+<script src="js/main.js?v=071"></script>
 
 <!-- 8. 起動 -->
 <script>

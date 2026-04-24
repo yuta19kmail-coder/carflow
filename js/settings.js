@@ -3,11 +3,12 @@
 // 設定画面：アコーディオン、警告エディタ、通知、目標設定、定休日ルール
 // ========================================
 
-// アコーディオン開閉
+// アコーディオン開閉（属性ベースで堅牢に）
 function toggleAcc(head) {
   const card = head.closest('.acc-card');
-  const open = card.dataset.accOpen === '1';
-  card.dataset.accOpen = open ? '0' : '1';
+  if (!card) return;
+  const cur = card.getAttribute('data-acc-open');
+  card.setAttribute('data-acc-open', cur === '1' ? '0' : '1');
 }
 
 // ========================================

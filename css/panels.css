@@ -33,19 +33,19 @@
 
 
 /* ========================================
-   アコーディオン（設定画面用）
+   アコーディオン（設定画面用） - !important で他CSSに負けないよう強化
    ======================================== */
-.acc-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
-.acc-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.acc-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;opacity:1 !important}
+.acc-head{display:flex !important;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s}
 .acc-head:hover{background:var(--bg3)}
 .acc-head h3{font-size:13px;font-weight:600;color:var(--text);margin:0}
-.acc-chev{font-size:14px;color:var(--text3);transition:transform .2s}
+.acc-chev{font-size:14px;color:var(--text3);transition:transform .2s;display:inline-block}
 .acc-card[data-acc-open="1"] .acc-chev{transform:rotate(180deg);color:var(--blue)}
 
-/* 閉じている時：完全に隠す */
-.acc-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
-/* 開いている時：自然な高さで全表示。max-height 制限なし → 中身切れない、画面側のスクロールで対応 */
-.acc-card[data-acc-open="1"] .acc-body{display:block;padding-top:14px}
+/* デフォルト＝閉じる：絶対に非表示 */
+.acc-body{display:none !important;padding:0 16px 16px;border-top:1px solid var(--border)}
+/* 明示的に開いた時だけ＝全表示。max-height制限なし、画面側でスクロール */
+.acc-card[data-acc-open="1"] > .acc-body{display:block !important;padding-top:14px}
 
 /* ========================================
    トップバー追加ボタン
