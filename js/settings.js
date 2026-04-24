@@ -88,9 +88,9 @@ function refreshLeadDaysUI() {
 function renderNotifEditor() {
   const el = document.getElementById('notif-editor');
   if (!el) return;
+  // 納車直前は「納車残日数の警告」、長期在庫は「在庫日数の警告」で代替できるため
+  // 通知では作業停滞アラートのみを管理する
   const rows = [
-    {key:'pre',   title:'納車直前アラート'},
-    {key:'stock', title:'長期在庫アラート'},
     {key:'stall', title:'作業停滞アラート'},
   ];
   el.innerHTML = rows.map(r => {
@@ -290,5 +290,4 @@ function applyBulkGoal() {
   closeBulkGoal();
   renderGoalsEditor();
   renderDashboard();
-  showToast('月次目標を一括設定しました');
 }
