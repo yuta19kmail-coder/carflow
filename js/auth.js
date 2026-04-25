@@ -4,12 +4,13 @@
 // ========================================
 
 function doLogin() {
-  const u = document.getElementById('login-user').value.trim();
-  if (!u) { showToast('ユーザー名を入力してください'); return; }
+  let u = document.getElementById('login-user').value.trim();
   if (document.getElementById('login-pass').value !== '1234') {
     showToast('パスワードが違います');
     return;
   }
+  // テスト用：名前未入力でもログインできるようにデフォルト名を補完
+  if (!u) u = 'ゲスト';
   currentUser = u;
   const init = u.slice(0,2).toUpperCase();
   document.getElementById('u-av').textContent = init;

@@ -47,7 +47,10 @@ function renderDetailBody(car) {
          <div class="core-memo-label">📌 メモ</div>
          <div class="core-memo-text">${escapeHtml(coreMemo).replace(/\n/g,'<br>')}</div>
        </div>`
-    : '';
+    : `<div class="core-memo core-memo-empty">
+         <div class="core-memo-label">📌 メモ</div>
+         <div class="core-memo-text core-memo-placeholder">メモは未記入です（編集ボタンから記入）</div>
+       </div>`;
   const workMemo = (car.workMemo || '').trim();
   let html = `
     <div class="detail-photo">

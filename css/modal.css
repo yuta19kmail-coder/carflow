@@ -192,6 +192,9 @@
 .core-memo[data-expanded="1"] .core-memo-text{
   -webkit-line-clamp:unset;display:block;overflow:visible
 }
+.core-memo.core-memo-empty{cursor:default;background:rgba(255,255,255,.02);border-color:var(--border)}
+.core-memo.core-memo-empty:hover{background:rgba(255,255,255,.03)}
+.core-memo-placeholder{color:var(--text3);font-style:italic}
 
 /* ========================================
    作業メモ（タスク下、タップで編集）

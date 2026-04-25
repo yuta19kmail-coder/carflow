@@ -6,14 +6,14 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css?v=077">
-<link rel="stylesheet" href="css/login.css?v=077">
-<link rel="stylesheet" href="css/layout.css?v=077">
-<link rel="stylesheet" href="css/components.css?v=077">
-<link rel="stylesheet" href="css/panels.css?v=077">
-<link rel="stylesheet" href="css/kanban.css?v=077">
-<link rel="stylesheet" href="css/calendar.css?v=077">
-<link rel="stylesheet" href="css/modal.css?v=077">
+<link rel="stylesheet" href="css/base.css?v=078">
+<link rel="stylesheet" href="css/login.css?v=078">
+<link rel="stylesheet" href="css/layout.css?v=078">
+<link rel="stylesheet" href="css/components.css?v=078">
+<link rel="stylesheet" href="css/panels.css?v=078">
+<link rel="stylesheet" href="css/kanban.css?v=078">
+<link rel="stylesheet" href="css/calendar.css?v=078">
+<link rel="stylesheet" href="css/modal.css?v=078">
 </head>
 <body>
 
@@ -24,10 +24,11 @@
       <div class="logo-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
       <h1>CarFlow</h1><p>車両管理システム</p>
     </div>
-    <div class="inp-g"><label>ユーザー名</label><input type="text" id="login-user" placeholder="例：yamada"></div>
+    <div class="inp-g"><label>ユーザー名</label><input type="text" id="login-user" placeholder="例：yamada（未入力でもOK）"></div>
     <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
-    <div class="login-hint">デモ：任意のユーザー名 / パスワード 1234</div>
+    <div class="login-hint">デモ：パスワード 1234（ユーザー名は省略可）</div>
     <button class="btn-login" onclick="doLogin()">ログイン</button>
+    <div class="login-ver">CarFlow v0.7.8</div>
   </div>
 </div>
 
@@ -36,7 +37,7 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.7.7</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.7.8</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
@@ -491,45 +492,39 @@
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js?v=077"></script>
-<script src="js/tasks-def.js?v=077"></script>
+<script src="js/config.js?v=078"></script>
+<script src="js/tasks-def.js?v=078"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js?v=077"></script>
+<script src="js/state.js?v=078"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js?v=077"></script>
-<script src="js/progress.js?v=077"></script>
+<script src="js/helpers.js?v=078"></script>
+<script src="js/progress.js?v=078"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js?v=077"></script>
+<script src="js/sample-data.js?v=078"></script>
 
 <!-- 5. 機能モジュール -->
-<script src="js/holidays.js?v=077"></script>
-<script src="js/auth.js?v=077"></script>
-<script src="js/navigation.js?v=077"></script>
-<script src="js/archive.js?v=077"></script>
-<script src="js/settings.js?v=077"></script>
+<script src="js/holidays.js?v=078"></script>
+<script src="js/auth.js?v=078"></script>
+<script src="js/navigation.js?v=078"></script>
+<script src="js/archive.js?v=078"></script>
+<script src="js/settings.js?v=078"></script>
 
 <!-- 6. 描画モジュール -->
-<script src="js/dashboard.js?v=077"></script>
-<script src="js/kanban.js?v=077"></script>
-<script src="js/car-detail.js?v=077"></script>
-<script src="js/car-modal.js?v=077"></script>
-<script src="js/workflow.js?v=077"></script>
-<script src="js/calendar.js?v=077"></script>
-<script src="js/views.js?v=077"></script>
+<script src="js/dashboard.js?v=078"></script>
+<script src="js/kanban.js?v=078"></script>
+<script src="js/car-detail.js?v=078"></script>
+<script src="js/car-modal.js?v=078"></script>
+<script src="js/workflow.js?v=078"></script>
+<script src="js/calendar.js?v=078"></script>
+<script src="js/views.js?v=078"></script>
 
 <!-- 7. 最終ディスパッチャ -->
-<script src="js/main.js?v=077"></script>
+<script src="js/main.js?v=078"></script>
 
 <!-- 8. 起動 -->
 <script>
   fetchJpHolidays().then(() => {
-    renderClosedDaysPicker();
-    renderHolidayMiniList();
-  });
-</script>
-
-</body>
-</html>
+    renderClose
