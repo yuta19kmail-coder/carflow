@@ -1,13 +1,12 @@
 // ========================================
 // kanban.js
-// カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売約／取消フロー
-// v0.8.4: 売約・取消フロー全面改修
+// カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売約／取消／納車完了フロー
+// v0.8.5: 納車完了フロー＋祝福演出
 // ========================================
 
 const COMPACT_THRESHOLD = 4;
 let expandedCards = {};
 
-// 列の進行順インデックス
 const COL_ORDER = ['purchase','regen','exhibit','delivery','done'];
 const colIdx = id => COL_ORDER.indexOf(id);
 
@@ -44,7 +43,7 @@ function renderKanban() {
 }
 
 // ========================================
-// 車両カード1枚を生成
+// 車両カード生成
 // ========================================
 function makeCarCard(car, isCompact) {
   const isD = car.col === 'delivery' || car.col === 'done';
@@ -127,13 +126,13 @@ function makeCarCard(car, isCompact) {
 }
 
 // ========================================
-// カンバン移動の振り分け（売約・取消含む）
+// カンバン移動の振り分け
 // ========================================
 function handleKanbanMove(car, targetCol) {
   const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const toLabel = COLS.find(c => c.id === targetCol)?.label || targetCol;
 
-  // パターン1: 仕入れ/再生中/展示中 → 納車準備（売約ポップアップ）
+  // パターン1: 仕入れ/再生中/展示中 → 納車準備（売約POP）
   if ((car.col === 'purchase' || car.col === 'regen' || car.col === 'exhibit') && targetCol === 'delivery') {
     pendingDragCar = car;
     pendingTargetCol = targetCol;
@@ -143,7 +142,25 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // パターン2: 納車準備/納車完了 → それより前（売約キャンセル確認）
+  // パターン2: 仕入れ/再生中/展示中 → 納車完了（特例：売約POP→OKで一気に納車完了＋祝福演出）
+  if ((car.col === 'purchase' || car.col === 'regen' || car.col === 'exhibit') && targetCol === 'done') {
+    pendingDragCar = car;
+    pendingTargetCol = targetCol;
+    const lead = (typeof appSettings !== 'undefined' && appSettings.deliveryLeadDays) || 14;
+    document.getElementById('sell-date').value = car.deliveryDate || dateAddDays(todayStr(), lead);
+    document.getElementById('confirm-sell').classList.add('open');
+    return;
+  }
+
+  // パターン3: 納車準備 → 納車完了（納車完了確認POP→OKで祝福演出）
+  if (car.col === 'delivery' && targetCol === 'done') {
+    pendingDragCar = car;
+    pendingTargetCol = targetCol;
+    document.getElementById('confirm-deliver').classList.add('open');
+    return;
+  }
+
+  // パターン4: 納車準備/納車完了 → それより前（売約キャンセル確認）
   if ((car.col === 'delivery' || car.col === 'done') &&
       (targetCol === 'purchase' || targetCol === 'regen' || targetCol === 'exhibit')) {
     pendingDragCar = car;
@@ -154,7 +171,7 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // パターン3: 納車完了 → 納車準備（取り消し確認、売約は残す）
+  // パターン5: 納車完了 → 納車準備（取り消し確認、売約は残す）
   if (car.col === 'done' && targetCol === 'delivery') {
     pendingDragCar = car;
     pendingTargetCol = targetCol;
@@ -162,7 +179,7 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // それ以外（仕入れ↔再生中、再生中↔展示中、納車準備→納車完了など）はそのまま移動
+  // それ以外（仕入れ↔再生中、再生中↔展示中など）はそのまま移動
   applyKanbanMove(car, targetCol);
 }
 
@@ -178,6 +195,7 @@ function applyKanbanMove(car, targetCol) {
 
 // ========================================
 // 売約確認ダイアログ
+// targetCol が done のときは売約データ設定後に祝福演出
 // ========================================
 function closeSellConfirm(sell) {
   document.getElementById('confirm-sell').classList.remove('open');
@@ -197,9 +215,35 @@ function closeSellConfirm(sell) {
   const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const toLabel = COLS.find(c => c.id === target)?.label || target;
   car.col = target;
-  addLog(car.id, `売約設定：${fromLabel}→${toLabel}`);
+  if (target === 'done') {
+    addLog(car.id, `売約＆納車完了：${fromLabel}→${toLabel}（特例）`);
+    renderAll();
+    celebrateDelivery(car);
+  } else {
+    addLog(car.id, `売約設定：${fromLabel}→${toLabel}`);
+    renderAll();
+    showToast('売約にしました！');
+  }
+}
+
+// ========================================
+// 納車完了確認ダイアログ（納車準備 → 納車完了）
+// ========================================
+function closeDeliverConfirm(deliver) {
+  document.getElementById('confirm-deliver').classList.remove('open');
+  if (!pendingDragCar) return;
+  const car = pendingDragCar;
+  const target = pendingTargetCol;
+  pendingDragCar = null;
+  pendingTargetCol = null;
+  if (!deliver) {
+    showToast('キャンセルしました');
+    return;
+  }
+  car.col = target;
+  addLog(car.id, '納車完了：納車準備→納車完了');
   renderAll();
-  showToast('売約にしました！');
+  celebrateDelivery(car);
 }
 
 // ========================================
@@ -249,4 +293,55 @@ function closeUndeliverConfirm(undeliver) {
   addLog(car.id, '納車完了を取り消し：納車完了→納車準備');
   renderAll();
   showToast('納車完了を取り消しました');
+}
+
+// ========================================
+// 納車完了の祝福演出（紙吹雪＋中央カード）
+// ========================================
+function celebrateDelivery(car) {
+  const overlay = document.getElementById('celebrate-overlay');
+  if (!overlay) return;
+  const conf = document.getElementById('celebrate-confetti');
+  const carEl = document.getElementById('celebrate-car');
+  if (carEl) carEl.textContent = `${car.maker} ${car.model}（${car.num}）`;
+
+  // 既存紙吹雪をクリア
+  if (conf) conf.innerHTML = '';
+
+  // 紙吹雪を生成（120片）
+  const colors = ['#fcd34d','#fb923c','#f87171','#60a5fa','#34d399','#a78bfa','#f472b6','#facc15'];
+  const count = 120;
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const left = Math.random() * 100;
+    const drift = (Math.random() - 0.5) * 300;
+    const spin = (Math.random() * 1080 + 360) * (Math.random() < 0.5 ? -1 : 1);
+    const dur = 2.4 + Math.random() * 1.6;
+    const delay = Math.random() * 0.4;
+    const w = 6 + Math.random() * 8;
+    const h = 8 + Math.random() * 12;
+    piece.style.left = left + '%';
+    piece.style.width = w + 'px';
+    piece.style.height = h + 'px';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.borderRadius = Math.random() < 0.3 ? '50%' : '2px';
+    piece.style.setProperty('--drift', drift + 'px');
+    piece.style.setProperty('--spin', spin + 'deg');
+    piece.style.animationDuration = dur + 's';
+    piece.style.animationDelay = delay + 's';
+    if (conf) conf.appendChild(piece);
+  }
+
+  overlay.classList.remove('fade-out');
+  overlay.classList.add('show');
+
+  // 3秒後にフェードアウト
+  setTimeout(() => {
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      overlay.classList.remove('show', 'fade-out');
+      if (conf) conf.innerHTML = '';
+    }, 500);
+  }, 3000);
 }

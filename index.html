@@ -6,14 +6,15 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css?v=084">
-<link rel="stylesheet" href="css/login.css?v=084">
-<link rel="stylesheet" href="css/layout.css?v=084">
-<link rel="stylesheet" href="css/components.css?v=084">
-<link rel="stylesheet" href="css/panels.css?v=084">
-<link rel="stylesheet" href="css/kanban.css?v=084">
-<link rel="stylesheet" href="css/calendar.css?v=084">
-<link rel="stylesheet" href="css/modal.css?v=084">
+<link rel="stylesheet" href="css/base.css?v=085">
+<link rel="stylesheet" href="css/login.css?v=085">
+<link rel="stylesheet" href="css/layout.css?v=085">
+<link rel="stylesheet" href="css/components.css?v=085">
+<link rel="stylesheet" href="css/panels.css?v=085">
+<link rel="stylesheet" href="css/kanban.css?v=085">
+<link rel="stylesheet" href="css/calendar.css?v=085">
+<link rel="stylesheet" href="css/modal.css?v=085">
+<link rel="stylesheet" href="css/celebrate.css?v=085">
 </head>
 <body>
 
@@ -28,7 +29,7 @@
     <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
     <div class="login-hint">デモ：パスワード 1234（ユーザー名は省略可）</div>
     <button class="btn-login" onclick="doLogin()">ログイン</button>
-    <div class="login-ver">CarFlow v0.8.4</div>
+    <div class="login-ver">CarFlow v0.8.5</div>
   </div>
 </div>
 
@@ -37,7 +38,7 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.8.4</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.8.5</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
@@ -400,6 +401,30 @@
   </div>
 </div>
 
+<!-- 納車完了確認（納車準備 → 納車完了） -->
+<div class="confirm-overlay" id="confirm-deliver">
+  <div class="confirm-box">
+    <div class="confirm-icon">🚗</div>
+    <div class="confirm-title">この車両を「納車完了」にしますか？</div>
+    <div class="confirm-sub">お客様への納車が完了したことを記録します。</div>
+    <div class="confirm-btns">
+      <button class="btn-sm" onclick="closeDeliverConfirm(false)">キャンセル</button>
+      <button class="btn-primary" onclick="closeDeliverConfirm(true)">納車完了にする</button>
+    </div>
+  </div>
+</div>
+
+<!-- 祝福演出（紙吹雪＋センターモーダル） -->
+<div id="celebrate-overlay">
+  <div id="celebrate-confetti"></div>
+  <div id="celebrate-card">
+    <div class="celebrate-emoji">🎉</div>
+    <div class="celebrate-title">納車完了！</div>
+    <div class="celebrate-sub">おつかれさまでした！</div>
+    <div class="celebrate-car" id="celebrate-car"></div>
+  </div>
+</div>
+
 <!-- 納車完了取り消し確認（納車完了 → 納車準備） -->
 <div class="confirm-overlay" id="confirm-undeliver">
   <div class="confirm-box">
@@ -520,37 +545,34 @@
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js?v=084"></script>
-<script src="js/tasks-def.js?v=084"></script>
+<script src="js/config.js?v=085"></script>
+<script src="js/tasks-def.js?v=085"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js?v=084"></script>
+<script src="js/state.js?v=085"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js?v=084"></script>
-<script src="js/progress.js?v=084"></script>
+<script src="js/helpers.js?v=085"></script>
+<script src="js/progress.js?v=085"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js?v=084"></script>
+<script src="js/sample-data.js?v=085"></script>
 
-<!-- 5. 機能モジュール -->
-<script src="js/holidays.js?v=084"></script>
-<script src="js/auth.js?v=084"></script>
-<script src="js/navigation.js?v=084"></script>
-<script src="js/archive.js?v=084"></script>
-<script src="js/settings.js?v=084"></script>
+<script src="js/navigation.js?v=085"></script>
+<script src="js/archive.js?v=085"></script>
+<script src="js/settings.js?v=085"></script>
 
 <!-- 6. 描画モジュール -->
-<script src="js/dashboard.js?v=084"></script>
-<script src="js/kanban.js?v=084"></script>
-<script src="js/car-detail.js?v=084"></script>
-<script src="js/car-modal.js?v=084"></script>
-<script src="js/workflow.js?v=084"></script>
-<script src="js/calendar.js?v=084"></script>
-<script src="js/views.js?v=084"></script>
+<script src="js/dashboard.js?v=085"></script>
+<script src="js/kanban.js?v=085"></script>
+<script src="js/car-detail.js?v=085"></script>
+<script src="js/car-modal.js?v=085"></script>
+<script src="js/workflow.js?v=085"></script>
+<script src="js/calendar.js?v=085"></script>
+<script src="js/views.js?v=085"></script>
 
 <!-- 7. 最終ディスパッチャ -->
-<script src="js/main.js?v=084"></script>
+<script src="js/main.js?v=085"></script>
 
 <!-- 8. 起動 -->
 <script>
