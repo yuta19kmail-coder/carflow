@@ -12,17 +12,16 @@
 .cal-nav-btn{background:#fff;border:1px solid #ddd;border-radius:var(--r);padding:6px 12px;cursor:pointer;color:#333;font-size:14px;font-weight:600;transition:.15s}
 .cal-nav-btn:hover{background:#f5f5f5;border-color:#bbb}
 
-/* 年月見出し：目立つ色＋大きめ */
+/* 年月見出し：ダークグレー塗り＋白字 */
 .cal-month-title{
-  font-size:22px;
-  font-weight:800;
+  font-size:20px;
+  font-weight:700;
   color:#fff;
-  background:linear-gradient(135deg, var(--blue) 0%, #2563eb 100%);
+  background:#4a4a4a;
   padding:6px 18px;
-  border-radius:8px;
+  border-radius:6px;
   letter-spacing:.02em;
-  box-shadow:0 2px 4px rgba(37,99,235,.25);
-  min-width:200px;
+  min-width:220px;
   text-align:center;
 }
 
@@ -40,10 +39,10 @@
   color:#333;
   margin-bottom:8px;
   padding-left:4px;
-  border-left:4px solid var(--blue);
+  border-left:4px solid #4a4a4a;
   padding:4px 0 4px 10px;
 }
-.cal-section-label.next{border-left-color:#94a3b8;color:#555}
+.cal-section-label.next{border-left-color:#a0a0a0;color:#555}
 
 /* カレンダーグリッド */
 .cal-wrap{background:#fff;border-radius:var(--r2);overflow:hidden;border:1px solid #ddd;flex-shrink:0}

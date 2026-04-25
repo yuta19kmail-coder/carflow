@@ -260,9 +260,30 @@ function renderOneMonth(year, month, hostEl) {
       nameRow.appendChild(nameEl);
     });
 
+    // 車両ごとに、この週内に存在するセグメントの全体範囲を計算
+    // 角丸判定用：車両全体のバーの最初/最後の日付と一致する週内列を特定
+    const carWeekRange = {};
+    weekSegs.forEach(s => {
+      const r = carWeekRange[s.car.id] || {min: 999, max: -1, carFirstDate: null, carLastDate: null};
+      if (s._s < r.min) r.min = s._s;
+      if (s._e > r.max) r.max = s._e;
+      // 車両のバー全体の開始日(最初のセグメントの startDate)と終了日(最終セグメントの endDate)
+      // 全セグメントを走査して計算
+      carWeekRange[s.car.id] = r;
+    });
+    // 車両全体の開始/終了日を allSegments から計算
+    const carBarBounds = {};
+    Object.keys(carWeekRange).forEach(carId => {
+      const segs = allSegments.filter(x => x.car.id === carId);
+      if (!segs.length) return;
+      const start = segs.reduce((m, x) => x.startDate < m ? x.startDate : m, segs[0].startDate);
+      const end = segs.reduce((m, x) => x.endDate > m ? x.endDate : m, segs[0].endDate);
+      carBarBounds[carId] = {start, end};
+    });
+
     // バー描画
     weekSegs.forEach(s => {
-      const segWidth = s._e - s._s + 1;
+      const bounds = carBarBounds[s.car.id];
       for (let col = s._s; col <= s._e; col++) {
         const cellEl = cellEls[col];
         if (!cellEl) continue;
@@ -270,21 +291,33 @@ function renderOneMonth(year, month, hostEl) {
         const row = rows[s._lane * 2 + 1];
         if (!row) continue;
 
+        const cellDate = weekCells[col].ds;
         const bar = document.createElement('div');
         bar.className = 'cal-ev-bar';
         if (s.isDone) bar.classList.add('done');
 
-        const isFirst = col === s._s, isLast = col === s._e;
+        const isSegFirst = col === s._s, isSegLast = col === s._e;
+        // 角丸判定：その車両のバー全体の最初/最後の日付と一致するセルでのみ角丸
+        const isBarStart = bounds && cellDate === bounds.start;
+        const isBarEnd = bounds && cellDate === bounds.end;
+        // 週端での視覚的角丸（DOMが切れる場所）
+        const isWeekStart = col === weekCells.findIndex(c => c !== null);
+        const isWeekEnd = col === weekCells.findLastIndex(c => c !== null);
+
         bar.style.background = s.bg;
         bar.style.color = s.color;
-        bar.style.left = isFirst ? '2px' : '-1px';
-        bar.style.right = isLast ? '2px' : '-1px';
-        bar.style.borderRadius = isFirst && isLast ? '8px' : isFirst ? '8px 0 0 8px' : isLast ? '0 8px 8px 0' : '0';
+        // 左右の余白：セグメントの最初/最後では2px、途中はマイナスで隙間を埋める
+        bar.style.left = isSegFirst ? (isBarStart || isWeekStart ? '2px' : '0') : '-1px';
+        bar.style.right = isSegLast ? (isBarEnd || isWeekEnd ? '2px' : '0') : '-1px';
 
-        if (isFirst && segWidth >= 2) {
+        // 角丸：車両バー全体の最初(または週頭)と最後(または週末)のみ
+        let leftRadius = (isBarStart || isWeekStart) && isSegFirst ? '8px' : '0';
+        let rightRadius = (isBarEnd || isWeekEnd) && isSegLast ? '8px' : '0';
+        bar.style.borderRadius = `${leftRadius} ${rightRadius} ${rightRadius} ${leftRadius}`;
+
+        // ラベル：必ずセグメント先頭セルに表示（短くても省略しない）
+        if (isSegFirst) {
           bar.textContent = s.label;
-          bar.title = `${s.car.maker} ${s.car.model} — ${s.label}${s.isDone ? '（完了）' : ''}`;
-        } else if (isFirst) {
           bar.title = `${s.car.maker} ${s.car.model} — ${s.label}${s.isDone ? '（完了）' : ''}`;
         }
 
