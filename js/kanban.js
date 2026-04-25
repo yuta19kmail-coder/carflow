@@ -3,18 +3,12 @@
 // カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売却確認
 // ========================================
 
-// 小表示モードへ切り替える列内の枚数しきい値
 const COMPACT_THRESHOLD = 4;
-
-// 現在一時展開中のカード（小表示モード時に1枚だけ大表示にする用）
-// { colId: cardElement } のマップ。列ごとに1枚のみ展開可。
 let expandedCards = {};
 
 // カンバン全体を描画
 function renderKanban() {
-  // 再描画時は展開状態をクリア
   expandedCards = {};
-
   const wrap = document.getElementById('kanban-wrap');
   wrap.innerHTML = '';
   COLS.forEach(col => {
@@ -27,7 +21,6 @@ function renderKanban() {
     const cd = div.querySelector('.k-cards');
     colCars.forEach(car => cd.appendChild(makeCarCard(car, isCompact)));
 
-    // 最下段の下に将来カンバン追加用の空行スペース
     const spacer = document.createElement('div');
     spacer.className = 'k-col-spacer';
     cd.appendChild(spacer);
@@ -46,6 +39,7 @@ function renderKanban() {
         document.getElementById('confirm-sell').classList.add('open');
       } else {
         addLog(dragCard.id, `ステータス変更: ${COLS.find(c=>c.id===dragCard.col)?.label}→${col.label}`);
+        if (col.id === 'delivery' && dragCard.col !== 'delivery') dragCard.workMemo = '';
         dragCard.col = col.id;
         renderAll();
         showToast('ステータスを更新しました');
@@ -65,45 +59,58 @@ function makeCarCard(car, isCompact) {
     const cls = p.pct === 100 ? 'done' : p.pct > 0 ? 'partial' : '';
     return `<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;
   }).join('');
-  // 売約ONなら「売約◯日」(blue系)、それ以外は「在庫◯日」(3段警告)
+
   const contractedDays = daysSinceContract(car);
-  let dayTag;
+  const delDiff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
+  let topDayTag, bottomDayTag = '';
   if (car.contract) {
-    // 納車残日数の警告色 or 基本blue
-    const diff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
-    const dt = delWarnTier(diff);
-    const extra = (dt && diff != null && diff >= 0) ? `<span style="margin-left:4px;font-size:10px">${diff===0?'納車本日':'納車まで'+diff+'日'}</span>` : '';
-    dayTag = `<div class="cc-days db">売約${contractedDays}日${extra}</div>`;
+    topDayTag = `<div class="cc-bigday db">売約<span class="cc-bigday-num">${contractedDays}</span>日</div>`;
+    if (delDiff != null) {
+      const dt = delWarnTier(delDiff);
+      const cls = dt ? (delDiff < 0 ? 'dr' : delDiff <= 1 ? 'dr' : delDiff <= 3 ? 'dw' : 'db') : 'db';
+      const label = delDiff === 0 ? '納車本日' : delDiff > 0 ? `納車まで${delDiff}日` : `納車超過${-delDiff}日`;
+      bottomDayTag = `<div class="cc-subday ${cls}"${dt?` style="background:${dt.bg};color:${dt.color}"`:''}>${label}</div>`;
+    }
   } else {
     const wt = invWarnTier(inv);
     const cls = wt ? (wt.days >= 45 ? 'dr' : wt.days >= 30 ? 'dw' : 'dg') : 'dg';
-    dayTag = `<div class="cc-days ${cls}"${wt?` style="background:${wt.bg};color:${wt.color}"`:''}>在庫${inv}日</div>`;
+    topDayTag = `<div class="cc-bigday ${cls}"${wt?` style="background:${wt.bg};color:${wt.color}"`:''}>在庫<span class="cc-bigday-num">${inv}</span>日</div>`;
+    if (car.col !== 'exhibit') {
+      bottomDayTag = `<div class="cc-subday">仕入れから${inv}日</div>`;
+    }
   }
+
   const div = document.createElement('div');
   div.className = 'car-card' + (isCompact ? ' compact' : '');
   div.draggable = true;
   div.dataset.carId = car.id;
   div.dataset.col = car.col;
   div.innerHTML = `
-    <div class="cc-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
+    <div class="cc-top">
+      <div class="cc-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
+      <div class="cc-top-info">
+        <div class="cc-maker">${car.maker} · ${car.num}</div>
+        <div class="cc-model">${car.model}</div>
+      </div>
+      <div class="cc-top-day">${topDayTag}</div>
+    </div>
     <div class="cc-body">
-      <div class="cc-maker">${car.maker} · ${car.num}</div>
-      <div class="cc-model">${car.model}</div>
-      <div class="cc-price">${fmtPrice(car.price)}</div>
+      <div class="cc-price-row">
+        <div class="cc-price">${fmtPrice(car.price)}</div>
+        <div class="cc-price-meta">
+          <div class="cc-tag">${car.size}</div>
+          <div class="cc-tag">${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div>
+        </div>
+      </div>
       <div class="cc-mid">
         <div><div class="cc-pct">${prog.pct}%</div><div class="cc-pct-label">${isD?'納車準備':'再生'}進捗</div></div>
         <div class="cc-dots">${dots}</div>
       </div>
-      <div class="cc-foot"><div class="cc-tag">${car.size}</div><div class="cc-tag">${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div>${dayTag}</div>
+      ${bottomDayTag ? `<div class="cc-foot">${bottomDayTag}</div>` : ''}
     </div>`;
   div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
   div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
 
-  // クリック挙動
-  //   通常モード：即 車両詳細を開く
-  //   小表示モード：
-  //     未展開→1枚だけ一時大表示（同列の別展開は閉じる）
-  //     展開中→車両詳細を開く
   div.addEventListener('click', () => {
     if (!isCompact) { openDetail(car.id); return; }
     const colId = car.col;
@@ -132,6 +139,7 @@ function closeSellConfirm(sell) {
   } else {
     addLog(car.id, 'ステータス変更: 展示中→納車準備');
   }
+  if (pendingTargetCol === 'delivery' && car.col !== 'delivery') car.workMemo = '';
   car.col = pendingTargetCol;
   pendingDragCar = null;
   pendingTargetCol = null;

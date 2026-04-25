@@ -146,3 +146,72 @@
 }
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue)}
 .fg input:disabled{opacity:.5;cursor:not-allowed}
+
+/* ========================================
+   車両詳細モーダル：上部の在庫日数ボックス＋金額
+   ======================================== */
+.detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.detail-head-left{flex-shrink:0}
+.detail-head-right{flex:1;text-align:right;display:flex;flex-direction:column;gap:4px;align-items:flex-end;justify-content:center;min-height:60px}
+.detail-price{font-size:24px;font-weight:800;color:var(--green);line-height:1.1}
+.detail-deldate{font-size:11px;color:var(--text2)}
+
+.detail-days-box{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px 14px;min-width:110px;text-align:left;display:flex;flex-direction:column;gap:2px
+}
+.detail-days-box.dg{background:rgba(29,185,122,.12);border-color:rgba(29,185,122,.35);color:var(--green)}
+.detail-days-box.dw{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:var(--orange)}
+.detail-days-box.dr{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4);color:#fca5a5}
+.detail-days-box.db{background:rgba(55,138,221,.15);border-color:rgba(55,138,221,.4);color:#93c5fd}
+.detail-days-num{font-size:28px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.detail-days-unit{font-size:14px;font-weight:700;margin-left:2px}
+.detail-days-label{font-size:11px;color:var(--text2);font-weight:600}
+.detail-days-box.db .detail-days-label,
+.detail-days-box.dg .detail-days-label,
+.detail-days-box.dw .detail-days-label,
+.detail-days-box.dr .detail-days-label{color:inherit;opacity:.8}
+.detail-days-sub{font-size:11px;font-weight:600;margin-top:2px;color:var(--text2)}
+.detail-days-sub.warn{color:#fca5a5}
+
+/* ========================================
+   コアメモ表示（編集ボタン上の枠）
+   ======================================== */
+.core-memo{
+  background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);
+  border-radius:var(--r);padding:10px 12px;margin-bottom:10px;cursor:pointer;
+  transition:.15s
+}
+.core-memo:hover{background:rgba(245,158,11,.13)}
+.core-memo-label{font-size:11px;font-weight:700;color:var(--orange);margin-bottom:4px}
+.core-memo-text{
+  font-size:13px;color:var(--text);line-height:1.55;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+  overflow:hidden
+}
+.core-memo[data-expanded="1"] .core-memo-text{
+  -webkit-line-clamp:unset;display:block;overflow:visible
+}
+
+/* ========================================
+   作業メモ（タスク下、タップで編集）
+   ======================================== */
+.work-memo{
+  margin-top:14px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);padding:11px 13px
+}
+.work-memo-label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.work-memo-hint{font-size:10px;color:var(--text3);font-weight:500}
+.work-memo-view{
+  font-size:13px;color:var(--text);line-height:1.6;
+  min-height:54px;cursor:text;padding:6px 4px;border-radius:5px;
+  transition:.15s;white-space:pre-wrap;word-break:break-word
+}
+.work-memo-view:hover{background:rgba(255,255,255,.03)}
+.work-memo-placeholder{color:var(--text3);font-style:italic}
+.work-memo-input{
+  width:100%;padding:9px 11px;background:var(--bg4);border:1px solid var(--blue);
+  border-radius:var(--r);color:var(--text);font-size:13px;outline:none;
+  font-family:inherit;line-height:1.55;resize:vertical;min-height:80px
+}
+.work-memo-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}

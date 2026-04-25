@@ -49,8 +49,9 @@ const REGEN_TASKS = [
     ]},
   ]},
 
-  {id:'t_photo',   name:'写真撮影', icon:'📷', type:'toggle'},
-  {id:'t_webup',   name:'webUP',   icon:'🌐', type:'toggle'},
+  {id:'t_photo',   name:'写真撮影',   icon:'📷', type:'toggle'},
+  {id:'t_estim',   name:'見積もり作成', icon:'🧮', type:'toggle'},
+  {id:'t_webup',   name:'webUP',     icon:'🌐', type:'toggle'},
 
   {id:'t_exhibit', name:'展示', icon:'🏪', type:'workflow', sections:[
     {title:'01 クリーニング', items:[

@@ -19,12 +19,25 @@
 .car-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);cursor:grab;transition:.15s;user-select:none;overflow:hidden;flex-shrink:0}
 .car-card:hover{border-color:var(--border2);box-shadow:0 3px 12px rgba(0,0,0,.35)}
 .car-card.dragging{opacity:.35}
-.cc-thumb{width:100%;height:115px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden;flex-shrink:0}
+
+/* 上段（サムネ＋メーカー名＋右上の在庫/売約日数） */
+.cc-top{position:relative;display:flex;align-items:flex-start;gap:0}
+.cc-thumb{width:90px;height:90px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden;flex-shrink:0}
 .cc-thumb img{width:100%;height:100%;object-fit:cover}
-.cc-body{padding:11px 12px 12px}
-.cc-maker{font-size:11px;color:var(--text3);margin-bottom:2px}
-.cc-model{font-size:16px;font-weight:700;line-height:1.2;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cc-price{font-size:18px;font-weight:700;color:var(--green);margin-bottom:9px}
+.cc-top-info{flex:1;min-width:0;padding:8px 8px 8px 10px}
+.cc-top-day{position:absolute;top:7px;right:8px}
+.cc-bigday{font-size:11px;font-weight:700;padding:4px 8px;border-radius:5px;white-space:nowrap;display:flex;align-items:baseline;gap:2px;line-height:1}
+.cc-bigday-num{font-size:18px;font-weight:800;margin:0 1px}
+
+.cc-body{padding:9px 12px 12px}
+.cc-maker{font-size:11px;color:var(--text3);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-model{font-size:15px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 金額＋ボディサイズ＋年式の2行構成 */
+.cc-price-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:9px;gap:8px}
+.cc-price{font-size:18px;font-weight:700;color:var(--green);line-height:1}
+.cc-price-meta{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+
 .cc-mid{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:8px}
 .cc-pct{font-size:22px;font-weight:700}
 .cc-pct-label{font-size:10px;color:var(--text3);margin-top:1px}
@@ -32,33 +45,42 @@
 .cc-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--border2)}
 .cc-dot.done{background:var(--orange);border-color:var(--orange)}
 .cc-dot.partial{background:var(--orange);border-color:var(--orange)}
-.cc-foot{display:flex;align-items:center;gap:5px}
+.cc-foot{display:flex;align-items:center;gap:5px;flex-wrap:wrap;row-gap:4px}
 .cc-tag{font-size:11px;color:var(--text3);background:var(--bg4);padding:2px 7px;border-radius:4px}
-.cc-days{font-size:11px;margin-left:auto;font-weight:600;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.cc-subday{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;white-space:nowrap;color:var(--text2);background:var(--bg4)}
 .dg{color:var(--green);background:rgba(29,185,122,.15)}
 .dw{color:var(--orange);background:rgba(245,158,11,.15)}
 .dr{color:#fca5a5;background:rgba(239,68,68,.18)}
 .db{color:#93c5fd;background:rgba(55,138,221,.18)}
-.cc-foot{flex-wrap:wrap;gap:5px;row-gap:4px}
 
 /* ---- 小表示モード（列内4枚以上で自動適用） ---- */
 .car-card.compact{cursor:pointer}
-.car-card.compact .cc-thumb{height:44px;font-size:20px}
-.car-card.compact .cc-body{padding:7px 10px 8px}
+.car-card.compact .cc-thumb{width:48px;height:48px;font-size:18px}
+.car-card.compact .cc-top-info{padding:6px 8px}
+.car-card.compact .cc-bigday-num{font-size:14px}
+.car-card.compact .cc-bigday{font-size:10px;padding:2px 6px}
+.car-card.compact .cc-body{padding:6px 10px 8px}
 .car-card.compact .cc-maker{display:none}
-.car-card.compact .cc-model{font-size:13px;margin-bottom:3px}
-.car-card.compact .cc-price{font-size:14px;margin-bottom:5px}
+.car-card.compact .cc-model{font-size:13px}
+.car-card.compact .cc-price-row{margin-bottom:4px}
+.car-card.compact .cc-price{font-size:14px}
+.car-card.compact .cc-price-meta{display:none}
 .car-card.compact .cc-mid{margin-bottom:0}
 .car-card.compact .cc-pct{font-size:16px}
 .car-card.compact .cc-pct-label{display:none}
 .car-card.compact .cc-dot{width:7px;height:7px;border-width:1px}
 .car-card.compact .cc-foot{display:none}
 /* compact中に一時展開された1枚はフルサイズで見せる */
-.car-card.compact.expanded .cc-thumb{height:115px;font-size:38px}
-.car-card.compact.expanded .cc-body{padding:11px 12px 12px}
+.car-card.compact.expanded .cc-thumb{width:90px;height:90px;font-size:30px}
+.car-card.compact.expanded .cc-top-info{padding:8px 8px 8px 10px}
+.car-card.compact.expanded .cc-bigday-num{font-size:18px}
+.car-card.compact.expanded .cc-bigday{font-size:11px;padding:4px 8px}
+.car-card.compact.expanded .cc-body{padding:9px 12px 12px}
 .car-card.compact.expanded .cc-maker{display:block}
-.car-card.compact.expanded .cc-model{font-size:16px;margin-bottom:6px}
-.car-card.compact.expanded .cc-price{font-size:18px;margin-bottom:9px}
+.car-card.compact.expanded .cc-model{font-size:15px}
+.car-card.compact.expanded .cc-price-row{margin-bottom:9px}
+.car-card.compact.expanded .cc-price{font-size:18px}
+.car-card.compact.expanded .cc-price-meta{display:flex}
 .car-card.compact.expanded .cc-mid{margin-bottom:8px}
 .car-card.compact.expanded .cc-pct{font-size:22px}
 .car-card.compact.expanded .cc-pct-label{display:block}

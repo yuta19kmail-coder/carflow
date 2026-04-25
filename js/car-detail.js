@@ -18,15 +18,51 @@ function renderDetailBody(car) {
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
   const prog = calcProg(car);
+  // 在庫日数 / 売約日数 / 納車までの日数
+  const inv = daysSince(car.purchaseDate);
+  const contractedDays = daysSinceContract(car);
+  const delDiff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
+  let dayBlock = '';
+  if (car.contract) {
+    const wt = delWarnTier(delDiff);
+    const delLabel = (delDiff != null) ? (delDiff === 0 ? '納車本日' : delDiff > 0 ? `納車まで${delDiff}日` : `納車超過${-delDiff}日`) : '';
+    dayBlock = `
+      <div class="detail-days-box db">
+        <div class="detail-days-num">${contractedDays}<span class="detail-days-unit">日</span></div>
+        <div class="detail-days-label">売約から</div>
+        ${delLabel ? `<div class="detail-days-sub${wt?' warn':''}">${delLabel}</div>` : ''}
+      </div>`;
+  } else {
+    const wt = invWarnTier(inv);
+    const cls = wt ? (wt.days >= 45 ? 'dr' : wt.days >= 30 ? 'dw' : 'dg') : 'dg';
+    dayBlock = `
+      <div class="detail-days-box ${cls}"${wt?` style="background:${wt.bg};color:${wt.color}"`:''}>
+        <div class="detail-days-num">${inv}<span class="detail-days-unit">日</span></div>
+        <div class="detail-days-label">在庫</div>
+      </div>`;
+  }
+  const coreMemo = (car.memo || '').trim();
+  const coreMemoHtml = coreMemo
+    ? `<div class="core-memo" data-expanded="0" onclick="toggleCoreMemo(this)">
+         <div class="core-memo-label">📌 メモ</div>
+         <div class="core-memo-text">${escapeHtml(coreMemo).replace(/\n/g,'<br>')}</div>
+       </div>`
+    : '';
+  const workMemo = (car.workMemo || '').trim();
   let html = `
     <div class="detail-photo">
       ${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}
       <div class="detail-photo-edit" onclick="document.getElementById('dp-inp').click()">📷 変更</div>
     </div>
     <input type="file" id="dp-inp" accept="image/*" style="display:none" onchange="onDetailPhoto(this)">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-      ${car.deliveryDate ? `<span style="font-size:12px;color:var(--text2)">納車予定: ${fmtDate(car.deliveryDate)}</span>` : ''}
-      ${car.price ? `<span style="font-size:15px;font-weight:700;color:var(--green);margin-left:auto">${fmtPrice(car.price)}</span>` : ''}
+    <div class="detail-head">
+      <div class="detail-head-left">
+        ${dayBlock}
+      </div>
+      <div class="detail-head-right">
+        ${car.price ? `<div class="detail-price">${fmtPrice(car.price)}</div>` : ''}
+        ${car.deliveryDate ? `<div class="detail-deldate">納車予定: ${fmtDate(car.deliveryDate)}</div>` : ''}
+      </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">管理番号</div><div style="font-size:13px;font-weight:600">${car.num}</div></div>
@@ -34,8 +70,9 @@ function renderDetailBody(car) {
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">車体色</div><div style="font-size:13px;font-weight:600">${car.color}</div></div>
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">走行距離</div><div style="font-size:13px;font-weight:600">${Number(car.km||0).toLocaleString()}km</div></div>
     </div>
+    ${coreMemoHtml}
     <button onclick="openCarModal('${car.id}')" style="width:100%;padding:9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:16px">✏️ 車両詳細を編集</button>
-    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${isD?'納車準備':'再生'}チェック</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${isD?'納車準備':'業務タスク'}</div>
     <div class="detail-overall">
       <div class="detail-overall-label"><span>全体進捗</span><span>${prog.done}/${prog.total} (${prog.pct}%)</span></div>
       <div class="detail-overall-bar"><div class="detail-overall-fill" style="width:${prog.pct}%"></div></div>
@@ -66,7 +103,68 @@ function renderDetailBody(car) {
     }
   });
   html += `</div>`;
+  html += `
+    <div class="work-memo" id="work-memo-wrap">
+      <div class="work-memo-label">📝 作業メモ ${isD ? '<span class="work-memo-hint">（納車準備中のメモ）</span>' : '<span class="work-memo-hint">（再生中のメモ）</span>'}</div>
+      <div class="work-memo-view" onclick="startEditWorkMemo('${car.id}')">${
+        workMemo
+          ? escapeHtml(workMemo).replace(/\n/g,'<br>')
+          : '<span class="work-memo-placeholder">タップしてメモを記入</span>'
+      }</div>
+    </div>`;
   document.getElementById('detail-body').innerHTML = html;
+}
+
+// コアメモの展開/折りたたみ
+function toggleCoreMemo(el) {
+  const cur = el.getAttribute('data-expanded') === '1';
+  el.setAttribute('data-expanded', cur ? '0' : '1');
+}
+
+// HTML エスケープ（メモ表示用）
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// 作業メモを編集モードへ
+function startEditWorkMemo(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+  const wrap = document.getElementById('work-memo-wrap');
+  if (!wrap) return;
+  const cur = car.workMemo || '';
+  wrap.innerHTML = `
+    <div class="work-memo-label">📝 作業メモ</div>
+    <textarea id="work-memo-ta" class="work-memo-input" rows="4" placeholder="作業の進捗・申し送りなど">${escapeHtml(cur)}</textarea>
+    <div class="work-memo-btns">
+      <button class="btn-sm" onclick="cancelEditWorkMemo('${carId}')">キャンセル</button>
+      <button class="btn-sm btn-primary" onclick="saveWorkMemo('${carId}')">保存</button>
+    </div>`;
+  const ta = document.getElementById('work-memo-ta');
+  if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+}
+
+function cancelEditWorkMemo(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+  renderDetailBody(car);
+}
+
+function saveWorkMemo(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+  const ta = document.getElementById('work-memo-ta');
+  const v = ta ? ta.value.trim() : '';
+  car.workMemo = v;
+  addLog(carId, '作業メモを更新');
+  renderDetailBody(car);
+  renderAll();
+  showToast('作業メモを保存しました');
 }
 
 // 詳細から写真を変更
