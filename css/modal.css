@@ -108,4 +108,41 @@
 .confirm-date-row{margin:0 0 18px;text-align:left}
 .confirm-date-row label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600}
 .confirm-date-row input{width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none}
-.confirm-btns{display:flex;gap:10px;justify-content:
+.confirm-btns{display:flex;gap:10px;justify-content:center;margin-top:8px}
+
+/* ========================================
+   売約スイッチ（車両モーダル内）
+   ======================================== */
+.sell-switch{
+  width:46px;height:26px;background:var(--bg4);border:1px solid var(--border);
+  border-radius:13px;cursor:pointer;position:relative;transition:.2s;flex-shrink:0
+}
+.sell-switch-knob{
+  position:absolute;width:20px;height:20px;background:var(--text2);
+  border-radius:50%;top:2px;left:2px;transition:.2s
+}
+.sell-switch.on{background:rgba(29,185,122,.3);border-color:var(--green)}
+.sell-switch.on .sell-switch-knob{background:var(--green);left:22px}
+
+/* ========================================
+   フォーム要素（モーダル内 input/textarea/select）
+   ======================================== */
+.fsec{
+  font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.5px;border-top:1px solid var(--border);padding-top:14px;margin:14px 0 10px
+}
+.frow{display:flex;gap:10px;margin-bottom:10px}
+.frow > .fg{flex:1}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.fg input[type="text"],
+.fg input[type="number"],
+.fg input[type="date"],
+.fg input[type="file"],
+.fg select,
+.fg textarea{
+  width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r);color:var(--text);font-size:13px;outline:none;font-family:inherit
+}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue)}
+.fg input:disabled{opacity:.5;cursor:not-allowed}
