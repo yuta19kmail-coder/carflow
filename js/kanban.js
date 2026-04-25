@@ -60,23 +60,31 @@ function makeCarCard(car, isCompact) {
     return `<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;
   }).join('');
 
+  // 右上：在庫日数 or 売約日数
   const contractedDays = daysSinceContract(car);
-  const delDiff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
-  let topDayTag, bottomDayTag = '';
+  let topDayTag;
   if (car.contract) {
     topDayTag = `<div class="cc-bigday db">売約<span class="cc-bigday-num">${contractedDays}</span>日</div>`;
-    if (delDiff != null) {
-      const dt = delWarnTier(delDiff);
-      const cls = dt ? (delDiff < 0 ? 'dr' : delDiff <= 1 ? 'dr' : delDiff <= 3 ? 'dw' : 'db') : 'db';
-      const label = delDiff === 0 ? '納車本日' : delDiff > 0 ? `納車まで${delDiff}日` : `納車超過${-delDiff}日`;
-      bottomDayTag = `<div class="cc-subday ${cls}"${dt?` style="background:${dt.bg};color:${dt.color}"`:''}>${label}</div>`;
-    }
   } else {
     const wt = invWarnTier(inv);
     const cls = wt ? (wt.days >= 45 ? 'dr' : wt.days >= 30 ? 'dw' : 'dg') : 'dg';
     topDayTag = `<div class="cc-bigday ${cls}"${wt?` style="background:${wt.bg};color:${wt.color}"`:''}>在庫<span class="cc-bigday-num">${inv}</span>日</div>`;
-    if (car.col !== 'exhibit') {
-      bottomDayTag = `<div class="cc-subday">仕入れから${inv}日</div>`;
+  }
+
+  // 下段帯：列ごとにルール分岐
+  // 仕入れ・再生中→仕入れからN日 / 展示中→なし / 納車準備→納車までN日 / 納車完了→なし
+  let bottomBar = '';
+  if (car.col === 'stock' || car.col === 'regen') {
+    bottomBar = `<div class="cc-bottom-bar">仕入れから${inv}日</div>`;
+  } else if (car.col === 'delivery') {
+    const delDiff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
+    if (delDiff != null) {
+      const dt = delWarnTier(delDiff);
+      const cls = dt ? (delDiff < 0 ? 'br' : delDiff <= 1 ? 'br' : delDiff <= 3 ? 'bw' : 'bb') : 'bb';
+      const label = delDiff === 0 ? '納車本日' : delDiff > 0 ? `納車まで${delDiff}日` : `納車超過${-delDiff}日`;
+      bottomBar = `<div class="cc-bottom-bar ${cls}"${dt?` style="background:${dt.bg};color:${dt.color}"`:''}>${label}</div>`;
+    } else {
+      bottomBar = `<div class="cc-bottom-bar">納車日未設定</div>`;
     }
   }
 
@@ -86,28 +94,26 @@ function makeCarCard(car, isCompact) {
   div.dataset.carId = car.id;
   div.dataset.col = car.col;
   div.innerHTML = `
-    <div class="cc-top">
-      <div class="cc-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
-      <div class="cc-top-info">
-        <div class="cc-maker">${car.maker} · ${car.num}</div>
-        <div class="cc-model">${car.model}</div>
-      </div>
-      <div class="cc-top-day">${topDayTag}</div>
-    </div>
+    <div class="cc-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
     <div class="cc-body">
-      <div class="cc-price-row">
-        <div class="cc-price">${fmtPrice(car.price)}</div>
-        <div class="cc-price-meta">
+      <div class="cc-info-row">
+        <div class="cc-info-left">
+          <div class="cc-maker">${car.maker} · ${car.num}</div>
+          <div class="cc-model">${car.model}</div>
+          <div class="cc-price">${fmtPrice(car.price)}</div>
+        </div>
+        <div class="cc-info-right">
+          ${topDayTag}
           <div class="cc-tag">${car.size}</div>
           <div class="cc-tag">${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div>
         </div>
       </div>
       <div class="cc-mid">
-        <div><div class="cc-pct">${prog.pct}%</div><div class="cc-pct-label">${isD?'納車準備':'再生'}進捗</div></div>
+        <div class="cc-pct-wrap"><span class="cc-pct">${prog.pct}%</span><span class="cc-pct-label">${isD?'納車準備':'再生'}進捗</span></div>
         <div class="cc-dots">${dots}</div>
       </div>
-      ${bottomDayTag ? `<div class="cc-foot">${bottomDayTag}</div>` : ''}
-    </div>`;
+    </div>
+    ${bottomBar}`;
   div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
   div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
 
