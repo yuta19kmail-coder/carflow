@@ -1,40 +1,37 @@
 // ========================================
 // calendar.js
 // 納車カレンダー描画、カウントダウン、月送り
-// v0.8.0: 2か月連続表示、1本バー＋マイルストーン色分け、打ち消し線、警告カード重複排除
+// v0.8.2: 警告カードを上に・今月ボタン・ラベルを最終日（マイルストーン日）に表示
 // ========================================
 
 // マイルストーンの完了判定
-// SCHED_POINTS の各 offset がどの deliveryTask 完了に紐付くか
-// 0=納車日, 1=完全完成, 2=登録完了, 3=整備完了, 5=書類作成完了
 function isMilestoneDone(car, offset) {
   const dt = car.deliveryTasks || {};
   switch (offset) {
-    case 0: // 納車日
+    case 0:
       return car.col === 'done';
-    case 1: { // 完全完成 = d_prep 全項目完了
+    case 1: {
       const t = (DELIVERY_TASKS || []).find(x => x.id === 'd_prep');
       if (!t || !t.sections) return false;
       const st = dt.d_prep || {};
       return t.sections.every(sec => sec.items.every(i => st[i.id]));
     }
-    case 2: // 登録完了 = d_reg ON
+    case 2:
       return !!dt.d_reg;
-    case 3: { // 整備完了 = d_maint 全項目完了
+    case 3: {
       const t = (DELIVERY_TASKS || []).find(x => x.id === 'd_maint');
       if (!t || !t.sections) return false;
       const st = dt.d_maint || {};
       return t.sections.every(sec => sec.items.every(i => st[i.id]));
     }
-    case 5: // 書類作成完了 = d_docs ON
+    case 5:
       return !!dt.d_docs;
     default:
       return false;
   }
 }
 
-// 1台あたりの「1本バー」のセグメント配列を作る
-// 今日〜納車日を SCHED_POINTS の日付で区切り、各区間をマイルストーン色で塗る
+// 1台あたりの「1本バー」のセグメント配列
 function buildBarSegments(car, todayStr) {
   const del = car.deliveryDate;
   if (!del || del < todayStr) return [];
@@ -68,11 +65,10 @@ function buildBarSegments(car, todayStr) {
   return segments;
 }
 
-// 1か月分のグリッドを描画する内部関数
+// 1か月分のグリッドを描画
 function renderOneMonth(year, month, hostEl) {
   const ts = todayStr();
 
-  // 月見出し
   const labelEl = document.createElement('div');
   labelEl.className = 'cal-section-label';
   if (year === calYear && month === calMonth) {
@@ -83,7 +79,6 @@ function renderOneMonth(year, month, hostEl) {
   }
   hostEl.appendChild(labelEl);
 
-  // ラッパ
   const wrap = document.createElement('div');
   wrap.className = 'cal-wrap-inner';
   wrap.style.cssText = 'background:#fff;border-radius:var(--r2);overflow:hidden;border:1px solid #ddd';
@@ -93,7 +88,6 @@ function renderOneMonth(year, month, hostEl) {
   grid.className = 'cal-grid';
   wrap.appendChild(grid);
 
-  // 曜日ヘッダー
   WEEK.forEach((d, i) => {
     const e = document.createElement('div');
     e.className = 'cal-dl';
@@ -115,7 +109,6 @@ function renderOneMonth(year, month, hostEl) {
     segs.forEach(s => allSegments.push(s));
   });
 
-  // 週ごとに描画
   const totalWeeks = Math.ceil((sd + dim) / 7);
   for (let week = 0; week < totalWeeks; week++) {
     const weekCells = [];
@@ -183,7 +176,6 @@ function renderOneMonth(year, month, hostEl) {
         showToast(`納車日を ${fmtDate(ds)} に変更しました`);
       });
 
-      // 日付ヘッダー
       const hdr = document.createElement('div');
       hdr.className = 'cal-cell-header';
       const numEl = document.createElement('span');
@@ -207,7 +199,7 @@ function renderOneMonth(year, month, hostEl) {
       cellEls.push(cellEl);
     });
 
-    // -------- レーン割り当て（1車種=1レーン）--------
+    // レーン割り当て（1車種=1レーン）
     const carLane = {};
     let nextLane = 0;
     weekSegs.forEach(s => {
@@ -260,20 +252,9 @@ function renderOneMonth(year, month, hostEl) {
       nameRow.appendChild(nameEl);
     });
 
-    // 車両ごとに、この週内に存在するセグメントの全体範囲を計算
-    // 角丸判定用：車両全体のバーの最初/最後の日付と一致する週内列を特定
-    const carWeekRange = {};
-    weekSegs.forEach(s => {
-      const r = carWeekRange[s.car.id] || {min: 999, max: -1, carFirstDate: null, carLastDate: null};
-      if (s._s < r.min) r.min = s._s;
-      if (s._e > r.max) r.max = s._e;
-      // 車両のバー全体の開始日(最初のセグメントの startDate)と終了日(最終セグメントの endDate)
-      // 全セグメントを走査して計算
-      carWeekRange[s.car.id] = r;
-    });
-    // 車両全体の開始/終了日を allSegments から計算
+    // 車両全体のバーの開始/終了日を計算
     const carBarBounds = {};
-    Object.keys(carWeekRange).forEach(carId => {
+    Object.keys(carLane).forEach(carId => {
       const segs = allSegments.filter(x => x.car.id === carId);
       if (!segs.length) return;
       const start = segs.reduce((m, x) => x.startDate < m ? x.startDate : m, segs[0].startDate);
@@ -297,27 +278,26 @@ function renderOneMonth(year, month, hostEl) {
         if (s.isDone) bar.classList.add('done');
 
         const isSegFirst = col === s._s, isSegLast = col === s._e;
-        // 角丸判定：その車両のバー全体の最初/最後の日付と一致するセルでのみ角丸
         const isBarStart = bounds && cellDate === bounds.start;
         const isBarEnd = bounds && cellDate === bounds.end;
-        // 週端での視覚的角丸（DOMが切れる場所）
-        const isWeekStart = col === weekCells.findIndex(c => c !== null);
-        const isWeekEnd = col === weekCells.findLastIndex(c => c !== null);
+        const weekFirstCol = weekCells.findIndex(c => c !== null);
+        const weekLastCol = weekCells.findLastIndex(c => c !== null);
+        const isWeekStart = col === weekFirstCol;
+        const isWeekEnd = col === weekLastCol;
 
         bar.style.background = s.bg;
         bar.style.color = s.color;
-        // 左右の余白：セグメントの最初/最後では2px、途中はマイナスで隙間を埋める
         bar.style.left = isSegFirst ? (isBarStart || isWeekStart ? '2px' : '0') : '-1px';
         bar.style.right = isSegLast ? (isBarEnd || isWeekEnd ? '2px' : '0') : '-1px';
 
-        // 角丸：車両バー全体の最初(または週頭)と最後(または週末)のみ
-        let leftRadius = (isBarStart || isWeekStart) && isSegFirst ? '8px' : '0';
-        let rightRadius = (isBarEnd || isWeekEnd) && isSegLast ? '8px' : '0';
+        const leftRadius = (isBarStart || isWeekStart) && isSegFirst ? '8px' : '0';
+        const rightRadius = (isBarEnd || isWeekEnd) && isSegLast ? '8px' : '0';
         bar.style.borderRadius = `${leftRadius} ${rightRadius} ${rightRadius} ${leftRadius}`;
 
-        // ラベル：必ずセグメント先頭セルに表示（短くても省略しない）
-        if (isSegFirst) {
+        // ラベル：マイルストーン日（=セグメント末尾）に右寄せで表示
+        if (isSegLast) {
           bar.textContent = s.label;
+          bar.style.justifyContent = 'flex-end';
           bar.title = `${s.car.maker} ${s.car.model} — ${s.label}${s.isDone ? '（完了）' : ''}`;
         }
 
@@ -334,7 +314,7 @@ function renderOneMonth(year, month, hostEl) {
   }
 }
 
-// カレンダー全体を描画（当月＋翌月）
+// カレンダー全体（当月＋翌月）
 function renderCalendar() {
   const titleEl = document.getElementById('cal-title');
   if (titleEl) {
@@ -343,7 +323,6 @@ function renderCalendar() {
     titleEl.textContent = `${calYear}年 ${calMonth + 1}月 〜 ${ny}年 ${nm + 1}月`;
   }
 
-  // .cal-wrap をホストにして毎回中身を作り直す
   const host = document.querySelector('#view-calendar .cal-wrap');
   if (!host) return;
   host.innerHTML = '';
@@ -352,10 +331,8 @@ function renderCalendar() {
   host.style.borderRadius = '0';
   host.style.overflow = 'visible';
 
-  // 当月
   renderOneMonth(calYear, calMonth, host);
 
-  // 翌月
   let ny = calYear, nm = calMonth + 1;
   if (nm > 11) { nm = 0; ny++; }
   renderOneMonth(ny, nm, host);
@@ -363,7 +340,7 @@ function renderCalendar() {
   renderCountdown();
 }
 
-// カウントダウンカード描画（1車種1個に重複排除：直近の未完了マイルストーン）
+// カウントダウンカード（1車種1個）
 function renderCountdown() {
   const el = document.getElementById('cal-countdown');
   if (!el) return;
@@ -412,5 +389,13 @@ function calPrev() {
 function calNext() {
   calMonth++;
   if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+// 今月に戻る
+function calToday() {
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
   renderCalendar();
 }
