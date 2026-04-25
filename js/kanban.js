@@ -1,12 +1,19 @@
 // ========================================
 // kanban.js
-// カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売却確認
+// カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売約／取消フロー
+// v0.8.4: 売約・取消フロー全面改修
 // ========================================
 
 const COMPACT_THRESHOLD = 4;
 let expandedCards = {};
 
-// カンバン全体を描画
+// 列の進行順インデックス
+const COL_ORDER = ['purchase','regen','exhibit','delivery','done'];
+const colIdx = id => COL_ORDER.indexOf(id);
+
+// ========================================
+// カンバン描画
+// ========================================
 function renderKanban() {
   expandedCards = {};
   const wrap = document.getElementById('kanban-wrap');
@@ -31,24 +38,14 @@ function renderKanban() {
       e.preventDefault();
       cd.classList.remove('drag-over');
       if (!dragCard || dragCard.col === col.id) return;
-      if (dragCard.col === 'exhibit' && col.id === 'delivery') {
-        pendingDragCar = dragCard;
-        pendingTargetCol = col.id;
-        const lead = (typeof appSettings !== 'undefined' && appSettings.deliveryLeadDays) || 14;
-        document.getElementById('sell-date').value = dateAddDays(todayStr(), lead);
-        document.getElementById('confirm-sell').classList.add('open');
-      } else {
-        addLog(dragCard.id, `ステータス変更: ${COLS.find(c=>c.id===dragCard.col)?.label}→${col.label}`);
-        if (col.id === 'delivery' && dragCard.col !== 'delivery') dragCard.workMemo = '';
-        dragCard.col = col.id;
-        renderAll();
-        showToast('ステータスを更新しました');
-      }
+      handleKanbanMove(dragCard, col.id);
     });
   });
 }
 
+// ========================================
 // 車両カード1枚を生成
+// ========================================
 function makeCarCard(car, isCompact) {
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
@@ -60,7 +57,6 @@ function makeCarCard(car, isCompact) {
     return `<div class="cc-dot ${cls}" title="${t.name} ${p.pct}%"></div>`;
   }).join('');
 
-  // 右上：在庫日数 or 売約日数
   const contractedDays = daysSinceContract(car);
   let topDayTag;
   if (car.contract) {
@@ -71,10 +67,8 @@ function makeCarCard(car, isCompact) {
     topDayTag = `<div class="cc-bigday ${cls}"${wt?` style="background:${wt.bg};color:${wt.color}"`:''}>在庫<span class="cc-bigday-num">${inv}</span>日</div>`;
   }
 
-  // 下段帯：列ごとにルール分岐
-  // 仕入れ・再生中→仕入れからN日 / 展示中→なし / 納車準備→納車までN日 / 納車完了→なし
   let bottomBar = '';
-  if (car.col === 'stock' || car.col === 'regen') {
+  if (car.col === 'purchase' || car.col === 'stock' || car.col === 'regen') {
     bottomBar = `<div class="cc-bottom-bar">仕入れから${inv}日</div>`;
   } else if (car.col === 'delivery') {
     const delDiff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
@@ -132,23 +126,127 @@ function makeCarCard(car, isCompact) {
   return div;
 }
 
-// 売却確認ダイアログの処理
+// ========================================
+// カンバン移動の振り分け（売約・取消含む）
+// ========================================
+function handleKanbanMove(car, targetCol) {
+  const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const toLabel = COLS.find(c => c.id === targetCol)?.label || targetCol;
+
+  // パターン1: 仕入れ/再生中/展示中 → 納車準備（売約ポップアップ）
+  if ((car.col === 'purchase' || car.col === 'regen' || car.col === 'exhibit') && targetCol === 'delivery') {
+    pendingDragCar = car;
+    pendingTargetCol = targetCol;
+    const lead = (typeof appSettings !== 'undefined' && appSettings.deliveryLeadDays) || 14;
+    document.getElementById('sell-date').value = car.deliveryDate || dateAddDays(todayStr(), lead);
+    document.getElementById('confirm-sell').classList.add('open');
+    return;
+  }
+
+  // パターン2: 納車準備/納車完了 → それより前（売約キャンセル確認）
+  if ((car.col === 'delivery' || car.col === 'done') &&
+      (targetCol === 'purchase' || targetCol === 'regen' || targetCol === 'exhibit')) {
+    pendingDragCar = car;
+    pendingTargetCol = targetCol;
+    const sub = document.getElementById('uncontract-sub');
+    if (sub) sub.textContent = `${fromLabel} → ${toLabel} に戻します。売約日・納車予定日・納車準備の進捗もすべてリセットされます。`;
+    document.getElementById('confirm-uncontract').classList.add('open');
+    return;
+  }
+
+  // パターン3: 納車完了 → 納車準備（取り消し確認、売約は残す）
+  if (car.col === 'done' && targetCol === 'delivery') {
+    pendingDragCar = car;
+    pendingTargetCol = targetCol;
+    document.getElementById('confirm-undeliver').classList.add('open');
+    return;
+  }
+
+  // それ以外（仕入れ↔再生中、再生中↔展示中、納車準備→納車完了など）はそのまま移動
+  applyKanbanMove(car, targetCol);
+}
+
+function applyKanbanMove(car, targetCol) {
+  const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const toLabel = COLS.find(c => c.id === targetCol)?.label || targetCol;
+  if (targetCol === 'delivery' && car.col !== 'delivery') car.workMemo = '';
+  car.col = targetCol;
+  addLog(car.id, `ステータス変更: ${fromLabel}→${toLabel}`);
+  renderAll();
+  showToast('ステータスを更新しました');
+}
+
+// ========================================
+// 売約確認ダイアログ
+// ========================================
 function closeSellConfirm(sell) {
   document.getElementById('confirm-sell').classList.remove('open');
   if (!pendingDragCar) return;
   const car = pendingDragCar;
-  if (sell) {
-    car.contract = 1;
-    if (!car.contractDate) car.contractDate = todayStr();
-    car.deliveryDate = document.getElementById('sell-date').value || '';
-    addLog(car.id, '売約設定・納車準備へ移動');
-  } else {
-    addLog(car.id, 'ステータス変更: 展示中→納車準備');
-  }
-  if (pendingTargetCol === 'delivery' && car.col !== 'delivery') car.workMemo = '';
-  car.col = pendingTargetCol;
+  const target = pendingTargetCol;
   pendingDragCar = null;
   pendingTargetCol = null;
+  if (!sell) {
+    showToast('キャンセルしました');
+    return;
+  }
+  car.contract = 1;
+  if (!car.contractDate) car.contractDate = todayStr();
+  car.deliveryDate = document.getElementById('sell-date').value || '';
+  car.workMemo = '';
+  const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const toLabel = COLS.find(c => c.id === target)?.label || target;
+  car.col = target;
+  addLog(car.id, `売約設定：${fromLabel}→${toLabel}`);
   renderAll();
-  showToast(sell ? '売約にしました！' : 'ステータスを更新しました');
+  showToast('売約にしました！');
+}
+
+// ========================================
+// 売約キャンセル確認ダイアログ
+// ========================================
+function closeUncontractConfirm(uncontract) {
+  document.getElementById('confirm-uncontract').classList.remove('open');
+  if (!pendingDragCar) return;
+  const car = pendingDragCar;
+  const target = pendingTargetCol;
+  pendingDragCar = null;
+  pendingTargetCol = null;
+  if (!uncontract) {
+    showToast('キャンセルしました');
+    return;
+  }
+  car.contract = 0;
+  car.contractDate = '';
+  car.deliveryDate = '';
+  car.workMemo = '';
+  if (typeof DELIVERY_TASKS !== 'undefined' && typeof mkTaskState === 'function') {
+    car.deliveryTasks = mkTaskState(DELIVERY_TASKS);
+  }
+  const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const toLabel = COLS.find(c => c.id === target)?.label || target;
+  car.col = target;
+  addLog(car.id, `売約キャンセル：${fromLabel}→${toLabel}（売約・納車準備データをリセット）`);
+  renderAll();
+  showToast('売約をキャンセルしました');
+}
+
+// ========================================
+// 納車完了取り消し確認ダイアログ
+// ========================================
+function closeUndeliverConfirm(undeliver) {
+  document.getElementById('confirm-undeliver').classList.remove('open');
+  if (!pendingDragCar) return;
+  const car = pendingDragCar;
+  const target = pendingTargetCol;
+  pendingDragCar = null;
+  pendingTargetCol = null;
+  if (!undeliver) {
+    showToast('キャンセルしました');
+    return;
+  }
+  car.col = target;
+  addLog(car.id, '納車完了を取り消し：納車完了→納車準備');
+  renderAll();
+  showToast('納車完了を取り消しました');
 }
