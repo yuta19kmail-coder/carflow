@@ -25,6 +25,9 @@ let customHolidays = [];           // カスタム休業日リスト
 let jpHolidays = {};               // 日本の祝日（APIから取得）
 let archivedCars = [];             // 月次集計締めでアーカイブされた車両
 
+// 展示ビューのソート設定（key: 'price'|'invDays'|'year'、dir: 'asc'|'desc'）
+let exhibitSort = { key: 'invDays', dir: 'desc' };
+
 // ========== 会社ごとの設定 ==========
 let appSettings = {
   // 在庫警告3段階（日数・ON/OFF）

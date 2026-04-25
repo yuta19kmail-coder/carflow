@@ -132,10 +132,147 @@
 .inv-body{padding:9px}
 .inv-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* 展示ビューの列 */
-.ex-cols{display:flex;gap:10px;overflow-x:auto;flex:1}
-.ex-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);min-width:185px;flex:1}
-.ex-col-hdr{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text2)}
-.ex-col-body{padding:7px;display:flex;flex-direction:column;gap:7px}
-.ex-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;cursor:pointer}
-.ex-card:hover{border-color:var(--border2)}
+/* ========== 展示ビュー ========== */
+/* ツールバー（一括ソート） */
+.ex-toolbar{display:flex;align-items:center;gap:8px;padding:8px 4px 12px;flex-shrink:0;flex-wrap:wrap}
+.ex-toolbar-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-right:4px}
+.ex-sort-btn{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:6px 12px;
+  color:var(--text2);
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.15s;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.ex-sort-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.ex-sort-btn.active{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+.ex-sort-btn .sort-arrow{display:inline-block;font-size:10px;line-height:1}
+.ex-toolbar-spacer{flex:1}
+.ex-total-label{font-size:11px;color:var(--text3)}
+
+/* 列群 */
+.ex-cols{display:flex;gap:10px;overflow-x:auto;flex:1;align-items:flex-start;padding-bottom:8px}
+
+/* 列 */
+.ex-col{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r2);
+  min-width:200px;
+  width:200px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  max-height:100%;
+}
+.ex-col.stock{
+  border-color:var(--blue);
+  background:linear-gradient(180deg, rgba(55,138,221,.10) 0%, var(--bg2) 60%);
+}
+
+/* ヘッダー */
+.ex-col-hdr{
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.ex-col-name{
+  font-size:13px;
+  font-weight:700;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.ex-col-name .ex-col-icon{font-size:14px}
+.ex-col-stats{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  margin-top:2px;
+}
+.ex-col-count{
+  font-size:22px;
+  font-weight:800;
+  color:var(--text);
+  line-height:1;
+}
+.ex-col-count-unit{font-size:11px;color:var(--text3);font-weight:600}
+.ex-col-pct{
+  font-size:13px;
+  font-weight:700;
+  color:var(--blue);
+  margin-left:auto;
+}
+.ex-col.stock .ex-col-count{color:var(--blue)}
+
+/* 列本体（スクロール可） */
+.ex-col-body{
+  padding:7px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  overflow-y:auto;
+  flex:1;
+  min-height:60px;
+}
+.ex-col-empty{
+  padding:18px 8px;
+  text-align:center;
+  font-size:11px;
+  color:var(--text3);
+  font-style:italic;
+}
+
+/* カード（タスク管理 compact 風） */
+.ex-card{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  cursor:pointer;
+  display:flex;
+  gap:8px;
+  padding:6px;
+  transition:.15s;
+}
+.ex-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.ex-card-thumb{
+  width:54px;
+  height:54px;
+  border-radius:6px;
+  background:var(--bg2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.ex-card-thumb img{width:100%;height:100%;object-fit:cover}
+.ex-card-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ex-card-title{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.ex-card-meta{font-size:10px;color:var(--text2);display:flex;flex-wrap:wrap;gap:6px;line-height:1.3}
+.ex-card-meta-item{white-space:nowrap}
+.ex-card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:2px}
+.ex-card-price{font-size:11px;font-weight:700;color:var(--green)}
+.ex-card-inv{
+  font-size:10px;
+  font-weight:700;
+  padding:1px 6px;
+  border-radius:4px;
+}
+.ex-card-inv.dg{background:rgba(29,185,122,.18);color:#16a34a}
+.ex-card-inv.dw{background:rgba(245,158,11,.20);color:#d97706}
+.ex-card-inv.dr{background:rgba(239,68,68,.22);color:#dc2626}

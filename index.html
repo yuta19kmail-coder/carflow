@@ -6,15 +6,15 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css?v=085">
-<link rel="stylesheet" href="css/login.css?v=085">
-<link rel="stylesheet" href="css/layout.css?v=085">
-<link rel="stylesheet" href="css/components.css?v=085">
-<link rel="stylesheet" href="css/panels.css?v=085">
-<link rel="stylesheet" href="css/kanban.css?v=085">
-<link rel="stylesheet" href="css/calendar.css?v=085">
-<link rel="stylesheet" href="css/modal.css?v=085">
-<link rel="stylesheet" href="css/celebrate.css?v=085">
+<link rel="stylesheet" href="css/base.css?v=086">
+<link rel="stylesheet" href="css/login.css?v=086">
+<link rel="stylesheet" href="css/layout.css?v=086">
+<link rel="stylesheet" href="css/components.css?v=086">
+<link rel="stylesheet" href="css/panels.css?v=086">
+<link rel="stylesheet" href="css/kanban.css?v=086">
+<link rel="stylesheet" href="css/calendar.css?v=086">
+<link rel="stylesheet" href="css/modal.css?v=086">
+<link rel="stylesheet" href="css/celebrate.css?v=086">
 </head>
 <body>
 
@@ -29,7 +29,7 @@
     <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
     <div class="login-hint">デモ：パスワード 1234（ユーザー名は省略可）</div>
     <button class="btn-login" onclick="doLogin()">ログイン</button>
-    <div class="login-ver">CarFlow v0.8.5</div>
+    <div class="login-ver">CarFlow v0.8.6</div>
   </div>
 </div>
 
@@ -38,7 +38,7 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.8.5</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.8.6</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
@@ -256,7 +256,15 @@
             <div class="cal-grid" id="cal-grid"></div>
           </div>
         </div>
-        <div id="view-exhibit" class="view" style="flex-direction:row">
+        <div id="view-exhibit" class="view">
+          <div class="ex-toolbar">
+            <div class="ex-toolbar-label">並び替え</div>
+            <button class="ex-sort-btn" data-key="price"      onclick="setExhibitSort('price')">💰 金額</button>
+            <button class="ex-sort-btn" data-key="invDays"    onclick="setExhibitSort('invDays')">📦 在庫日数</button>
+            <button class="ex-sort-btn" data-key="year"       onclick="setExhibitSort('year')">📅 年式</button>
+            <div class="ex-toolbar-spacer"></div>
+            <div class="ex-total-label" id="ex-total-label"></div>
+          </div>
           <div class="ex-cols" id="ex-cols"></div>
         </div>
         <div id="view-gantt" class="view">
@@ -545,36 +553,36 @@
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js?v=085"></script>
-<script src="js/tasks-def.js?v=085"></script>
+<script src="js/config.js?v=086"></script>
+<script src="js/tasks-def.js?v=086"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js?v=085"></script>
+<script src="js/state.js?v=086"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js?v=085"></script>
-<script src="js/progress.js?v=085"></script>
+<script src="js/helpers.js?v=086"></script>
+<script src="js/progress.js?v=086"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js?v=085"></script>
+<script src="js/sample-data.js?v=086"></script>
 
-<script src="js/holidays.js?v=085"></script>
-<script src="js/auth.js?v=085"></script>
-<script src="js/navigation.js?v=085"></script>
-<script src="js/archive.js?v=085"></script>
-<script src="js/settings.js?v=085"></script>
+<script src="js/holidays.js?v=086"></script>
+<script src="js/auth.js?v=086"></script>
+<script src="js/navigation.js?v=086"></script>
+<script src="js/archive.js?v=086"></script>
+<script src="js/settings.js?v=086"></script>
 
 <!-- 6. 描画モジュール -->
-<script src="js/dashboard.js?v=085"></script>
-<script src="js/kanban.js?v=085"></script>
-<script src="js/car-detail.js?v=085"></script>
-<script src="js/car-modal.js?v=085"></script>
-<script src="js/workflow.js?v=085"></script>
-<script src="js/calendar.js?v=085"></script>
-<script src="js/views.js?v=085"></script>
+<script src="js/dashboard.js?v=086"></script>
+<script src="js/kanban.js?v=086"></script>
+<script src="js/car-detail.js?v=086"></script>
+<script src="js/car-modal.js?v=086"></script>
+<script src="js/workflow.js?v=086"></script>
+<script src="js/calendar.js?v=086"></script>
+<script src="js/views.js?v=086"></script>
 
 <!-- 7. 最終ディスパッチャ -->
-<script src="js/main.js?v=085"></script>
+<script src="js/main.js?v=086"></script>
 
 <!-- 8. 起動 -->
 <script>
