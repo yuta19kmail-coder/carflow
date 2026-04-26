@@ -189,3 +189,57 @@
 @media (max-width: 768px) {
   .tb-btn.font-quick{display:none !important}
 }
+
+/* ========================================
+   v0.9.9 トップバーのフォントサイズ3分割ボタン
+   ======================================== */
+.tb-fontsize-group{
+  display:inline-flex;
+  margin-left:8px;
+  border:1px solid rgba(55,138,221,.3);
+  border-radius:var(--r);
+  overflow:hidden;
+  background:rgba(55,138,221,.08);
+}
+.tb-fontsize-btn{
+  background:transparent;
+  border:none;
+  border-right:1px solid rgba(55,138,221,.3);
+  padding:5px 11px;
+  cursor:pointer;
+  color:var(--text2);
+  font-weight:700;
+  transition:.15s;
+  font-family:inherit;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:28px;
+}
+.tb-fontsize-btn:last-child{border-right:none}
+.tb-fontsize-btn:hover{background:rgba(55,138,221,.15);color:var(--text)}
+.tb-fontsize-btn.active{
+  background:rgba(55,138,221,.28);
+  color:var(--blue);
+}
+
+/* スマホ時は非表示 */
+@media (max-width: 768px) {
+  .tb-fontsize-group{display:none !important}
+}
+
+/* ライトモードでの色調整 */
+:root[data-theme="light"] .tb-fontsize-group{
+  border-color:rgba(30,95,194,.4);
+  background:rgba(30,95,194,.08);
+}
+:root[data-theme="light"] .tb-fontsize-btn{
+  border-right-color:rgba(30,95,194,.4);
+}
+:root[data-theme="light"] .tb-fontsize-btn:hover{
+  background:rgba(30,95,194,.15);
+}
+:root[data-theme="light"] .tb-fontsize-btn.active{
+  background:rgba(30,95,194,.20);
+  color:var(--blue);
+}
