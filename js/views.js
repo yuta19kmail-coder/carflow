@@ -390,13 +390,17 @@ function renderTable() {
 function _invCardHtml(car) {
   const inv = daysSince(car.purchaseDate);
   const dc  = inv > 30 ? '#ef4444' : inv > 14 ? '#f59e0b' : '#1db97a';
-  const dbg = inv > 30 ? 'rgba(239,68,68,.2)' : inv > 14 ? 'rgba(245,158,11,.2)' : 'rgba(29,185,122,.2)';
   return `<div class="inv-card" onclick="openDetail('${car.id}')">
-    <div class="inv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}<div class="inv-badge" style="background:${dbg};color:${dc}">${inv}日</div></div>
+    <div class="inv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div>
     <div class="inv-body">
-      <div class="inv-name">${car.maker} ${car.model}</div>
-      <div style="font-size:10px;color:var(--text3);margin-top:2px">${car.num}</div>
-      <span class="pill ${pillMap[car.col]||'pill-gray'}" style="margin-top:5px;display:inline-block">${COLS.find(c=>c.id===car.col)?.label||car.col}</span>
+      <div class="inv-row">
+        <div class="inv-info">
+          <div class="inv-name">${car.maker} ${car.model}</div>
+          <div class="inv-num">${car.num}</div>
+          <span class="pill ${pillMap[car.col]||'pill-gray'}" style="margin-top:5px;display:inline-block">${COLS.find(c=>c.id===car.col)?.label||car.col}</span>
+        </div>
+        <div class="inv-day-big" style="color:${dc}">${inv}<span class="inv-day-unit">日</span></div>
+      </div>
     </div>
   </div>`;
 }
@@ -443,7 +447,6 @@ function renderInventory() {
   });
   groupDefs.forEach(g => {
     const arr = buckets[g.key] || [];
-    if (!arr.length) return;
     const cls = _invGroupCls(g.key);
     const icon = _invGroupIcon(g.key);
     let desc = '';
@@ -453,7 +456,10 @@ function renderInventory() {
       desc = `仕入れから ${g.threshold} 日以上`;
     }
     const sec = document.createElement('div');
-    sec.className = 'inv-group ' + cls;
+    sec.className = 'inv-group ' + cls + (arr.length ? '' : ' is-empty');
+    const bodyHtml = arr.length
+      ? arr.map(_invCardHtml).join('')
+      : '<div class="inv-empty">該当なし</div>';
     sec.innerHTML = `
       <div class="inv-group-head">
         <span class="tbl-group-icon">${icon}</span>
@@ -462,11 +468,11 @@ function renderInventory() {
         <span class="tbl-group-count">${arr.length}台</span>
       </div>
       <div class="inv-group-body">
-        ${arr.map(_invCardHtml).join('')}
+        ${bodyHtml}
       </div>`;
     grid.appendChild(sec);
   });
-  if (!list.length) {
+  if (!list.length && !groupDefs.length) {
     grid.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px 4px">在庫車両がありません</div>';
   }
 }
