@@ -1,9 +1,9 @@
 // ========================================
 // navigation.js
 // パネル・タブの切り替え
+// v0.9.6: 設定画面でテーマ・フォントサイズ選択状態を反映
 // ========================================
 
-// サイドバーのパネル（ダッシュボード、ログ、メンバー、設定、販売実績）表示
 function showPanel(name, el) {
   document.querySelectorAll('.side-panel,.view').forEach(v => {
     v.classList.remove('open','active');
@@ -27,6 +27,9 @@ function showPanel(name, el) {
     renderClosedRulesList();
     renderGoalsEditor();
     refreshLeadDaysUI();
+    // v0.9.6: テーマ・フォントサイズの選択状態を反映
+    if (typeof refreshThemePickerUI === 'function') refreshThemePickerUI();
+    if (typeof refreshFontSizePickerUI === 'function') refreshFontSizePickerUI();
   }
 }
 

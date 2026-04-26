@@ -1,12 +1,14 @@
 /* ========================================
    base.css
    共通基礎スタイル（CSS変数、リセット、body）
-   ここを変えると全画面のテーマカラーが変わります
+   v0.9.6: テーマ切替（ダーク/ライト）＋フォントサイズ切替
    ======================================== */
 
 *{box-sizing:border-box;margin:0;padding:0}
 
-:root{
+/* ===== ダークテーマ（デフォルト） ===== */
+:root,
+:root[data-theme="dark"]{
   /* 背景色（暗い順） */
   --bg:#0f1117;--bg2:#1a1d27;--bg3:#222536;--bg4:#2a2e42;
   /* ボーダー */
@@ -19,11 +21,45 @@
   --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
   /* 角丸 */
   --r:8px;--r2:12px;
+  /* シャドウ */
+  --shadow-card:0 3px 12px rgba(0,0,0,.35);
 }
 
-html,body{font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+/* ===== ライトテーマ ===== */
+:root[data-theme="light"]{
+  /* 背景色（明るい順、ダークと逆） */
+  --bg:#ffffff;--bg2:#f6f7fa;--bg3:#eceef3;--bg4:#dfe2ea;
+  /* ボーダー */
+  --border:#d1d5db;--border2:#9ca3af;
+  /* 文字色（濃い順） */
+  --text:#1a1d27;--text2:#3a3f54;--text3:#6b7280;
+  /* アクセントカラー（ライト用にやや濃いめ） */
+  --green:#059669;--blue:#2563eb;--orange:#d97706;--red:#dc2626;
+  /* レイアウトサイズ・角丸はダークと同じ */
+  --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
+  --r:8px;--r2:12px;
+  /* シャドウ（ライトでは控えめ） */
+  --shadow-card:0 2px 8px rgba(0,0,0,.10);
+}
+
+/* ===== フォントサイズ切替（PC時のみ。スマホはmobile.cssが優先） ===== */
+:root,
+:root[data-fontsize="md"]{font-size:15px}
+:root[data-fontsize="lg"]{font-size:17.25px}    /* 115% */
+:root[data-fontsize="xl"]{font-size:19.5px}     /* 130% */
+
+html,body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  height:100vh;
+  overflow:hidden;
+}
 
 /* スクロールバー */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ===== ライトテーマでのhover/box-shadow微調整 ===== */
+:root[data-theme="light"] .car-card:hover{box-shadow:var(--shadow-card)}
