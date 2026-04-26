@@ -1,7 +1,6 @@
 /* ========================================
    base.css
-   共通基礎スタイル（CSS変数、リセット、body）
-   v0.9.6: テーマ切替（ダーク/ライト）＋フォントサイズ切替
+   v0.9.7: ライトモード色調整＋フォントサイズをzoomベースに
    ======================================== */
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -9,44 +8,50 @@
 /* ===== ダークテーマ（デフォルト） ===== */
 :root,
 :root[data-theme="dark"]{
-  /* 背景色（暗い順） */
   --bg:#0f1117;--bg2:#1a1d27;--bg3:#222536;--bg4:#2a2e42;
-  /* ボーダー */
   --border:#333650;--border2:#444870;
-  /* 文字色（明るい順） */
   --text:#e8eaf6;--text2:#9fa8c7;--text3:#5c6490;
-  /* アクセントカラー */
   --green:#1db97a;--blue:#378ADD;--orange:#f59e0b;--red:#ef4444;
-  /* レイアウトサイズ */
   --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
-  /* 角丸 */
   --r:8px;--r2:12px;
-  /* シャドウ */
   --shadow-card:0 3px 12px rgba(0,0,0,.35);
 }
 
-/* ===== ライトテーマ ===== */
+/* ===== ライトテーマ（v0.9.7 で再調整：薄ベージュ系で目に優しく） ===== */
 :root[data-theme="light"]{
-  /* 背景色（明るい順、ダークと逆） */
-  --bg:#ffffff;--bg2:#f6f7fa;--bg3:#eceef3;--bg4:#dfe2ea;
-  /* ボーダー */
-  --border:#d1d5db;--border2:#9ca3af;
-  /* 文字色（濃い順） */
-  --text:#1a1d27;--text2:#3a3f54;--text3:#6b7280;
-  /* アクセントカラー（ライト用にやや濃いめ） */
-  --green:#059669;--blue:#2563eb;--orange:#d97706;--red:#dc2626;
-  /* レイアウトサイズ・角丸はダークと同じ */
+  /* 背景：薄いベージュ → 中間ベージュグレー → やや濃いベージュ → 一番濃い */
+  --bg:#f5f1ea;       /* メイン背景：薄いベージュ */
+  --bg2:#fffdf8;      /* カード背景：ほぼ白だが少し黄味 */
+  --bg3:#ece5d6;      /* セカンダリ背景：少し濃いベージュ */
+  --bg4:#ddd4bf;      /* 強調背景：もう一段濃い */
+  /* ボーダー：メリハリつけて見やすく */
+  --border:#c8bfa8;
+  --border2:#a89d80;
+  /* 文字：濃い茶系 */
+  --text:#2a2620;
+  --text2:#5a4f3f;
+  --text3:#8a7d65;
+  /* アクセント：ライト用にやや濃いめ */
+  --green:#057a5b;
+  --blue:#1e5fc2;
+  --orange:#c2640a;
+  --red:#c92121;
   --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
   --r:8px;--r2:12px;
-  /* シャドウ（ライトでは控えめ） */
-  --shadow-card:0 2px 8px rgba(0,0,0,.10);
+  --shadow-card:0 2px 8px rgba(80,60,30,.12);
 }
 
-/* ===== フォントサイズ切替（PC時のみ。スマホはmobile.cssが優先） ===== */
+/* ===== フォントサイズ切替（v0.9.7: zoom ベースに変更） =====
+   既存CSSが px 固定値を多用してるため、html の font-size だけでは効かない。
+   body 全体を zoom で拡大する方式に変更（PC専用） */
 :root,
 :root[data-fontsize="md"]{font-size:15px}
-:root[data-fontsize="lg"]{font-size:17.25px}    /* 115% */
-:root[data-fontsize="xl"]{font-size:19.5px}     /* 130% */
+:root[data-fontsize="lg"]{font-size:15px}
+:root[data-fontsize="xl"]{font-size:15px}
+
+body{zoom:1}
+:root[data-fontsize="lg"] body{zoom:1.15}
+:root[data-fontsize="xl"] body{zoom:1.30}
 
 html,body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -56,10 +61,6 @@ html,body{
   overflow:hidden;
 }
 
-/* スクロールバー */
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-/* ===== ライトテーマでのhover/box-shadow微調整 ===== */
-:root[data-theme="light"] .car-card:hover{box-shadow:var(--shadow-card)}
