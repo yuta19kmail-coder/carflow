@@ -282,3 +282,12 @@ body.mobile .pv-group-head { display: none; }
 body:not(.mobile) #mobile-back-mobile ~ #app .topbar {
   padding-top: 38px;
 }
+
+/* v1.0.19: スマホでは進捗ビューのDnDハンドルを非表示
+   （HTML5 DnD はタッチで動かないため。PC専用機能として隔離） */
+body.mobile .pv-drag {
+  display: none !important;
+}
+body.mobile .pv-head {
+  padding-right: 13px;
+}
