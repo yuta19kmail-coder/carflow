@@ -50,4 +50,11 @@ function switchTab(name, el) {
   if (name === 'progress')  renderProgress();
   if (name === 'table')     renderTable();
   if (name === 'inventory') renderInventory();
+  // v1.0.16: 商談モード切替
+  if (name === 'deal') {
+    if (typeof renderDeal === 'function') renderDeal();
+    if (typeof enterDealMode === 'function') enterDealMode();
+  } else {
+    document.body.classList.remove('deal-mode');
+  }
 }

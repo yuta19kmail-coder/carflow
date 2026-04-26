@@ -160,6 +160,121 @@ function renderExhibit() {
 function renderGantt() { /* removed in v0.8.9 */ }
 
 // ========================================
+// 商談ビュー（v1.0.16）
+// 顧客と話す時の「アテ」ビジュアル。キオスク的UI
+// ========================================
+function _makeDealCard(car) {
+  const km = Number(car.km || 0).toLocaleString();
+  const yr = fmtYearDisplay(parseYearInput(car.year) || car.year);
+  const card = document.createElement('div');
+  card.className = 'deal-card';
+  card.innerHTML = `
+    <div class="deal-card-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
+    <div class="deal-card-body">
+      <div class="deal-card-title">${car.maker} ${car.model}</div>
+      <div class="deal-card-stats">
+        <div class="deal-stat">
+          <div class="deal-stat-num">${yr}</div>
+          <div class="deal-stat-lbl">年式</div>
+        </div>
+        <div class="deal-stat">
+          <div class="deal-stat-num">${km}<span class="deal-stat-unit">km</span></div>
+          <div class="deal-stat-lbl">走行距離</div>
+        </div>
+      </div>
+      <div class="deal-card-price">${fmtPrice(car.price)}</div>
+    </div>`;
+  card.onclick = () => openDealPopup(car);
+  return card;
+}
+
+function _makeDealColumn(opts) {
+  const col = document.createElement('div');
+  col.className = 'deal-col' + (opts.isStock ? ' stock' : '');
+  col.innerHTML = `
+    <div class="deal-col-hdr">
+      <div class="deal-col-name"><span class="deal-col-icon">${opts.icon}</span>${opts.name}</div>
+    </div>
+    <div class="deal-col-body"></div>`;
+  const body = col.querySelector('.deal-col-body');
+  opts.cars.forEach(c => body.appendChild(_makeDealCard(c)));
+  return col;
+}
+
+function renderDeal() {
+  const cols = document.getElementById('deal-cols');
+  if (!cols) return;
+  cols.innerHTML = '';
+
+  // ストック車両（仕入れ・再生中）→ 「展示前」と表記
+  const stockCars = cars.filter(c => c.col === 'purchase' || c.col === 'regen');
+  const exhibitCars = cars.filter(c => c.col === 'exhibit');
+
+  const sorter = _exhibitSorter();
+  stockCars.sort(sorter);
+
+  // ストック（展示前）：0台でも非表示にしない方が運用上わかりやすいか？
+  // 仕様：「商談ビューに限っては在庫が0の枠は非表示」 → 0台なら非表示
+  if (stockCars.length > 0) {
+    const stockCol = _makeDealColumn({
+      key: 'stock', name: '展示前', icon: '📦',
+      isStock: true, cars: stockCars,
+    });
+    cols.appendChild(stockCol);
+  }
+
+  SIZES.forEach(size => {
+    const sized = exhibitCars.filter(c => c.size === size).sort(sorter);
+    if (sized.length === 0) return; // 0台枠は非表示
+    const col = _makeDealColumn({
+      key: size, name: size, icon: carEmoji(size),
+      isStock: false, cars: sized,
+    });
+    cols.appendChild(col);
+  });
+
+  _refreshExhibitSortBtns();
+}
+
+// 商談用ポップアップ（カードクリック）
+function openDealPopup(car) {
+  const body = document.getElementById('deal-popup-body');
+  if (!body) return;
+  const km = Number(car.km || 0).toLocaleString();
+  const yr = fmtYearDisplay(parseYearInput(car.year) || car.year);
+  body.innerHTML = `
+    <div class="deal-popup-photo">${car.photo ? `<img src="${car.photo}">` : `<div class="deal-popup-emoji">${carEmoji(car.size)}</div>`}</div>
+    <div class="deal-popup-info">
+      <div class="deal-popup-title">${car.maker} ${car.model}</div>
+      <div class="deal-popup-stats">
+        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">年式</div><div class="deal-popup-stat-val">${yr}</div></div>
+        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">走行距離</div><div class="deal-popup-stat-val">${km}<span class="deal-popup-stat-unit">km</span></div></div>
+        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">ボディ</div><div class="deal-popup-stat-val">${car.size || '—'}</div></div>
+        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">色</div><div class="deal-popup-stat-val">${car.color || '—'}</div></div>
+      </div>
+      <div class="deal-popup-price">${fmtPrice(car.price)}</div>
+    </div>`;
+  document.getElementById('modal-deal').classList.add('open');
+}
+
+// 商談モード入退出
+function enterDealMode() {
+  document.body.classList.add('deal-mode');
+}
+function askExitDealMode() {
+  document.getElementById('confirm-exit-deal').classList.add('open');
+}
+function confirmExitDealMode() {
+  document.getElementById('confirm-exit-deal').classList.remove('open');
+  document.body.classList.remove('deal-mode');
+  // タスク管理タブに戻す
+  const kanbanTab = document.querySelector('.tab[onclick*="kanban"]');
+  if (kanbanTab) {
+    if (typeof switchTab === 'function') switchTab('kanban', kanbanTab);
+  }
+}
+
+// ========================================
 // 進捗ビュー（v0.9.0で3枠化、v0.9.5で補足sub削除＋スマホ用タブ追加）
 // ========================================
 function _makeProgressCardOther(car, compact) {

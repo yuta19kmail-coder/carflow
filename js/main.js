@@ -16,5 +16,6 @@ function renderAll() {
     if (t.includes('進捗'))       renderProgress();
     if (t.includes('全体'))       renderTable();
     if (t.includes('在庫'))       renderInventory();
+    if (t.includes('商談'))       renderDeal();
   }
 }

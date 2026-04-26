@@ -5,23 +5,24 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CarFlow - 車両管理システム</title>
 
-<!-- ========== ファビコン（v1.0.15） ========== -->
+<!-- ========== ファビコン（v1.0.16） ========== -->
 <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
 <link rel="apple-touch-icon" href="images/favicon.svg">
 <meta name="theme-color" content="#378ADD">
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css?v=115">
-<link rel="stylesheet" href="css/login.css?v=115">
-<link rel="stylesheet" href="css/layout.css?v=115">
-<link rel="stylesheet" href="css/components.css?v=115">
-<link rel="stylesheet" href="css/panels.css?v=115">
-<link rel="stylesheet" href="css/kanban.css?v=115">
-<link rel="stylesheet" href="css/calendar.css?v=115">
-<link rel="stylesheet" href="css/modal.css?v=115">
-<link rel="stylesheet" href="css/celebrate.css?v=115">
-<link rel="stylesheet" href="css/help.css?v=115">
-<link rel="stylesheet" href="css/mobile.css?v=115">
+<link rel="stylesheet" href="css/base.css?v=116">
+<link rel="stylesheet" href="css/login.css?v=116">
+<link rel="stylesheet" href="css/layout.css?v=116">
+<link rel="stylesheet" href="css/components.css?v=116">
+<link rel="stylesheet" href="css/panels.css?v=116">
+<link rel="stylesheet" href="css/kanban.css?v=116">
+<link rel="stylesheet" href="css/calendar.css?v=116">
+<link rel="stylesheet" href="css/modal.css?v=116">
+<link rel="stylesheet" href="css/celebrate.css?v=116">
+<link rel="stylesheet" href="css/help.css?v=116">
+<link rel="stylesheet" href="css/mobile.css?v=116">
+<link rel="stylesheet" href="css/deal.css?v=116">
 </head>
 <body>
 
@@ -36,7 +37,7 @@
     <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
     <div class="login-hint">デモ：パスワード 1234（ユーザー名は省略可）</div>
     <button class="btn-login" onclick="doLogin()">ログイン</button>
-    <div class="login-ver">CarFlow v1.0.15</div>
+    <div class="login-ver">CarFlow v1.0.16</div>
   </div>
 </div>
 
@@ -44,12 +45,12 @@
 <div id="app" style="display:none;flex-direction:column;height:100vh">
   <!-- トップバー -->
   <div class="topbar">
-    <!-- v1.0.15: サイドバー折りたたみトグル -->
+    <!-- v1.0.16: サイドバー折りたたみトグル -->
     <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="サイドバーを開閉">☰</button>
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v1.0.15</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v1.0.16</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
-    <!-- v1.0.15: フォントサイズ3分割クイック切替（A小・A中・A大） -->
+    <!-- v1.0.16: フォントサイズ3分割クイック切替（A小・A中・A大） -->
     <div class="tb-fontsize-group" id="tb-fontsize-group" title="文字サイズを変更">
       <button class="tb-fontsize-btn" data-fontsize="md" onclick="setFontSize('md')"><span style="font-size:10px;font-weight:600">A</span></button>
       <button class="tb-fontsize-btn" data-fontsize="lg" onclick="setFontSize('lg')"><span style="font-size:14px;font-weight:700">A</span></button>
@@ -101,6 +102,7 @@
         <div class="tab" onclick="switchTab('progress',this)">⚡ 進捗</div>
         <div class="tab" onclick="switchTab('table',this)">📑 全体一覧</div>
         <div class="tab" onclick="switchTab('inventory',this)">📦 在庫日数</div>
+        <div class="tab" onclick="switchTab('deal',this)">💼 商談</div>
       </div>
 
       <div class="views">
@@ -151,7 +153,7 @@
         <div id="panel-settings" class="side-panel">
           <div><div class="panel-title">設定</div><div class="panel-sub">会社ごとの運用ルールをここで調整します</div></div>
 
-          <!-- 0. 表示設定（v1.0.15） -->
+          <!-- 0. 表示設定（v1.0.16） -->
           <div class="acc-card" data-acc-open="1">
             <div class="acc-head" onclick="toggleAcc(this)">
               <h3>🎨 表示設定</h3><span class="acc-chev">▾</span>
@@ -335,6 +337,18 @@
         <div id="view-inventory" class="view">
           <div class="inv-grid" id="inv-grid"></div>
         </div>
+
+        <!-- v1.0.16: 商談ビュー（顧客と話すときのアテ用、キオスク的UI） -->
+        <div id="view-deal" class="view">
+          <button class="deal-exit-btn" onclick="askExitDealMode()" title="商談モードを終了">✕ 終了</button>
+          <div class="ex-toolbar">
+            <div class="ex-toolbar-label">並び替え</div>
+            <button class="ex-sort-btn" data-key="price"   onclick="setExhibitSort('price')">💰 金額</button>
+            <button class="ex-sort-btn" data-key="invDays" onclick="setExhibitSort('invDays')">📦 在庫日数</button>
+            <button class="ex-sort-btn" data-key="year"    onclick="setExhibitSort('year')">📅 年式</button>
+          </div>
+          <div class="deal-cols" id="deal-cols"></div>
+        </div>
       </div>
 
       <div class="action-area">
@@ -362,6 +376,31 @@
   <div class="modal modal-wide">
     <div class="mhdr"><div class="mhdr-title" id="detail-title">車両詳細</div><button class="mclose" onclick="closeModal('modal-detail')">✕</button></div>
     <div class="mbody" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- v1.0.16: 商談用ポップアップ（シンプル版） -->
+<div class="overlay deal-overlay" id="modal-deal">
+  <div class="deal-popup">
+    <button class="deal-popup-close" onclick="closeModal('modal-deal')">✕</button>
+    <div class="deal-popup-body" id="deal-popup-body"></div>
+  </div>
+</div>
+
+<!-- v1.0.16: 商談モード終了確認（危険系のトーンで顧客が反射的に押さない） -->
+<div class="overlay" id="confirm-exit-deal">
+  <div class="modal" style="max-width:420px">
+    <div class="mhdr"><div class="mhdr-title" style="color:var(--red)">⚠️ 管理画面に戻りますか？</div></div>
+    <div class="mbody">
+      <div style="font-size:13px;line-height:1.7;color:var(--text2);padding:6px 0 14px">
+        商談モードを終了して、管理画面（在庫情報や設定）に戻ります。<br>
+        お客様にお見せする画面ではないため、お客様の前では操作しないでください。
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-cancel" onclick="closeModal('confirm-exit-deal')" style="flex:1;font-size:14px;padding:11px">キャンセル</button>
+        <button class="btn btn-danger" onclick="confirmExitDealMode()" style="font-size:13px;padding:11px 14px;opacity:.85">終了する</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -426,7 +465,7 @@
         <textarea id="inp-memo" rows="3" placeholder="自由記入" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
       </div>
 
-      <!-- v1.0.15: 編集時のみ表示される危険ゾーン（車両削除） -->
+      <!-- v1.0.16: 編集時のみ表示される危険ゾーン（車両削除） -->
       <div class="edit-danger-zone" id="edit-danger-zone" style="display:none">
         <div class="edit-danger-label">⚠️ 危険な操作</div>
         <button class="detail-delete-btn" id="edit-delete-btn" onclick="onEditDeleteClick()">🗑️ この車両を削除</button>
@@ -612,7 +651,7 @@
   </div>
 </div>
 
-<!-- v1.0.15: スマホ用「フルメニュー」切替ボタン（下部固定）と「クイックメニューに戻る」（上部固定） -->
+<!-- v1.0.16: スマホ用「フルメニュー」切替ボタン（下部固定）と「クイックメニューに戻る」（上部固定） -->
 <button id="mobile-admin-toggle" onclick="enterAdminMode()" style="display:none">🗂️ フルメニュー</button>
 <button id="mobile-back-mobile" onclick="exitAdminMode()" style="display:none">⚡ クイックメニューに戻る</button>
 
@@ -691,38 +730,38 @@
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js?v=115"></script>
-<script src="js/tasks-def.js?v=115"></script>
+<script src="js/config.js?v=116"></script>
+<script src="js/tasks-def.js?v=116"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js?v=115"></script>
+<script src="js/state.js?v=116"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js?v=115"></script>
-<script src="js/progress.js?v=115"></script>
+<script src="js/helpers.js?v=116"></script>
+<script src="js/progress.js?v=116"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js?v=115"></script>
+<script src="js/sample-data.js?v=116"></script>
 
-<script src="js/holidays.js?v=115"></script>
-<script src="js/auth.js?v=115"></script>
-<script src="js/navigation.js?v=115"></script>
-<script src="js/archive.js?v=115"></script>
-<script src="js/settings.js?v=115"></script>
+<script src="js/holidays.js?v=116"></script>
+<script src="js/auth.js?v=116"></script>
+<script src="js/navigation.js?v=116"></script>
+<script src="js/archive.js?v=116"></script>
+<script src="js/settings.js?v=116"></script>
 
 <!-- 6. 車両管理（カンバン・進捗・カード） -->
-<script src="js/dashboard.js?v=115"></script>
-<script src="js/kanban.js?v=115"></script>
-<script src="js/car-detail.js?v=115"></script>
-<script src="js/car-modal.js?v=115"></script>
-<script src="js/workflow.js?v=115"></script>
-<script src="js/calendar.js?v=115"></script>
-<script src="js/views.js?v=115"></script>
-<script src="js/help.js?v=115"></script>
-<script src="js/theme.js?v=115"></script>
+<script src="js/dashboard.js?v=116"></script>
+<script src="js/kanban.js?v=116"></script>
+<script src="js/car-detail.js?v=116"></script>
+<script src="js/car-modal.js?v=116"></script>
+<script src="js/workflow.js?v=116"></script>
+<script src="js/calendar.js?v=116"></script>
+<script src="js/views.js?v=116"></script>
+<script src="js/help.js?v=116"></script>
+<script src="js/theme.js?v=116"></script>
 
 <!-- 7. メイン -->
-<script src="js/main.js?v=115"></script>
+<script src="js/main.js?v=116"></script>
 
 <script>
   if (typeof makeSampleCars === 'function') {
@@ -741,4 +780,3 @@
 </script>
 </body>
 </html>
-                                                                                                                         
