@@ -169,7 +169,9 @@ function _makeProgressCardOther(car) {
   const workMemo = (car.workMemo || '').trim();
   const card = document.createElement('div');
   card.className = 'pv-card pv-card-other';
+  card.dataset.carId = car.id;
   card.innerHTML = `
+    <div class="pv-drag" title="ドラッグして並び替え">⋮⋮</div>
     <div class="pv-head">
       <div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div>
       <div style="flex:1">
@@ -201,11 +203,12 @@ function _makeProgressCard(car) {
   const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const card = document.createElement('div');
   card.className = 'pv-card';
+  card.dataset.carId = car.id;
   const taskRows = tasks.map(t => {
     const p = calcSingleProg(car, t.id, tasks);
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${t.icon}</span><div style="flex:1;font-size:12px">${t.name}</div><div class="pbar" style="width:52px"><div class="pfill" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);width:30px;text-align:right">${p.pct}%</div></div>`;
   }).join('');
-  card.innerHTML = `<div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:9px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
+  card.innerHTML = `<div class="pv-drag" title="ドラッグして並び替え">⋮⋮</div><div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:9px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
   return card;
 }
 
@@ -255,6 +258,7 @@ function renderProgress() {
       </div>
       <div class="pv-group-body"></div>`;
     const body = sec.querySelector('.pv-group-body');
+    body.dataset.group = g.id;
     if (!g.cars.length) {
       const empty = document.createElement('div');
       empty.className = 'pv-group-empty';
@@ -264,6 +268,73 @@ function renderProgress() {
       g.cars.forEach(car => body.appendChild(_makeProgressCard(car)));
     }
     wrap.appendChild(sec);
+  });
+
+  _attachProgressDnD();
+}
+
+// 進捗ビューのドラッグ&ドロップ並び替え（同じ枠内のみ、再描画でリセット）
+function _attachProgressDnD() {
+  const bodies = document.querySelectorAll('#pv-grid .pv-group-body');
+  bodies.forEach(body => {
+    const groupId = body.dataset.group;
+    body.querySelectorAll('.pv-card').forEach(card => {
+      const handle = card.querySelector('.pv-drag');
+      if (!handle) return;
+      // ハンドルにマウスダウンしたときだけドラッグ可能化
+      handle.addEventListener('mousedown', () => { card.draggable = true; });
+      handle.addEventListener('mouseup',   () => { card.draggable = false; });
+      card.addEventListener('dragend',     () => {
+        card.draggable = false;
+        card.classList.remove('pv-dragging');
+        document.querySelectorAll('.pv-card.pv-drop-before, .pv-card.pv-drop-after')
+          .forEach(c => c.classList.remove('pv-drop-before','pv-drop-after'));
+      });
+      card.addEventListener('dragstart', (e) => {
+        card.classList.add('pv-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/x-pv-group', groupId);
+        e.dataTransfer.setData('text/x-pv-id', card.dataset.carId || '');
+      });
+    });
+
+    body.addEventListener('dragover', (e) => {
+      const dragging = document.querySelector('.pv-card.pv-dragging');
+      if (!dragging) return;
+      // 別枠は受け付けない
+      const srcGroup = dragging.closest('.pv-group-body')?.dataset.group;
+      if (srcGroup !== groupId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      // どのカードの前/後ろに挿入するか判定
+      const target = e.target.closest('.pv-card');
+      document.querySelectorAll('.pv-card.pv-drop-before, .pv-card.pv-drop-after')
+        .forEach(c => c.classList.remove('pv-drop-before','pv-drop-after'));
+      if (target && target !== dragging) {
+        const r = target.getBoundingClientRect();
+        const before = (e.clientY - r.top) < r.height / 2;
+        target.classList.add(before ? 'pv-drop-before' : 'pv-drop-after');
+      }
+    });
+
+    body.addEventListener('drop', (e) => {
+      const dragging = document.querySelector('.pv-card.pv-dragging');
+      if (!dragging) return;
+      const srcGroup = e.dataTransfer.getData('text/x-pv-group');
+      if (srcGroup !== groupId) return; // 別枠は弾く
+      e.preventDefault();
+      const target = e.target.closest('.pv-card');
+      if (target && target !== dragging) {
+        const r = target.getBoundingClientRect();
+        const before = (e.clientY - r.top) < r.height / 2;
+        target.parentNode.insertBefore(dragging, before ? target : target.nextSibling);
+      } else if (!target) {
+        body.appendChild(dragging);
+      }
+      document.querySelectorAll('.pv-card.pv-drop-before, .pv-card.pv-drop-after')
+        .forEach(c => c.classList.remove('pv-drop-before','pv-drop-after'));
+    });
   });
 }
 
