@@ -14,7 +14,13 @@ function setExhibitSort(key) {
     exhibitSort.key = key;
     exhibitSort.dir = 'desc';
   }
-  renderExhibit();
+  // v1.0.18: アクティブなビューを再描画（展示／商談どちらでも動くように）
+  const dealView = document.getElementById('view-deal');
+  if (dealView && dealView.classList.contains('active')) {
+    if (typeof renderDeal === 'function') renderDeal();
+  } else {
+    renderExhibit();
+  }
 }
 
 function _exhibitSorter() {
@@ -95,7 +101,8 @@ function _makeExhibitColumn(opts) {
 }
 
 function _refreshExhibitSortBtns() {
-  document.querySelectorAll('#view-exhibit .ex-sort-btn').forEach(btn => {
+  // v1.0.18: 展示ビューと商談ビューの両方のソートボタンを更新
+  document.querySelectorAll('#view-exhibit .ex-sort-btn, #view-deal .ex-sort-btn').forEach(btn => {
     const k = btn.dataset.key;
     btn.classList.remove('active');
     const ar = btn.querySelector('.sort-arrow');
