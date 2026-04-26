@@ -504,3 +504,22 @@
 .edit-danger-hint{
   font-size:10px;color:var(--text3);margin-top:6px;text-align:center;
 }
+
+/* ========================================
+   v0.9.1 その他カードの右上バッジ「仕入N日」
+   通常カードの cc-bigday と同じ位置・サイズ、グレー系の色
+   ======================================== */
+.cc-bigday.cc-other-day{
+  background:rgba(138,143,168,.22);
+  color:#c5cad8;
+  border:1px solid rgba(138,143,168,.35);
+}
+
+/* compact モードでも右上バッジは表示しておく（仕入日数だけは見せたい） */
+.car-card.cc-other.compact .cc-bigday.cc-other-day{
+  font-size:10px;padding:2px 6px;
+}
+.car-card.cc-other.compact .cc-bigday.cc-other-day .cc-bigday-num{font-size:14px}
+
+/* v0.9.0 の cc-other-badge は廃止 */
+.cc-other-badge{display:none !important}

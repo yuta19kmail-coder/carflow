@@ -1,9 +1,6 @@
 // ========================================
 // kanban.js
-// カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売約／取消／納車完了フロー
-// v0.8.5: 納車完了フロー＋祝福演出
-// v0.8.9: 「その他」列追加（保留車両用、メモ中心の専用カード）
-// v0.9.0: その他カードを既存カード踏襲のレイアウトに刷新（写真あり・メモ2行打ち切り・左にグレー太枠）
+// v0.9.1: その他カード右上を「仕入N日」バッジ化、下段帯削除
 // ========================================
 
 const COMPACT_THRESHOLD = 4;
@@ -41,13 +38,7 @@ function renderKanban() {
   });
 }
 
-// ========================================
-// その他カード（v0.9.0：既存カード踏襲）
-// 写真・メーカー・モデル・管理番号・サイズタグ・仕入れバーは通常カード同様
-// 金額・進捗ドット・進捗％・在庫日数バッジは省略
-// 代わりにコアメモ＋作業メモを2行打ち切りで表示
-// 左にグレーの太枠で売り物カードと区別
-// ========================================
+// v0.9.1: その他カード（右上は仕入Nバッジのみ、下段帯なし）
 function _makeOtherCard(car, isCompact) {
   const inv = daysSince(car.purchaseDate);
   const coreMemo = (car.memo || '').trim();
@@ -79,13 +70,11 @@ function _makeOtherCard(car, isCompact) {
           <div class="cc-model">${car.model}</div>
         </div>
         <div class="cc-info-right">
-          <div class="cc-other-badge">📝 その他</div>
-          <div class="cc-tag">${car.size||'—'}</div>
+          <div class="cc-bigday cc-other-day">仕入<span class="cc-bigday-num">${inv}</span>日</div>
         </div>
       </div>
       ${memoBlock}
-    </div>
-    <div class="cc-bottom-bar">仕入れから${inv}日</div>`;
+    </div>`;
   div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
   div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
   div.addEventListener('click', () => {
@@ -184,14 +173,10 @@ function makeCarCard(car, isCompact) {
   return div;
 }
 
-// ========================================
-// カンバン移動の振り分け
-// ========================================
 function handleKanbanMove(car, targetCol) {
   const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const toLabel = COLS.find(c => c.id === targetCol)?.label || targetCol;
 
-  // ★禁止：その他 ↔ 納車準備、その他 ↔ 納車完了
   if ((car.col === 'other' && (targetCol === 'delivery' || targetCol === 'done')) ||
       ((car.col === 'delivery' || car.col === 'done') && targetCol === 'other')) {
     showToast(`${fromLabel}と${toLabel}の間は移動できません`);
@@ -348,9 +333,7 @@ function celebrateDelivery(car) {
   const conf = document.getElementById('celebrate-confetti');
   const carEl = document.getElementById('celebrate-car');
   if (carEl) carEl.textContent = `${car.maker} ${car.model}（${car.num}）`;
-
   if (conf) conf.innerHTML = '';
-
   const colors = ['#fcd34d','#fb923c','#f87171','#60a5fa','#34d399','#a78bfa','#f472b6','#facc15'];
   const count = 120;
   for (let i = 0; i < count; i++) {
@@ -374,10 +357,8 @@ function celebrateDelivery(car) {
     piece.style.animationDelay = delay + 's';
     if (conf) conf.appendChild(piece);
   }
-
   overlay.classList.remove('fade-out');
   overlay.classList.add('show');
-
   setTimeout(() => {
     overlay.classList.add('fade-out');
     setTimeout(() => {
