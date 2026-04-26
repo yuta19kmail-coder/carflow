@@ -1,0 +1,187 @@
+/* ========================================
+   mobile.css
+   スマホ対応（768px以下＋body.mobileクラス）
+   現場スタッフ用：ログイン後→進捗ビュー固定、編集系UI非表示、
+   タスクチェック・作業メモのみ可能
+   ======================================== */
+
+@media (max-width: 768px) {
+
+  /* ========== 全体レイアウト ========== */
+  html, body { font-size: 14px; }
+
+  /* トップバー：ロゴ＋ログアウトのみ */
+  .topbar {
+    padding: 0 10px;
+    gap: 6px;
+    height: 48px;
+  }
+  .topbar-logo { font-size: 14px; width: auto; }
+  /* バージョンバッジは小さく */
+  .topbar > span { font-size: 9px !important; padding: 1px 5px !important; }
+  /* 販売実績ボタン・ヘルプボタン・アバター・ユーザー名は隠す */
+  .topbar .tb-btn,
+  .topbar .help-btn,
+  .topbar .av,
+  .topbar #u-name { display: none !important; }
+  /* ログアウトだけは残す（小さく） */
+  .topbar .btn-sm { font-size: 11px; padding: 4px 9px; }
+
+  /* サイドバー：完全に隠す */
+  .sidebar { display: none !important; }
+  .body-row { display: block !important; height: calc(100vh - 48px); }
+  .content { display: flex; flex-direction: column; height: 100%; }
+
+  /* タブバー：完全に隠す（進捗固定なのでタブ切替不要） */
+  .tabs { display: none !important; }
+
+  /* 設定・ダッシュボード・販売実績・操作ログ・メンバーパネルも隠す */
+  #panel-dashboard,
+  #panel-settings,
+  #panel-archive,
+  #panel-log,
+  #panel-members { display: none !important; }
+
+  /* 他のビュー（カンバン・カレンダー・展示・全体一覧・在庫）も非表示 */
+  #view-kanban,
+  #view-calendar,
+  #view-exhibit,
+  #view-table,
+  #view-inventory { display: none !important; }
+
+  /* 下部の警告チップエリア：スペース節約のため非表示 */
+  .action-area { display: none !important; }
+
+  /* 進捗ビューを強制表示＆フル画面 */
+  #view-progress {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px;
+  }
+
+  /* ========== 進捗ビューのカード ========== */
+  .pv-grid { display: block !important; }
+  .pv-group { margin-bottom: 18px; }
+  .pv-group-head {
+    padding: 6px 2px 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+  .pv-group-title { font-size: 14px; }
+  .pv-group-sub { font-size: 10px; margin-left: 0; }
+
+  /* カードを1カラムに */
+  .pv-group-body {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+    padding-top: 10px;
+  }
+  .pv-card { border-radius: 10px; }
+  .pv-head { padding: 11px; gap: 9px; }
+  .pv-thumb { width: 60px; height: 50px; font-size: 22px; }
+  .pv-body { padding: 11px; }
+  .pv-btn {
+    margin: 0 11px 11px;
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ========== 詳細モーダルをフル画面に ========== */
+  .overlay { padding: 0 !important; align-items: stretch !important; }
+  .modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .modal.modal-wide { width: 100vw !important; max-width: 100vw !important; }
+  .mhdr { padding: 12px 14px; position: sticky; top: 0; z-index: 5; background: var(--bg2); }
+  .mbody { padding: 14px; }
+
+  /* 詳細モーダル内：編集ボタン非表示（閲覧+チェック+メモのみ） */
+  #detail-body button[onclick^="openCarModal"] { display: none !important; }
+  /* 詳細モーダル内：その他カード用の編集ボタンも */
+  .detail-photo-edit { display: none !important; }
+  /* タスク一覧の「開く →」ボタンは残す（ワークフロー画面でチェックするため） */
+  /* 危険ゾーン（削除ボタン）も詳細モーダル経由では出ないので無関係 */
+
+  /* ========== 車両編集モーダル：開かせない ========== */
+  /* 念のため：もしJSで開いてしまっても表示されないように */
+  body.mobile #modal-car { display: none !important; }
+  /* 確認ダイアログ系（削除確認・売約確認）は念のため残すが、
+     実際にトリガーされる経路は塞ぐ */
+
+  /* 各種確認ダイアログがフル画面化しないよう調整 */
+  .confirm-overlay { padding: 20px !important; align-items: center !important; }
+  .confirm-box {
+    width: 100% !important;
+    max-width: 360px !important;
+    height: auto !important;
+    max-height: 80vh !important;
+  }
+
+  /* ========== ワークフロー画面の調整 ========== */
+  .wf-topbar { padding: 11px 12px; }
+  .wf-back { font-size: 13px; }
+  .wf-vehicle { padding: 10px 12px; }
+  .wf-body { padding: 14px; }
+  .wf-footer { padding: 12px; }
+  .wf-done-btn { font-size: 14px; padding: 14px; }
+
+  /* ========== ヘルプモーダルもフル画面 ========== */
+  .help-overlay { padding: 0 !important; }
+  .help-modal {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+  }
+  .help-tab { padding: 11px 12px; font-size: 12px; }
+  .help-body { padding: 14px; }
+
+  /* ========== 作業メモのタッチ領域を大きく ========== */
+  .work-memo-view {
+    min-height: 60px;
+    padding: 14px;
+    font-size: 14px;
+  }
+  .work-memo-input {
+    font-size: 14px;
+    padding: 11px;
+  }
+
+  /* タスクチェックボックスを大きく */
+  .task-chk {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .task-chk svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .task-item-name { font-size: 13px; }
+  .task-item-pct { font-size: 12px; }
+  .task-open-btn {
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+
+  /* ========== 現場モードヒント（トップバー左に控えめに） ========== */
+  .topbar-logo::after {
+    content: " 📱現場";
+    font-size: 10px;
+    color: var(--text3);
+    margin-left: 6px;
+    font-weight: normal;
+  }
+
+  /* ログイン画面はスマホ対応（中央寄せのまま、横幅だけ調整） */
+  .login-box { width: 90vw; max-width: 360px; }
+}
