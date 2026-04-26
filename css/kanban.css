@@ -122,8 +122,9 @@
 .dtable td{border:1px solid var(--border);padding:8px 11px;font-size:12px;background:var(--bg2);vertical-align:middle}
 .dtable tr:hover td{background:var(--bg3);cursor:pointer}
 
-/* 在庫日数グリッド */
-.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:9px}
+/* 在庫日数グリッド（v0.8.8: グループ化に伴い、ラッパはブロック表示。
+   グリッド配置は .inv-group-body 内で行う） */
+.inv-grid{display:block}
 .inv-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer}
 .inv-card:hover{border-color:var(--border2)}
 .inv-thumb{height:95px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;overflow:hidden}
@@ -324,3 +325,28 @@
 .tbl-group .dtable{min-width:auto;border-collapse:collapse}
 .tbl-group .dtable th{background:var(--bg2)}
 .tbl-group .dtable td{background:var(--bg2)}
+
+/* ========================================
+   v0.8.8 在庫日数ビュー：グループ表示
+   tbl-group の色分けクラス（g-ok / g-warn / g-action / g-danger）を流用
+   ======================================== */
+.inv-group{margin-bottom:18px;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;background:var(--bg2)}
+.inv-group:last-child{margin-bottom:0}
+.inv-group-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.inv-group-body{padding:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:9px}
+
+.inv-group.g-ok .tbl-group-name{color:var(--green)}
+.inv-group.g-ok .tbl-group-count{background:rgba(29,185,122,.15);color:var(--green);border:1px solid rgba(29,185,122,.35)}
+.inv-group.g-ok{border-left:3px solid var(--green)}
+
+.inv-group.g-warn .tbl-group-name{color:#fcd34d}
+.inv-group.g-warn .tbl-group-count{background:rgba(245,210,59,.15);color:#fcd34d;border:1px solid rgba(245,210,59,.35)}
+.inv-group.g-warn{border-left:3px solid #fcd34d}
+
+.inv-group.g-action .tbl-group-name{color:#fb923c}
+.inv-group.g-action .tbl-group-count{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.4)}
+.inv-group.g-action{border-left:3px solid #fb923c}
+
+.inv-group.g-danger .tbl-group-name{color:var(--red)}
+.inv-group.g-danger .tbl-group-count{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.inv-group.g-danger{border-left:3px solid var(--red)}
