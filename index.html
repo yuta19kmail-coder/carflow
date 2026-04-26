@@ -6,16 +6,16 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css?v=091">
-<link rel="stylesheet" href="css/login.css?v=091">
-<link rel="stylesheet" href="css/layout.css?v=091">
-<link rel="stylesheet" href="css/components.css?v=091">
-<link rel="stylesheet" href="css/panels.css?v=091">
-<link rel="stylesheet" href="css/kanban.css?v=091">
-<link rel="stylesheet" href="css/calendar.css?v=091">
-<link rel="stylesheet" href="css/modal.css?v=091">
-<link rel="stylesheet" href="css/celebrate.css?v=091">
-<link rel="stylesheet" href="css/help.css?v=091">
+<link rel="stylesheet" href="css/base.css?v=092">
+<link rel="stylesheet" href="css/login.css?v=092">
+<link rel="stylesheet" href="css/layout.css?v=092">
+<link rel="stylesheet" href="css/components.css?v=092">
+<link rel="stylesheet" href="css/panels.css?v=092">
+<link rel="stylesheet" href="css/kanban.css?v=092">
+<link rel="stylesheet" href="css/calendar.css?v=092">
+<link rel="stylesheet" href="css/modal.css?v=092">
+<link rel="stylesheet" href="css/celebrate.css?v=092">
+<link rel="stylesheet" href="css/help.css?v=092">
 </head>
 <body>
 
@@ -30,7 +30,7 @@
     <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
     <div class="login-hint">デモ：パスワード 1234（ユーザー名は省略可）</div>
     <button class="btn-login" onclick="doLogin()">ログイン</button>
-    <div class="login-ver">CarFlow v0.9.1</div>
+    <div class="login-ver">CarFlow v0.9.2</div>
   </div>
 </div>
 
@@ -39,7 +39,7 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.9.1</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.9.2</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
@@ -370,7 +370,7 @@
         <textarea id="inp-memo" rows="3" placeholder="自由記入" style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
       </div>
 
-      <!-- v0.9.1: 編集時のみ表示される危険ゾーン（車両削除） -->
+      <!-- v0.9.2: 編集時のみ表示される危険ゾーン（車両削除） -->
       <div class="edit-danger-zone" id="edit-danger-zone" style="display:none">
         <div class="edit-danger-label">⚠️ 危険な操作</div>
         <button class="detail-delete-btn" id="edit-delete-btn" onclick="onEditDeleteClick()">🗑️ この車両を削除</button>
@@ -631,37 +631,37 @@
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js?v=091"></script>
-<script src="js/tasks-def.js?v=091"></script>
+<script src="js/config.js?v=092"></script>
+<script src="js/tasks-def.js?v=092"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js?v=091"></script>
+<script src="js/state.js?v=092"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js?v=091"></script>
-<script src="js/progress.js?v=091"></script>
+<script src="js/helpers.js?v=092"></script>
+<script src="js/progress.js?v=092"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js?v=091"></script>
+<script src="js/sample-data.js?v=092"></script>
 
-<script src="js/holidays.js?v=091"></script>
-<script src="js/auth.js?v=091"></script>
-<script src="js/navigation.js?v=091"></script>
-<script src="js/archive.js?v=091"></script>
-<script src="js/settings.js?v=091"></script>
+<script src="js/holidays.js?v=092"></script>
+<script src="js/auth.js?v=092"></script>
+<script src="js/navigation.js?v=092"></script>
+<script src="js/archive.js?v=092"></script>
+<script src="js/settings.js?v=092"></script>
 
 <!-- 6. 描画モジュール -->
-<script src="js/dashboard.js?v=091"></script>
-<script src="js/kanban.js?v=091"></script>
-<script src="js/car-detail.js?v=091"></script>
-<script src="js/car-modal.js?v=091"></script>
-<script src="js/workflow.js?v=091"></script>
-<script src="js/calendar.js?v=091"></script>
-<script src="js/views.js?v=091"></script>
-<script src="js/help.js?v=091"></script>
+<script src="js/dashboard.js?v=092"></script>
+<script src="js/kanban.js?v=092"></script>
+<script src="js/car-detail.js?v=092"></script>
+<script src="js/car-modal.js?v=092"></script>
+<script src="js/workflow.js?v=092"></script>
+<script src="js/calendar.js?v=092"></script>
+<script src="js/views.js?v=092"></script>
+<script src="js/help.js?v=092"></script>
 
 <!-- 7. 最終ディスパッチャ -->
-<script src="js/main.js?v=091"></script>
+<script src="js/main.js?v=092"></script>
 
 <!-- 8. 起動 -->
 <script>
@@ -680,7 +680,7 @@
   }
 </script>
 
-<!-- v0.9.1: 車両削除確認ダイアログ -->
+<!-- v0.9.2: 車両削除確認ダイアログ -->
 <div class="confirm-overlay" id="confirm-delete-car">
   <div class="confirm-box">
 <div class="confirm-icon">🗑️</div>

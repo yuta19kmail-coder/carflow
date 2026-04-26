@@ -523,3 +523,11 @@
 
 /* v0.9.0 の cc-other-badge は廃止 */
 .cc-other-badge{display:none !important}
+
+/* ========================================
+   v0.9.2 その他カードの左バー削除
+   ======================================== */
+.car-card.cc-other{border-left:1px solid var(--border) !important}
+.car-card.cc-other:hover{border-left-color:var(--border2) !important}
+.pv-card.pv-card-other{border-left:1px solid var(--border) !important}
+.pv-card.pv-card-other:hover{border-left-color:var(--border2) !important}
