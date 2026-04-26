@@ -9,6 +9,21 @@ let expandedCards = {};
 const COL_ORDER = ['other','purchase','regen','exhibit','delivery','done'];
 const colIdx = id => COL_ORDER.indexOf(id);
 
+// v1.0.15: 展開中、カード以外の余白クリックで縮小に戻す（一度だけ配線）
+document.addEventListener('click', (e) => {
+  if (!kanbanForceExpand) return;
+  const view = document.getElementById('view-kanban');
+  if (!view || !view.classList.contains('active')) return;
+  if (!view.contains(e.target)) return;
+  // ツールバー内のボタンクリックは除外（自前の処理に任せる）
+  if (e.target.closest('#kanban-toolbar')) return;
+  // カード本体クリックは除外（詳細を開く / 縮小→展開トグル等）
+  if (e.target.closest('.car-card')) return;
+  // 余白クリック → 縮小に戻す
+  kanbanForceExpand = false;
+  renderKanban();
+});
+
 function renderKanban() {
   expandedCards = {};
   const wrap = document.getElementById('kanban-wrap');
@@ -62,12 +77,6 @@ function _sortKanbanCars(arr, sort) {
       // 売約済みなら売約日数、それ以外は仕入日数
       av = a.contract ? daysSinceContract(a) : daysSince(a.purchaseDate);
       bv = b.contract ? daysSinceContract(b) : daysSince(b.purchaseDate);
-    } else if (key === 'status') {
-      // 同列内ソートだから「売約フラグ優先＋仕入日数」で並べる
-      av = (a.contract ? 1 : 0); bv = (b.contract ? 1 : 0);
-      if (av === bv) {
-        av = daysSince(a.purchaseDate); bv = daysSince(b.purchaseDate);
-      }
     } else {
       return 0;
     }

@@ -28,7 +28,6 @@
 .kt-sort-btn.active{color:#fff;background:var(--blue);border-color:var(--blue)}
 .kt-sort-btn .kt-arrow{font-size:10px;line-height:1}
 .kt-expand-btn{
-  margin-left:auto;
   background:var(--bg2);
   border:1px solid var(--border);
   border-radius:var(--r);
