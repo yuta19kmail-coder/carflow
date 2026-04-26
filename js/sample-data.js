@@ -40,7 +40,7 @@ function makeSampleCars() {
       year:'2015', color:'シルバー', size:'軽自動車', km:'82000', price:'',
       purchaseDate:dateAddDays(t,-12), contract:0, deliveryDate:'',
       memo:'買取車両、簡単に仕上げてオークション出品予定', workMemo:'',
-      photo:null, col:'other',
+      photo:'images/sample/car1.jpg', col:'other',
       regenTasks:mkTaskState(REGEN_TASKS),
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -49,7 +49,7 @@ function makeSampleCars() {
       year:'2010', color:'ホワイト', size:'軽自動車', km:'135000', price:'',
       purchaseDate:dateAddDays(t,-25), contract:0, deliveryDate:'',
       memo:'廃車予定、書類待ち。客先で引取済み', workMemo:'解体屋への手配済',
-      photo:null, col:'other',
+      photo:'images/sample/car2.jpg', col:'other',
       regenTasks:mkTaskState(REGEN_TASKS),
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -58,7 +58,7 @@ function makeSampleCars() {
       year:'2018', color:'ホワイト', size:'トラック', km:'98000', price:'',
       purchaseDate:dateAddDays(t,-6), contract:0, deliveryDate:'',
       memo:'下取り車両、買取りで保留中。再生して販売 or オークション検討', workMemo:'',
-      photo:null, col:'other',
+      photo:'images/sample/car3.jpg', col:'other',
       regenTasks:mkTaskState(REGEN_TASKS),
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -67,7 +67,7 @@ function makeSampleCars() {
       year:'2016', color:'ホワイト', size:'トラック', km:'72000', price:'',
       purchaseDate:dateAddDays(t,-3), contract:0, deliveryDate:'',
       memo:'社用車として保留。販売 or 自社使用判断中', workMemo:'',
-      photo:null, col:'other',
+      photo:'images/sample/car4.jpg', col:'other',
       regenTasks:mkTaskState(REGEN_TASKS),
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -105,7 +105,7 @@ function makeSampleCars() {
       year:'2022', color:'ブラック', size:'軽自動車', km:'19000', price:'1420000',
       purchaseDate:dateAddDays(t,-7), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'purchase',
+      photo:'images/sample/car5.jpg', col:'purchase',
       regenTasks:mkTaskState(REGEN_TASKS),
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -184,7 +184,7 @@ function makeSampleCars() {
       year:'2021', color:'オレンジ', size:'軽自動車', km:'21000', price:'1180000',
       purchaseDate:dateAddDays(t,-22), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car6.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -193,7 +193,7 @@ function makeSampleCars() {
       year:'2020', color:'ピンク', size:'軽自動車', km:'34000', price:'880000',
       purchaseDate:dateAddDays(t,-28), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car7.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -202,7 +202,7 @@ function makeSampleCars() {
       year:'2019', color:'シルバー', size:'軽自動車', km:'48000', price:'780000',
       purchaseDate:dateAddDays(t,-50), contract:0, deliveryDate:'',
       memo:'長期在庫', workMemo:'値下げ検討中',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car8.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -222,7 +222,7 @@ function makeSampleCars() {
       year:'2022', color:'ホワイト', size:'コンパクト', km:'18000', price:'1680000',
       purchaseDate:dateAddDays(t,-19), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car9.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -231,7 +231,7 @@ function makeSampleCars() {
       year:'2021', color:'ブラック', size:'コンパクト', km:'29000', price:'1880000',
       purchaseDate:dateAddDays(t,-12), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car10.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -240,7 +240,7 @@ function makeSampleCars() {
       year:'2020', color:'グレー', size:'コンパクト', km:'42000', price:'1380000',
       purchaseDate:dateAddDays(t,-32), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car11.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -260,7 +260,7 @@ function makeSampleCars() {
       year:'2022', color:'ブラック', size:'SUV', km:'26000', price:'3680000',
       purchaseDate:dateAddDays(t,-24), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car12.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -269,7 +269,7 @@ function makeSampleCars() {
       year:'2021', color:'ホワイトパール', size:'SUV', km:'33000', price:'2280000',
       purchaseDate:dateAddDays(t,-16), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car13.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -278,7 +278,7 @@ function makeSampleCars() {
       year:'2020', color:'シルバー', size:'SUV', km:'48000', price:'1880000',
       purchaseDate:dateAddDays(t,-46), contract:0, deliveryDate:'',
       memo:'長期在庫', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car1.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -289,7 +289,7 @@ function makeSampleCars() {
       year:'2022', color:'ブラック', size:'ミニバン', km:'24000', price:'2980000',
       purchaseDate:dateAddDays(t,-21), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car2.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -298,7 +298,7 @@ function makeSampleCars() {
       year:'2020', color:'パールホワイト', size:'ミニバン', km:'58000', price:'2380000',
       purchaseDate:dateAddDays(t,-38), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car3.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -309,7 +309,7 @@ function makeSampleCars() {
       year:'2021', color:'シルバー', size:'セダン', km:'32000', price:'1880000',
       purchaseDate:dateAddDays(t,-26), contract:0, deliveryDate:'',
       memo:'', workMemo:'',
-      photo:null, col:'exhibit',
+      photo:'images/sample/car4.jpg', col:'exhibit',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -343,7 +343,7 @@ function makeSampleCars() {
       year:'2022', color:'パールホワイト', size:'軽自動車', km:'19000', price:'1480000',
       purchaseDate:dateAddDays(t,-18), contract:1, contractDate:dateAddDays(t,-2), deliveryDate:dateAddDays(t,12),
       memo:'', workMemo:'',
-      photo:null, col:'delivery',
+      photo:'images/sample/car5.jpg', col:'delivery',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -352,7 +352,7 @@ function makeSampleCars() {
       year:'2021', color:'レッド', size:'コンパクト', km:'27000', price:'1280000',
       purchaseDate:dateAddDays(t,-15), contract:1, contractDate:dateAddDays(t,-1), deliveryDate:dateAddDays(t,14),
       memo:'', workMemo:'',
-      photo:null, col:'delivery',
+      photo:'images/sample/car6.jpg', col:'delivery',
       regenTasks: {...REGEN_FULL},
       deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[]
     },
@@ -372,7 +372,7 @@ function makeSampleCars() {
       year:'2022', color:'ブラック', size:'SUV', km:'22000', price:'1980000',
       purchaseDate:dateAddDays(t,-45), contract:1, contractDate:dateAddDays(t,-12), deliveryDate:dateAddDays(t,-2),
       memo:'納車済み', workMemo:'',
-      photo:null, col:'done',
+      photo:'images/sample/car7.jpg', col:'done',
       regenTasks: {...REGEN_FULL},
       deliveryTasks: {...DELIVERY_FULL}, logs:[]
     },
@@ -381,7 +381,7 @@ function makeSampleCars() {
       year:'2023', color:'ホワイト', size:'コンパクト', km:'9000', price:'1980000',
       purchaseDate:dateAddDays(t,-35), contract:1, contractDate:dateAddDays(t,-9), deliveryDate:dateAddDays(t,-1),
       memo:'納車済み', workMemo:'',
-      photo:null, col:'done',
+      photo:'images/sample/car8.jpg', col:'done',
       regenTasks: {...REGEN_FULL},
       deliveryTasks: {...DELIVERY_FULL}, logs:[]
     },
@@ -447,7 +447,7 @@ function makeArchivedSamples() {
         size: band.size, km: String(km),
         price: String(price),
         purchaseDate, contractDate, deliveryDate, contract:1,
-        memo:'', photo:null, col:'done',
+        memo:'', photo:'images/sample/car'+((numSeq % 13) + 1)+'.jpg', col:'done',
         regenTasks:mkTaskState(REGEN_TASKS),
         deliveryTasks:mkTaskState(DELIVERY_TASKS), logs:[],
         _archivedAt: dateAddDays(`${y}-${String(m).padStart(2,'0')}-${String(dim).padStart(2,'0')}`, 3),
@@ -459,4 +459,6 @@ function makeArchivedSamples() {
   return out;
 }
 // 初期アーカイブ投入
+archivedCars = makeArchivedSamples();
+入
 archivedCars = makeArchivedSamples();
