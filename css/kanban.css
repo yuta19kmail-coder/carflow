@@ -531,3 +531,15 @@
 .car-card.cc-other:hover{border-left-color:var(--border2) !important}
 .pv-card.pv-card-other{border-left:1px solid var(--border) !important}
 .pv-card.pv-card-other:hover{border-left-color:var(--border2) !important}
+
+/* ========================================
+   v0.9.5 進捗ビューのグループ切替タブ
+   PC：タブは非表示、3グループ縦並び全表示
+   スマホ：タブ表示、選択中のグループのみ表示
+   ======================================== */
+
+/* PCではタブを完全に隠す */
+.pv-tabs{display:none}
+
+/* PCでは全グループ表示（pv-active クラスは無視） */
+.pv-group{display:block}

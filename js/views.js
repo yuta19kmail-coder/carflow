@@ -1,11 +1,7 @@
 // ========================================
 // views.js
-// その他のビュー（展示、進捗、全体一覧、在庫）
-// エクスポート機能も含む
-// v0.8.6: 展示ビュー全面リライト
-// v0.8.7: 進捗2枠グループ化、全体一覧並び替えボタン
-// v0.8.8: 在庫日数ビューを invWarn 連動グループ化
-// v0.8.9: ガント削除、その他列対応（展示・進捗）
+// 展示／進捗／全体一覧／在庫日数／エクスポート
+// v0.9.5: 進捗ビュー：補足sub削除、「販売前」短縮、スマホ用グループ切替タブ
 // ========================================
 
 // ========================================
@@ -119,7 +115,6 @@ function renderExhibit() {
   if (!cols) return;
   cols.innerHTML = '';
 
-  // v0.8.9: その他列を最左に追加
   const otherCars = cars.filter(c => c.col === 'other');
   const stockCars = cars.filter(c => c.col === 'purchase' || c.col === 'regen');
   const exhibitCars = cars.filter(c => c.col === 'exhibit');
@@ -130,25 +125,15 @@ function renderExhibit() {
   const exhibitTotal = exhibitCars.length;
 
   const otherCol = _makeExhibitColumn({
-    key: 'other',
-    name: 'その他',
-    icon: '📝',
-    isStock: true,
-    count: otherCars.length,
-    pct: 0,
-    cars: otherCars,
+    key: 'other', name: 'その他', icon: '📝',
+    isStock: true, count: otherCars.length, pct: 0, cars: otherCars,
   });
   otherCol.classList.add('other');
   cols.appendChild(otherCol);
 
   const stockCol = _makeExhibitColumn({
-    key: 'stock',
-    name: 'ストック車両',
-    icon: '📦',
-    isStock: true,
-    count: stockCars.length,
-    pct: 0,
-    cars: stockCars,
+    key: 'stock', name: 'ストック車両', icon: '📦',
+    isStock: true, count: stockCars.length, pct: 0, cars: stockCars,
   });
   cols.appendChild(stockCol);
 
@@ -156,13 +141,8 @@ function renderExhibit() {
     const sized = exhibitCars.filter(c => c.size === size).sort(sorter);
     const pct = exhibitTotal > 0 ? (sized.length / exhibitTotal * 100) : 0;
     const col = _makeExhibitColumn({
-      key: size,
-      name: size,
-      icon: carEmoji(size),
-      isStock: false,
-      count: sized.length,
-      pct,
-      cars: sized,
+      key: size, name: size, icon: carEmoji(size),
+      isStock: false, count: sized.length, pct, cars: sized,
     });
     cols.appendChild(col);
   });
@@ -171,19 +151,16 @@ function renderExhibit() {
   if (totalLabel) {
     totalLabel.textContent = `その他 ${otherCars.length}台 / ストック ${stockCars.length}台 / 展示中 ${exhibitTotal}台`;
   }
-
   _refreshExhibitSortBtns();
 }
 
 // ========================================
 // ガントチャートビュー（v0.8.9 で削除）
-// 互換性のため renderGantt は no-op スタブを残す
 // ========================================
 function renderGantt() { /* removed in v0.8.9 */ }
 
 // ========================================
-// 進捗ビュー：2枠グループ化（販売前／納車準備）
-// v0.8.9: 「その他」を販売前グループに含める。その他はタスクなしのメモ重視カード
+// 進捗ビュー（v0.9.0で3枠化、v0.9.5で補足sub削除＋スマホ用タブ追加）
 // ========================================
 function _makeProgressCardOther(car) {
   const inv = daysSince(car.purchaseDate);
@@ -192,7 +169,6 @@ function _makeProgressCardOther(car) {
   const workMemo = (car.workMemo || '').trim();
   const card = document.createElement('div');
   card.className = 'pv-card pv-card-other';
-  // v0.9.3: 通常カードと同じく pv-thumb を表示（写真 or サイズ絵文字）
   card.innerHTML = `
     <div class="pv-head">
       <div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div>
@@ -233,29 +209,49 @@ function _makeProgressCard(car) {
   return card;
 }
 
+// v0.9.5: 進捗ビューのグループ選択（スマホ用、PCでは縦並び全表示）
+let progressActiveGroup = 'other';
+
+function setProgressGroup(groupId) {
+  progressActiveGroup = groupId;
+  document.querySelectorAll('.pv-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.group === groupId);
+  });
+  document.querySelectorAll('.pv-group').forEach(g => {
+    g.classList.toggle('pv-active', g.dataset.group === groupId);
+  });
+}
+
 function renderProgress() {
   const wrap = document.getElementById('pv-grid');
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  // v0.9.0: その他／販売前／納車準備 の3枠化
   const otherCars = cars.filter(c => c.col === 'other');
   const beforeSale = cars.filter(c => ['purchase','regen','exhibit'].includes(c.col));
   const inDelivery = cars.filter(c => c.col === 'delivery');
 
   const groups = [
-    {id:'other',    label:'📝 その他', sub:'身の振り方が決まっていない保留中の車両', cars: otherCars, emptyMsg:'その他の車両はありません'},
-    {id:'before',   label:'🏷️ 販売前（売約前）', sub:'仕入れ・再生中・展示中', cars: beforeSale, emptyMsg:'販売前の車両はありません'},
-    {id:'delivery', label:'📦 納車準備', sub:'売約済み・納車に向けて準備中', cars: inDelivery, emptyMsg:'納車準備中の車両はありません'},
+    {id:'other',    label:'📝 その他',   cars: otherCars,   emptyMsg:'その他の車両はありません'},
+    {id:'before',   label:'🏷️ 販売前',   cars: beforeSale,  emptyMsg:'販売前の車両はありません'},
+    {id:'delivery', label:'📦 納車準備', cars: inDelivery,  emptyMsg:'納車準備中の車両はありません'},
   ];
+
+  // スマホ用切替タブ（CSSでスマホ時のみ表示）
+  const tabBar = document.createElement('div');
+  tabBar.className = 'pv-tabs';
+  tabBar.innerHTML = groups.map(g =>
+    `<button class="pv-tab${g.id === progressActiveGroup ? ' active' : ''}" data-group="${g.id}" onclick="setProgressGroup('${g.id}')">${g.label}<span class="pv-tab-count">${g.cars.length}</span></button>`
+  ).join('');
+  wrap.appendChild(tabBar);
 
   groups.forEach(g => {
     const sec = document.createElement('div');
-    sec.className = 'pv-group';
+    sec.className = 'pv-group' + (g.id === progressActiveGroup ? ' pv-active' : '');
+    sec.dataset.group = g.id;
     sec.innerHTML = `
       <div class="pv-group-head">
         <div class="pv-group-title">${g.label} <span class="pv-group-count">${g.cars.length}台</span></div>
-        <div class="pv-group-sub">${g.sub}</div>
       </div>
       <div class="pv-group-body"></div>`;
     const body = sec.querySelector('.pv-group-body');
@@ -272,7 +268,7 @@ function renderProgress() {
 }
 
 // ========================================
-// 全体一覧ビュー：v0.8.7 並び替えボタン、v0.8.8 グループ化撤回（元の1テーブル）
+// 全体一覧ビュー
 // ========================================
 function setTableSort(key) {
   if (tableSort.key === key) {
@@ -349,10 +345,8 @@ function renderTable() {
   _renderTableSortBar();
   const wrap = document.getElementById('table-body-wrap');
   if (!wrap) return;
-
   const sorter = _tableSorter();
   const sorted = cars.slice().sort(sorter);
-
   let rows = '';
   sorted.forEach(car => {
     const prog = calcProg(car);
@@ -378,7 +372,6 @@ function renderTable() {
       <td><div style="display:flex;align-items:center;gap:5px"><div class="pbar" style="width:56px"><div class="pfill" style="width:${prog.pct}%"></div></div><span style="font-size:11px;color:var(--text3)">${prog.pct}%</span></div></td>
     </tr>`;
   });
-
   wrap.innerHTML = `<div style="overflow-x:auto"><table class="dtable">
     <thead><tr>
       <th>管理番号</th><th>メーカー/車種</th><th>年式</th><th>ボディ</th>
@@ -387,14 +380,12 @@ function renderTable() {
     </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
-
   const totalEl = document.getElementById('table-total-label');
   if (totalEl) totalEl.textContent = `合計 ${cars.length}台`;
 }
 
 // ========================================
-// 在庫日数ビュー：v0.8.8 invWarn 連動グループ化
-// v0.8.9: その他は対象外（売り物じゃないので）
+// 在庫日数ビュー
 // ========================================
 function _invCardHtml(car) {
   const inv = daysSince(car.purchaseDate);
@@ -429,23 +420,18 @@ function renderInventory() {
   const grid = document.getElementById('inv-grid');
   if (!grid) return;
   grid.innerHTML = '';
-
-  // v0.8.9: その他と納車完了は除外
   const list = cars
     .filter(c => c.col !== 'done' && c.col !== 'other')
     .slice()
     .sort((a,b) => daysSince(b.purchaseDate) - daysSince(a.purchaseDate));
-
   const onTiers = (appSettings?.invWarn || [])
     .filter(t => t.on)
     .slice()
     .sort((a,b) => a.days - b.days);
-
   const groupDefs = [
     {key:'OK', threshold:null},
     ...onTiers.map(t => ({key: t.label || `${t.days}日〜`, threshold: t.days, tier: t}))
   ];
-
   const buckets = {};
   groupDefs.forEach(g => buckets[g.key] = []);
   list.forEach(car => {
@@ -455,7 +441,6 @@ function renderInventory() {
     if (!buckets[key]) buckets[key] = [];
     buckets[key].push(car);
   });
-
   groupDefs.forEach(g => {
     const arr = buckets[g.key] || [];
     if (!arr.length) return;
@@ -481,7 +466,6 @@ function renderInventory() {
       </div>`;
     grid.appendChild(sec);
   });
-
   if (!list.length) {
     grid.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px 4px">在庫車両がありません</div>';
   }
