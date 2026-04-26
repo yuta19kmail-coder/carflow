@@ -101,9 +101,10 @@ body.deal-mode .body-row {
   gap: 12px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
-/* ===== カード（写真大きめ、年式・距離・金額をしっかり） ===== */
+/* ===== カード（全カード統一サイズ：写真→タイトル→年式距離→金額まで必ず見える） ===== */
 .deal-card {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -111,6 +112,9 @@ body.deal-mode .body-row {
   overflow: hidden;
   cursor: pointer;
   transition: .15s;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0; /* 列内で縮まない */
 }
 .deal-card:hover {
   border-color: var(--blue);
@@ -119,6 +123,7 @@ body.deal-mode .body-row {
 }
 .deal-card-thumb {
   height: 170px;
+  flex-shrink: 0;
   background: var(--bg3);
   display: flex;
   align-items: center;
