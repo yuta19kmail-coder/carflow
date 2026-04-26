@@ -488,5 +488,3 @@ function exportData() {
   a.click();
   showToast('エクスポートしました');
 }
-ートしました');
-}

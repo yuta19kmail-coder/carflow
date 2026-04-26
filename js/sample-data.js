@@ -460,5 +460,3 @@ function makeArchivedSamples() {
 }
 // 初期アーカイブ投入
 archivedCars = makeArchivedSamples();
-入
-archivedCars = makeArchivedSamples();
