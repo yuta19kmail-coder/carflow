@@ -246,9 +246,15 @@ function renderOneMonth(year, month, hostEl) {
       const nameRow = rows[lane * 2];
       if (!nameRow) return;
       const nameEl = document.createElement('div');
-      nameEl.style.cssText = 'position:absolute;left:4px;right:0;top:0;height:16px;font-size:10px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px;pointer-events:none';
+      nameEl.className = 'cal-ev-name';
+      nameEl.dataset.carId = car.id;
+      nameEl.style.cssText = 'position:absolute;left:4px;right:0;top:0;height:16px;font-size:10px;font-weight:700;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px;cursor:pointer';
       nameEl.textContent = car.model;
-      nameEl.title = `${car.maker} ${car.model}`;
+      nameEl.title = `${car.maker} ${car.model} — クリックで詳細`;
+      nameEl.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        openDetail(car.id);
+      });
       nameRow.appendChild(nameEl);
     });
 
@@ -301,13 +307,17 @@ function renderOneMonth(year, month, hostEl) {
           bar.title = `${s.car.maker} ${s.car.model} — ${s.label}${s.isDone ? '（完了）' : ''}`;
         }
 
+        bar.dataset.carId = s.car.id;
         if (s.isFinal) {
           bar.draggable = true;
           bar.style.cursor = 'grab';
           bar.addEventListener('dragstart', () => { dragDeliveryCarId = s.car.id; });
           bar.addEventListener('dragend', () => { dragDeliveryCarId = null; });
         }
-        bar.addEventListener('click', () => openDetail(s.car.id));
+        bar.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          setCalendarFocus(s.car.id);
+        });
         row.appendChild(bar);
       }
     });
@@ -399,3 +409,35 @@ function calToday() {
   calMonth = now.getMonth();
   renderCalendar();
 }
+
+// v1.0.13: バーのハイライト切替（解除はカレンダー空白クリックのみ。Q1=B採用）
+function setCalendarFocus(carId) {
+  const wrap = document.querySelector('#view-calendar .cal-wrap');
+  if (!wrap) return;
+  wrap.classList.add('cal-focused');
+  wrap.dataset.focusCarId = carId;
+  wrap.querySelectorAll('.cal-bar-active, .cal-name-active').forEach(el => {
+    el.classList.remove('cal-bar-active', 'cal-name-active');
+  });
+  wrap.querySelectorAll(`.cal-ev-bar[data-car-id="${carId}"]`).forEach(el => el.classList.add('cal-bar-active'));
+  wrap.querySelectorAll(`.cal-ev-name[data-car-id="${carId}"]`).forEach(el => el.classList.add('cal-name-active'));
+}
+
+function clearCalendarFocus() {
+  const wrap = document.querySelector('#view-calendar .cal-wrap');
+  if (!wrap) return;
+  wrap.classList.remove('cal-focused');
+  wrap.dataset.focusCarId = '';
+  wrap.querySelectorAll('.cal-bar-active').forEach(el => el.classList.remove('cal-bar-active'));
+}
+
+// カレンダー空白クリックで解除（一度だけ配線）
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('#view-calendar .cal-wrap');
+  if (!wrap || !wrap.classList.contains('cal-focused')) return;
+  // クリックが wrap の外、または wrap 内でもバー/ラベル以外なら解除
+  if (!wrap.contains(e.target)) return;
+  if (e.target.closest('.cal-ev-bar')) return;
+  if (e.target.closest('.cal-ev-name')) return;
+  clearCalendarFocus();
+});
