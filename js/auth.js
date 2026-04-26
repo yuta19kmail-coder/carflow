@@ -2,14 +2,13 @@
 // auth.js
 // ログイン/ログアウト
 // v0.9.4: スマホ判定（768px以下）でログイン後に進捗ビューへ自動遷移
+// v0.9.8: ログイン直後にトップバーのフォントサイズラベル更新
 // ========================================
 
-// スマホモード判定（768px以下）
 function isMobileMode() {
   return window.innerWidth <= 768;
 }
 
-// スマホモードならボディに mobile クラスを付与（CSSで一括制御）
 function applyMobileClass() {
   document.body.classList.toggle('mobile', isMobileMode());
 }
@@ -35,13 +34,13 @@ function doLogin() {
   applyMobileClass();
   renderAll();
   renderDashboard();
-  // v0.9.4: スマホモードなら強制で進捗ビューへ
+  // v0.9.8: トップバーのフォントサイズラベル反映
+  if (typeof refreshTopbarFontSizeLabel === 'function') refreshTopbarFontSizeLabel();
   if (isMobileMode()) {
     forceProgressView();
   }
 }
 
-// スマホ用：強制で進捗ビューに切り替え
 function forceProgressView() {
   document.querySelectorAll('.side-panel,.view').forEach(v => {
     v.classList.remove('open','active');
@@ -63,7 +62,6 @@ function doLogout() {
   document.getElementById('app').style.display = 'none';
 }
 
-// リサイズ時にスマホ⇔PCを切替
 window.addEventListener('resize', () => {
   applyMobileClass();
   if (document.getElementById('app').style.display !== 'none' && isMobileMode()) {

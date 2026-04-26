@@ -1,6 +1,6 @@
 /* ========================================
    base.css
-   v0.9.7: ライトモード色調整＋フォントサイズをzoomベースに
+   v0.9.8: ライトモードのオレンジ系を可読色に
    ======================================== */
 
 *{box-sizing:border-box;margin:0;padding:0}
@@ -17,33 +17,73 @@
   --shadow-card:0 3px 12px rgba(0,0,0,.35);
 }
 
-/* ===== ライトテーマ（v0.9.7 で再調整：薄ベージュ系で目に優しく） ===== */
+/* ===== ライトテーマ（v0.9.7 で再調整：薄ベージュ系） ===== */
 :root[data-theme="light"]{
-  /* 背景：薄いベージュ → 中間ベージュグレー → やや濃いベージュ → 一番濃い */
-  --bg:#f5f1ea;       /* メイン背景：薄いベージュ */
-  --bg2:#fffdf8;      /* カード背景：ほぼ白だが少し黄味 */
-  --bg3:#ece5d6;      /* セカンダリ背景：少し濃いベージュ */
-  --bg4:#ddd4bf;      /* 強調背景：もう一段濃い */
-  /* ボーダー：メリハリつけて見やすく */
+  --bg:#f5f1ea;
+  --bg2:#fffdf8;
+  --bg3:#ece5d6;
+  --bg4:#ddd4bf;
   --border:#c8bfa8;
   --border2:#a89d80;
-  /* 文字：濃い茶系 */
   --text:#2a2620;
   --text2:#5a4f3f;
   --text3:#8a7d65;
-  /* アクセント：ライト用にやや濃いめ */
+  /* v0.9.8: オレンジを更に濃く（焦茶系）。「注意」「要対応」が読みやすい */
   --green:#057a5b;
   --blue:#1e5fc2;
-  --orange:#c2640a;
-  --red:#c92121;
+  --orange:#9a4a05;
+  --red:#a31818;
   --sidebar:220px;--topbar:54px;--tabs:46px;--action:56px;
   --r:8px;--r2:12px;
   --shadow-card:0 2px 8px rgba(80,60,30,.12);
 }
 
-/* ===== フォントサイズ切替（v0.9.7: zoom ベースに変更） =====
-   既存CSSが px 固定値を多用してるため、html の font-size だけでは効かない。
-   body 全体を zoom で拡大する方式に変更（PC専用） */
+/* ===== v0.9.8: ライトモードでハードコードの黄色系・オレンジ系を上書き ===== */
+:root[data-theme="light"] .dw,
+:root[data-theme="light"] .cc-bigday.dw{color:#7a3a05 !important;background:rgba(154,74,5,.15) !important}
+:root[data-theme="light"] .dr,
+:root[data-theme="light"] .cc-bigday.dr{color:#7a0d0d !important;background:rgba(163,24,24,.15) !important}
+:root[data-theme="light"] .dg,
+:root[data-theme="light"] .cc-bigday.dg{color:#054934 !important;background:rgba(5,122,91,.15) !important}
+
+/* tbl-group / inv-group の黄色系名前色を可読に */
+:root[data-theme="light"] .tbl-group.g-warn .tbl-group-name,
+:root[data-theme="light"] .inv-group.g-warn .tbl-group-name{color:#7a3a05}
+:root[data-theme="light"] .tbl-group.g-warn .tbl-group-count,
+:root[data-theme="light"] .inv-group.g-warn .tbl-group-count{background:rgba(154,74,5,.12);color:#7a3a05;border-color:rgba(154,74,5,.35)}
+:root[data-theme="light"] .tbl-group.g-warn,
+:root[data-theme="light"] .inv-group.g-warn{border-left-color:#9a4a05}
+
+:root[data-theme="light"] .tbl-group.g-action .tbl-group-name,
+:root[data-theme="light"] .inv-group.g-action .tbl-group-name{color:#9a4a05}
+:root[data-theme="light"] .tbl-group.g-action .tbl-group-count,
+:root[data-theme="light"] .inv-group.g-action .tbl-group-count{background:rgba(154,74,5,.15);color:#7a3a05;border-color:rgba(154,74,5,.4)}
+
+:root[data-theme="light"] .tbl-group.g-danger .tbl-group-name,
+:root[data-theme="light"] .inv-group.g-danger .tbl-group-name{color:#a31818}
+:root[data-theme="light"] .tbl-group.g-danger .tbl-group-count,
+:root[data-theme="light"] .inv-group.g-danger .tbl-group-count{background:rgba(163,24,24,.12);color:#7a0d0d;border-color:rgba(163,24,24,.4)}
+
+/* arc-achv（販売実績の達成バッジ）も */
+:root[data-theme="light"] .arc-achv.miss{background:rgba(154,74,5,.12);color:#7a3a05;border-color:rgba(154,74,5,.4)}
+:root[data-theme="light"] .arc-achv.hit{background:rgba(5,122,91,.12);color:#054934;border-color:rgba(5,122,91,.4)}
+
+/* cc-bottom-bar（下段帯）の納車警告色 */
+:root[data-theme="light"] .cc-bottom-bar.bw{background:rgba(154,74,5,.15) !important;color:#7a3a05 !important;border-top-color:rgba(154,74,5,.35) !important}
+:root[data-theme="light"] .cc-bottom-bar.br{background:rgba(163,24,24,.15) !important;color:#7a0d0d !important;border-top-color:rgba(163,24,24,.4) !important}
+:root[data-theme="light"] .cc-bottom-bar.bb{background:rgba(30,95,194,.12) !important;color:#1e5fc2 !important;border-top-color:rgba(30,95,194,.3) !important}
+
+/* cc-other-day（その他カード仕入バッジ）もライトで濃く */
+:root[data-theme="light"] .cc-bigday.cc-other-day{background:rgba(138,125,101,.18);color:#5a4f3f;border-color:rgba(138,125,101,.4)}
+
+/* 進捗ドット（オレンジ→焦茶） */
+:root[data-theme="light"] .cc-dot.done,
+:root[data-theme="light"] .cc-dot.partial{background:#9a4a05;border-color:#9a4a05}
+
+/* ヘルプWIP帯 */
+:root[data-theme="light"] .help-wip{background:rgba(154,74,5,.10);border-color:rgba(154,74,5,.4);color:#7a3a05}
+
+/* ===== フォントサイズ切替（zoomベース） ===== */
 :root,
 :root[data-fontsize="md"]{font-size:15px}
 :root[data-fontsize="lg"]{font-size:15px}
