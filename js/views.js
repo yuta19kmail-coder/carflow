@@ -192,8 +192,10 @@ function _makeProgressCardOther(car) {
   const workMemo = (car.workMemo || '').trim();
   const card = document.createElement('div');
   card.className = 'pv-card pv-card-other';
+  // v0.9.3: 通常カードと同じく pv-thumb を表示（写真 or サイズ絵文字）
   card.innerHTML = `
     <div class="pv-head">
+      <div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div>
         <div style="font-size:11px;color:var(--text2)">${car.num}</div>
