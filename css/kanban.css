@@ -276,3 +276,51 @@
 .ex-card-inv.dg{background:rgba(29,185,122,.18);color:#16a34a}
 .ex-card-inv.dw{background:rgba(245,158,11,.20);color:#d97706}
 .ex-card-inv.dr{background:rgba(239,68,68,.22);color:#dc2626}
+
+/* ========================================
+   v0.8.7 進捗ビュー：2枠グループ化
+   ======================================== */
+.pv-group{margin-bottom:18px}
+.pv-group:last-child{margin-bottom:0}
+.pv-group-head{display:flex;align-items:baseline;gap:10px;padding:8px 4px 10px;border-bottom:2px solid var(--border)}
+.pv-group-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.pv-group-count{font-size:11px;font-weight:600;color:var(--blue);background:rgba(55,138,221,.15);border:1px solid rgba(55,138,221,.3);border-radius:10px;padding:2px 9px}
+.pv-group-sub{font-size:11px;color:var(--text3);margin-left:auto}
+.pv-group-body{padding-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.pv-group-empty{grid-column:1/-1;font-size:12px;color:var(--text3);padding:12px 4px}
+
+/* ========================================
+   v0.8.7 全体一覧：在庫日数グループ
+   ======================================== */
+.tbl-group{margin-bottom:16px;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;background:var(--bg2)}
+.tbl-group:last-child{margin-bottom:0}
+.tbl-group-head{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.tbl-group-icon{font-size:18px;flex-shrink:0}
+.tbl-group-name{font-size:14px;font-weight:700;color:var(--text);flex-shrink:0}
+.tbl-group-desc{font-size:11px;color:var(--text3);flex:1}
+.tbl-group-count{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;flex-shrink:0}
+
+.tbl-group.g-ok .tbl-group-name{color:var(--green)}
+.tbl-group.g-ok .tbl-group-count{background:rgba(29,185,122,.15);color:var(--green);border:1px solid rgba(29,185,122,.35)}
+.tbl-group.g-ok{border-left:3px solid var(--green)}
+
+.tbl-group.g-warn .tbl-group-name{color:#fcd34d}
+.tbl-group.g-warn .tbl-group-count{background:rgba(245,210,59,.15);color:#fcd34d;border:1px solid rgba(245,210,59,.35)}
+.tbl-group.g-warn{border-left:3px solid #fcd34d}
+
+.tbl-group.g-action .tbl-group-name{color:#fb923c}
+.tbl-group.g-action .tbl-group-count{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.4)}
+.tbl-group.g-action{border-left:3px solid #fb923c}
+
+.tbl-group.g-danger .tbl-group-name{color:var(--red)}
+.tbl-group.g-danger .tbl-group-count{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.tbl-group.g-danger{border-left:3px solid var(--red)}
+
+.tbl-group.g-done .tbl-group-name{color:var(--text3)}
+.tbl-group.g-done .tbl-group-count{background:var(--bg4);color:var(--text2);border:1px solid var(--border)}
+.tbl-group.g-done{border-left:3px solid var(--text3)}
+
+/* グループ内のテーブルは外枠なし（カード側で囲っている） */
+.tbl-group .dtable{min-width:auto;border-collapse:collapse}
+.tbl-group .dtable th{background:var(--bg2)}
+.tbl-group .dtable td{background:var(--bg2)}

@@ -105,3 +105,27 @@
 .toggle::after{content:'';position:absolute;width:14px;height:14px;background:var(--text2);border-radius:50%;top:2px;left:2px;transition:.2s}
 .toggle.on{background:rgba(29,185,122,.3);border-color:var(--green)}
 .toggle.on::after{background:var(--green);left:18px}
+
+/* ========================================
+   販売実績ビュー（archive）
+   ======================================== */
+.arc-year{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:14px}
+.arc-year-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:var(--bg3);user-select:none;transition:background .15s}
+.arc-year-head:hover{background:var(--bg4)}
+.arc-year-head h3{font-size:15px;font-weight:700;color:var(--text);margin:0}
+.arc-year-body{padding:12px 14px}
+
+.arc-month{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:10px}
+.arc-month:last-child{margin-bottom:0}
+.arc-month-head{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;color:var(--text)}
+.arc-month-head:hover{color:var(--blue)}
+.arc-month-title{font-size:14px;font-weight:600;flex-shrink:0}
+.arc-month-stat{font-size:12px;color:var(--text2);flex:1}
+.arc-achv{font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+.arc-achv.hit{background:rgba(29,185,122,.18);color:var(--green);border:1px solid rgba(29,185,122,.4)}
+.arc-achv.miss{background:rgba(245,158,11,.15);color:var(--orange);border:1px solid rgba(245,158,11,.35)}
+
+.arc-cars{margin-top:10px;border-top:1px dashed var(--border);padding-top:8px}
+.arc-car-row{display:grid;grid-template-columns:80px 1fr 70px 90px 100px 80px;gap:10px;align-items:center;padding:7px 4px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--border)}
+.arc-car-row:last-child{border-bottom:none}
+.arc-car-row .mono{font-family:'SF Mono','Consolas',monospace;color:var(--blue);font-weight:600}

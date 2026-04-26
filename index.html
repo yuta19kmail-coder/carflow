@@ -6,15 +6,16 @@
 <title>CarFlow - 車両管理システム</title>
 
 <!-- ========== CSS ========== -->
-<link rel="stylesheet" href="css/base.css?v=086">
-<link rel="stylesheet" href="css/login.css?v=086">
-<link rel="stylesheet" href="css/layout.css?v=086">
-<link rel="stylesheet" href="css/components.css?v=086">
-<link rel="stylesheet" href="css/panels.css?v=086">
-<link rel="stylesheet" href="css/kanban.css?v=086">
-<link rel="stylesheet" href="css/calendar.css?v=086">
-<link rel="stylesheet" href="css/modal.css?v=086">
-<link rel="stylesheet" href="css/celebrate.css?v=086">
+<link rel="stylesheet" href="css/base.css?v=087">
+<link rel="stylesheet" href="css/login.css?v=087">
+<link rel="stylesheet" href="css/layout.css?v=087">
+<link rel="stylesheet" href="css/components.css?v=087">
+<link rel="stylesheet" href="css/panels.css?v=087">
+<link rel="stylesheet" href="css/kanban.css?v=087">
+<link rel="stylesheet" href="css/calendar.css?v=087">
+<link rel="stylesheet" href="css/modal.css?v=087">
+<link rel="stylesheet" href="css/celebrate.css?v=087">
+<link rel="stylesheet" href="css/help.css?v=087">
 </head>
 <body>
 
@@ -29,7 +30,7 @@
     <div class="inp-g"><label>パスワード</label><input type="password" id="login-pass" value="1234"></div>
     <div class="login-hint">デモ：パスワード 1234（ユーザー名は省略可）</div>
     <button class="btn-login" onclick="doLogin()">ログイン</button>
-    <div class="login-ver">CarFlow v0.8.6</div>
+    <div class="login-ver">CarFlow v0.8.7</div>
   </div>
 </div>
 
@@ -38,11 +39,12 @@
   <!-- トップバー -->
   <div class="topbar">
     <div class="topbar-logo"><div class="logo-dot"></div>CarFlow</div>
-    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.8.6</span>
+    <span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:8px">v0.8.7</span>
     <button class="tb-btn" onclick="showPanel('archive',document.getElementById('si-archive'))">📈 販売実績</button>
     <div class="topbar-user">
       <div class="av" id="u-av">YM</div>
       <span style="font-size:13px;color:var(--text2)" id="u-name">山田</span>
+      <button class="help-btn" onclick="openHelp('basic')" title="ヘルプを見る">？</button>
       <button class="btn-sm" onclick="doLogout()">ログアウト</button>
     </div>
   </div>
@@ -64,6 +66,7 @@
         <div class="sb-item" id="si-members" onclick="showPanel('members',this)"><span class="sb-icon">👥</span>メンバー</div>
         <div class="sb-sec">システム</div>
         <div class="sb-item" id="si-settings" onclick="showPanel('settings',this)"><span class="sb-icon">⚙️</span>設定</div>
+        <div class="sb-item sb-help" onclick="openHelp('basic')"><span class="sb-icon">❓</span>ヘルプ</div>
       </div>
       <div class="sb-bottom">
         <div class="sb-div"></div>
@@ -274,7 +277,8 @@
           <div class="pv-grid" id="pv-grid"></div>
         </div>
         <div id="view-table" class="view">
-          <div style="overflow-x:auto"><table class="dtable" id="dtable"></table></div>
+          <div class="ex-toolbar" id="table-toolbar"></div>
+          <div id="table-body-wrap"></div>
         </div>
         <div id="view-inventory" class="view">
           <div class="inv-grid" id="inv-grid"></div>
@@ -547,42 +551,112 @@
   </div>
 </div>
 
+<!-- ========== ヘルプモーダル ========== -->
+<div class="help-overlay" id="help-overlay">
+  <div class="help-modal">
+    <div class="help-hdr">
+      <div class="help-hdr-title">❓ CarFlow ヘルプ</div>
+      <button class="help-close" onclick="closeHelp()">✕</button>
+    </div>
+    <div class="help-tabs">
+      <div class="help-tab active" data-tab="basic" onclick="switchHelpTab('basic')">基本の使い方</div>
+      <div class="help-tab" data-tab="terms" onclick="switchHelpTab('terms')">用語の意味</div>
+      <div class="help-tab" data-tab="faq" onclick="switchHelpTab('faq')">こんなときは？</div>
+    </div>
+    <div class="help-body">
+      <div class="help-wip">⚠️ このヘルプは仮の内容です。社内で使いながら追記していきます。困ったらゆうたに聞いてください。</div>
+
+      <!-- 基本の使い方 -->
+      <div class="help-section active" data-tab="basic">
+        <h3>🚗 新しい車を登録する</h3>
+        <p>左側の <strong>「➕ 新規車両登録」</strong> をクリックします。<br>必要な情報（管理番号・メーカー・車種など）を入れて <strong>「登録する」</strong>。</p>
+
+        <h3>📋 車の進捗を変える（タスク管理画面）</h3>
+        <p>カードを <strong>ドラッグ＆ドロップ</strong>（マウスでつかんで動かす）で別の列に移動できます。</p>
+        <ul>
+          <li><strong>仕入れ → 再生中</strong>：作業を始めるとき</li>
+          <li><strong>再生中 → 展示中</strong>：店頭に出すとき</li>
+          <li><strong>展示中 → 納車準備</strong>：お客さんが決まったとき（売約POPが出ます）</li>
+          <li><strong>納車準備 → 納車完了</strong>：お渡しが終わったとき（紙吹雪のお祝いが出ます）</li>
+        </ul>
+
+        <h3>📝 車の詳細を編集する</h3>
+        <p>カードをクリックすると詳細画面が開きます。<br>内容を直したいときは右上の <strong>「✏️ 車両詳細を編集」</strong> から。</p>
+
+        <h3>📅 納車カレンダーを見る</h3>
+        <p>上のタブ <strong>「📅 納車カレンダー」</strong> で、今月と来月の納車予定がカレンダー形式で見られます。<br>赤い警告カードが上に出ていたら、その車は予定が押している（または書類などが間に合っていない）サインです。</p>
+
+        <h3>📈 販売実績を確認する</h3>
+        <p>左の <strong>「📈 販売実績」</strong> で、過去に納車完了した車の月別売上が見られます。<br>毎月「📦 月次集計締め」を押すと、その月の納車完了車が販売実績に移動します。</p>
+
+        <h3>⚙️ 設定を変える</h3>
+        <p>左下の <strong>「⚙️ 設定」</strong> で、定休日・在庫日数の警告日数・月次目標などを調整できます。</p>
+      </div>
+
+      <!-- 用語の意味 -->
+      <div class="help-section" data-tab="terms">
+        <div class="help-term"><div class="help-term-name">在庫日数</div><div class="help-term-desc">仕入れ日から今日までの日数。長くなるほど売れ残っているので注意。設定で「何日から色を変えるか」を変えられます。</div></div>
+        <div class="help-term"><div class="help-term-name">売約日数</div><div class="help-term-desc">お客さんと契約してから今日までの日数。納車準備の進み具合の目安に。</div></div>
+        <div class="help-term"><div class="help-term-name">納車まで N 日</div><div class="help-term-desc">納車予定日まであと何日か。マイナスは予定日を過ぎている＝要対応。</div></div>
+        <div class="help-term"><div class="help-term-name">マイルストーン</div><div class="help-term-desc">納車前の重要ポイント（書類・整備・登録・完成）。カレンダーのバーに色で表示されます。</div></div>
+        <div class="help-term"><div class="help-term-name">業務タスク</div><div class="help-term-desc">「装備品チェック」「再生」など、車1台ごとに進める作業のこと。詳細画面でチェックを付けます。</div></div>
+        <div class="help-term"><div class="help-term-name">コアメモ</div><div class="help-term-desc">車そのものの情報メモ（例：エンジン音気になる、純正ナビ付属）。フェーズが変わっても残ります。</div></div>
+        <div class="help-term"><div class="help-term-name">作業メモ</div><div class="help-term-desc">そのときの作業の申し送り（例：今日は塗装乾かし中）。納車準備に進むと自動で空になります。</div></div>
+        <div class="help-term"><div class="help-term-name">月次集計締め</div><div class="help-term-desc">その月の販売を確定する操作。締めると「販売実績」に移動して、タスク管理画面からは消えます。</div></div>
+        <div class="help-term"><div class="help-term-name">リードタイム</div><div class="help-term-desc">売約日から納車予定日までの初期日数。設定で変更できます（標準14日）。</div></div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="help-section" data-tab="faq">
+        <div class="help-faq"><div class="help-faq-q">画面が変わらない／表示がおかしい</div><div class="help-faq-a">ブラウザを <strong>Ctrl+Shift+R</strong>（強制再読み込み）してみてください。それでも直らない時はゆうたへ。</div></div>
+        <div class="help-faq"><div class="help-faq-q">間違って売約してしまった</div><div class="help-faq-a">納車準備の列にあるカードを、<strong>仕入れ／再生中／展示中</strong>のどこかに戻すと「売約をキャンセルしますか？」のPOPが出ます。OKで売約データが消えます。</div></div>
+        <div class="help-faq"><div class="help-faq-q">納車完了にしたけどミスだった</div><div class="help-faq-a">納車完了のカードを <strong>納車準備</strong> に戻せば取り消せます（売約情報は残ります）。</div></div>
+        <div class="help-faq"><div class="help-faq-q">在庫日数が赤いのが多すぎる</div><div class="help-faq-a">設定 → <strong>「⚠️ 在庫日数の警告」</strong> で、赤くなる日数を変えられます（標準45日）。</div></div>
+        <div class="help-faq"><div class="help-faq-q">月の目標を変えたい</div><div class="help-faq-a">設定 → <strong>「🎯 店舗目標・売上計上モード」</strong> から月別の目標を設定できます。</div></div>
+        <div class="help-faq"><div class="help-faq-q">休みの日を追加したい</div><div class="help-faq-a">納車カレンダーの右上 <strong>「＋ 休業日を追加」</strong> から夏季休暇など期間を追加できます。<br>毎週・隔週の定休日は設定の「🗓️ 定休日ルール」で。</div></div>
+        <div class="help-faq"><div class="help-faq-q">使い方が分からない</div><div class="help-faq-a">遠慮なくゆうたに聞いてください。「ここ分かりにくい」もどんどん教えてもらえると改善します。</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- トースト -->
 <div class="toast" id="toast"></div>
 
 
 <!-- ========== JS ========== -->
 <!-- 1. 設定・定数 -->
-<script src="js/config.js?v=086"></script>
-<script src="js/tasks-def.js?v=086"></script>
+<script src="js/config.js?v=087"></script>
+<script src="js/tasks-def.js?v=087"></script>
 
 <!-- 2. 状態 -->
-<script src="js/state.js?v=086"></script>
+<script src="js/state.js?v=087"></script>
 
 <!-- 3. ユーティリティ -->
-<script src="js/helpers.js?v=086"></script>
-<script src="js/progress.js?v=086"></script>
+<script src="js/helpers.js?v=087"></script>
+<script src="js/progress.js?v=087"></script>
 
 <!-- 4. サンプル -->
-<script src="js/sample-data.js?v=086"></script>
+<script src="js/sample-data.js?v=087"></script>
 
-<script src="js/holidays.js?v=086"></script>
-<script src="js/auth.js?v=086"></script>
-<script src="js/navigation.js?v=086"></script>
-<script src="js/archive.js?v=086"></script>
-<script src="js/settings.js?v=086"></script>
+<script src="js/holidays.js?v=087"></script>
+<script src="js/auth.js?v=087"></script>
+<script src="js/navigation.js?v=087"></script>
+<script src="js/archive.js?v=087"></script>
+<script src="js/settings.js?v=087"></script>
 
 <!-- 6. 描画モジュール -->
-<script src="js/dashboard.js?v=086"></script>
-<script src="js/kanban.js?v=086"></script>
-<script src="js/car-detail.js?v=086"></script>
-<script src="js/car-modal.js?v=086"></script>
-<script src="js/workflow.js?v=086"></script>
-<script src="js/calendar.js?v=086"></script>
-<script src="js/views.js?v=086"></script>
+<script src="js/dashboard.js?v=087"></script>
+<script src="js/kanban.js?v=087"></script>
+<script src="js/car-detail.js?v=087"></script>
+<script src="js/car-modal.js?v=087"></script>
+<script src="js/workflow.js?v=087"></script>
+<script src="js/calendar.js?v=087"></script>
+<script src="js/views.js?v=087"></script>
+<script src="js/help.js?v=087"></script>
 
 <!-- 7. 最終ディスパッチャ -->
-<script src="js/main.js?v=086"></script>
+<script src="js/main.js?v=087"></script>
 
 <!-- 8. 起動 -->
 <script>

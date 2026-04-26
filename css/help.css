@@ -1,0 +1,55 @@
+/* ========================================
+   help.css
+   ヘルプモーダル＋トリガーボタン
+   ======================================== */
+
+/* トリガーボタン（トップバー、サイドバー） */
+.help-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
+.help-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* サイドバー用ヘルプ項目（既存 sb-item を踏襲） */
+.sb-item.sb-help{color:var(--text2)}
+
+/* モーダルオーバーレイ */
+.help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9000;align-items:center;justify-content:center;padding:20px}
+.help-overlay.open{display:flex}
+
+/* モーダル本体 */
+.help-modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);width:100%;max-width:720px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.help-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.help-hdr-title{font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.help-close{background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;width:30px;height:30px;border-radius:6px}
+.help-close:hover{background:var(--bg4);color:var(--text)}
+
+/* タブ */
+.help-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.help-tab{padding:11px 18px;font-size:13px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:.15s;user-select:none}
+.help-tab:hover{color:var(--text)}
+.help-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+
+/* 本体スクロール領域 */
+.help-body{flex:1;overflow-y:auto;padding:18px 22px}
+.help-section{display:none}
+.help-section.active{display:block}
+
+.help-section h3{font-size:14px;font-weight:700;color:var(--text);margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.help-section h3:first-child{margin-top:0}
+.help-section p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:8px}
+.help-section ul{margin:0 0 10px 18px;padding:0}
+.help-section li{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:4px}
+.help-section li strong{color:var(--text);font-weight:600}
+
+/* 用語ボックス */
+.help-term{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;margin-bottom:8px}
+.help-term-name{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:4px}
+.help-term-desc{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* FAQ */
+.help-faq{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;margin-bottom:8px}
+.help-faq-q{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;gap:6px}
+.help-faq-q::before{content:'Q';color:var(--blue);font-weight:700;flex-shrink:0}
+.help-faq-a{font-size:12px;color:var(--text2);line-height:1.7;display:flex;gap:6px}
+.help-faq-a::before{content:'A';color:var(--green);font-weight:700;flex-shrink:0}
+
+/* 仮の注意書き */
+.help-wip{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--orange);margin-bottom:14px}

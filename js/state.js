@@ -28,6 +28,10 @@ let archivedCars = [];             // 月次集計締めでアーカイブされ
 // 展示ビューのソート設定（key: 'price'|'invDays'|'year'、dir: 'asc'|'desc'）
 let exhibitSort = { key: 'invDays', dir: 'desc' };
 
+// 全体一覧ビューのソート設定（v0.8.7）
+// key: 'num'|'purchaseDate'|'status'|'progress'|'deliveryDate'、dir: 'asc'|'desc'
+let tableSort = { key: 'purchaseDate', dir: 'desc' };
+
 // ========== 会社ごとの設定 ==========
 let appSettings = {
   // 在庫警告3段階（日数・ON/OFF）

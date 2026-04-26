@@ -3,6 +3,7 @@
 // その他のビュー（展示、ガント、進捗、全体一覧、在庫）
 // エクスポート機能も含む
 // v0.8.6: 展示ビューを全面リライト（ストック列＋ボディサイズ別、上部一括ソート、空列表示）
+// v0.8.7: 進捗ビューを2枠グループ化、全体一覧に並び替えボタン＋在庫日数グループ表示
 // ========================================
 
 // ========================================
@@ -103,10 +104,9 @@ function _makeExhibitColumn(opts) {
 
 // ソートボタンの状態を更新
 function _refreshExhibitSortBtns() {
-  document.querySelectorAll('.ex-sort-btn').forEach(btn => {
+  document.querySelectorAll('#view-exhibit .ex-sort-btn').forEach(btn => {
     const k = btn.dataset.key;
     btn.classList.remove('active');
-    // 既存の矢印を消す
     const ar = btn.querySelector('.sort-arrow');
     if (ar) ar.remove();
     if (k === exhibitSort.key) {
@@ -132,10 +132,8 @@ function renderExhibit() {
 
   const sorter = _exhibitSorter();
   stockCars.sort(sorter);
-  // 展示中の合計（％計算用）
   const exhibitTotal = exhibitCars.length;
 
-  // ストック列（最左、ボディサイズで分けない）
   const stockCol = _makeExhibitColumn({
     key: 'stock',
     name: 'ストック車両',
@@ -147,7 +145,6 @@ function renderExhibit() {
   });
   cols.appendChild(stockCol);
 
-  // 展示中：SIZES の順序で全列を出す（0台でも表示）
   SIZES.forEach(size => {
     const sized = exhibitCars.filter(c => c.size === size).sort(sorter);
     const pct = exhibitTotal > 0 ? (sized.length / exhibitTotal * 100) : 0;
@@ -163,7 +160,6 @@ function renderExhibit() {
     cols.appendChild(col);
   });
 
-  // 合計表示
   const totalLabel = document.getElementById('ex-total-label');
   if (totalLabel) {
     totalLabel.textContent = `ストック ${stockCars.length}台 / 展示中 ${exhibitTotal}台`;
@@ -202,45 +198,251 @@ function renderGantt() {
 }
 
 // ========================================
-// 進捗ビュー：カード一覧で進捗を表示
+// 進捗ビュー：v0.8.7 で2枠グループ化（販売前／納車準備）
 // ========================================
+function _makeProgressCard(car) {
+  const isD = car.col === 'delivery';
+  const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
+  const prog = calcProg(car);
+  const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const card = document.createElement('div');
+  card.className = 'pv-card';
+  const taskRows = tasks.map(t => {
+    const p = calcSingleProg(car, t.id, tasks);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${t.icon}</span><div style="flex:1;font-size:12px">${t.name}</div><div class="pbar" style="width:52px"><div class="pfill" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);width:30px;text-align:right">${p.pct}%</div></div>`;
+  }).join('');
+  card.innerHTML = `<div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:9px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
+  return card;
+}
+
 function renderProgress() {
-  const active = cars.filter(c => ['regen','delivery'].includes(c.col));
-  const grid = document.getElementById('pv-grid');
-  grid.innerHTML = '';
-  active.forEach(car => {
-    const isD = car.col === 'delivery';
-    const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
-    const prog = calcProg(car);
-    const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
-    const card = document.createElement('div');
-    card.className = 'pv-card';
-    const taskRows = tasks.map(t => {
-      const p = calcSingleProg(car, t.id, tasks);
-      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${t.icon}</span><div style="flex:1;font-size:12px">${t.name}</div><div class="pbar" style="width:52px"><div class="pfill" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);width:30px;text-align:right">${p.pct}%</div></div>`;
-    }).join('');
-    card.innerHTML = `<div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:9px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
-    grid.appendChild(card);
+  const wrap = document.getElementById('pv-grid');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  // 販売前 ＝ 仕入れ／再生中／展示中（売約前すべて）
+  const beforeSale = cars.filter(c => ['purchase','regen','exhibit'].includes(c.col));
+  // 納車準備
+  const inDelivery = cars.filter(c => c.col === 'delivery');
+
+  const groups = [
+    {id:'before', label:'🏷️ 販売前（売約前）', sub:'仕入れ・再生中・展示中', cars: beforeSale, emptyMsg:'販売前の車両はありません'},
+    {id:'delivery', label:'📦 納車準備', sub:'売約済み・納車に向けて準備中', cars: inDelivery, emptyMsg:'納車準備中の車両はありません'},
+  ];
+
+  groups.forEach(g => {
+    const sec = document.createElement('div');
+    sec.className = 'pv-group';
+    sec.innerHTML = `
+      <div class="pv-group-head">
+        <div class="pv-group-title">${g.label} <span class="pv-group-count">${g.cars.length}台</span></div>
+        <div class="pv-group-sub">${g.sub}</div>
+      </div>
+      <div class="pv-group-body"></div>`;
+    const body = sec.querySelector('.pv-group-body');
+    if (!g.cars.length) {
+      const empty = document.createElement('div');
+      empty.className = 'pv-group-empty';
+      empty.textContent = g.emptyMsg;
+      body.appendChild(empty);
+    } else {
+      g.cars.forEach(car => body.appendChild(_makeProgressCard(car)));
+    }
+    wrap.appendChild(sec);
   });
-  if (!active.length) grid.innerHTML = '<div style="color:var(--text3);font-size:13px">再生中・納車準備の車両がありません</div>';
 }
 
 // ========================================
-// 全体一覧ビュー
+// 全体一覧ビュー：v0.8.7 並び替え＋在庫日数グループ
 // ========================================
-function renderTable() {
-  const tbl = document.getElementById('dtable');
-  tbl.innerHTML = `<thead><tr><th>管理番号</th><th>メーカー/車種</th><th>年式</th><th>ボディ</th><th>走行距離</th><th>販売金額</th><th>仕入日</th><th>ステータス</th><th>成約</th><th>納車予定</th><th>進捗</th></tr></thead>`;
-  const tbody = document.createElement('tbody');
-  cars.forEach(car => {
-    const prog = calcProg(car);
-    const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td style="font-weight:600;color:var(--blue)">${car.num}</td><td>${car.maker} ${car.model}</td><td>${fmtYearDisplay(parseYearInput(car.year)||car.year)}</td><td>${car.size}</td><td>${Number(car.km||0).toLocaleString()}km</td><td style="color:var(--green);font-weight:600">${fmtPrice(car.price)}</td><td>${fmtDate(car.purchaseDate)}</td><td><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></td><td>${car.contract?'<span class="pill pill-green">成約</span>':'<span class="pill pill-gray">未成約</span>'}</td><td>${car.deliveryDate?fmtDate(car.deliveryDate):'—'}</td><td><div style="display:flex;align-items:center;gap:5px"><div class="pbar" style="width:56px"><div class="pfill" style="width:${prog.pct}%"></div></div><span style="font-size:11px;color:var(--text3)">${prog.pct}%</span></div></td>`;
-    tr.onclick = () => openDetail(car.id);
-    tbody.appendChild(tr);
+
+// 並び替えボタンクリック：同keyならdir反転、違うkeyならkey切替
+function setTableSort(key) {
+  if (tableSort.key === key) {
+    tableSort.dir = tableSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    tableSort.key = key;
+    // 仕入れ日・納車予定日は新しい順から、進捗％・管理番号は若い順から、ステータスはCOLS順
+    tableSort.dir = (key === 'num' || key === 'status' || key === 'progress') ? 'asc' : 'desc';
+  }
+  renderTable();
+}
+
+function _tableSorter() {
+  const {key, dir} = tableSort;
+  const sign = dir === 'asc' ? 1 : -1;
+  const colOrder = {};
+  COLS.forEach((c, i) => { colOrder[c.id] = i; });
+  return (a, b) => {
+    let av, bv;
+    if (key === 'num') {
+      av = (a.num || '').toString();
+      bv = (b.num || '').toString();
+      return av.localeCompare(bv) * sign;
+    } else if (key === 'purchaseDate') {
+      av = a.purchaseDate || '';
+      bv = b.purchaseDate || '';
+      return av.localeCompare(bv) * sign;
+    } else if (key === 'status') {
+      av = colOrder[a.col] != null ? colOrder[a.col] : 99;
+      bv = colOrder[b.col] != null ? colOrder[b.col] : 99;
+    } else if (key === 'progress') {
+      av = calcProg(a).pct;
+      bv = calcProg(b).pct;
+    } else if (key === 'deliveryDate') {
+      av = a.deliveryDate || '';
+      bv = b.deliveryDate || '';
+      return av.localeCompare(bv) * sign;
+    } else {
+      return 0;
+    }
+    if (av < bv) return -1 * sign;
+    if (av > bv) return 1 * sign;
+    return 0;
+  };
+}
+
+// 在庫日数からグループキーを決める（OK/注意/要対応/危険）
+// 設定の invWarn を参照。on の閾値しか考慮しない
+function _invGroupKey(days) {
+  const tiers = (appSettings?.invWarn || []).filter(t => t.on).slice().sort((a,b) => b.days - a.days);
+  for (const t of tiers) {
+    if (days >= t.days) {
+      // ラベルから対応：注意/要対応/危険
+      return t.label || '警告';
+    }
+  }
+  return 'OK';
+}
+
+// グループ表示順とスタイル
+const _INV_GROUP_DEFS = [
+  {key:'OK',     icon:'✅', cls:'g-ok',     desc:'まだ余裕あり'},
+  {key:'注意',   icon:'⚠️', cls:'g-warn',   desc:'そろそろ動きを意識'},
+  {key:'要対応', icon:'🔶', cls:'g-action', desc:'販促・値下げ等の検討時期'},
+  {key:'危険',   icon:'🔴', cls:'g-danger', desc:'要早期対応'},
+];
+
+function _renderTableSortBar() {
+  const bar = document.getElementById('table-toolbar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  const items = [
+    {key:'num', label:'管理番号', icon:'🔢'},
+    {key:'purchaseDate', label:'仕入れ日', icon:'📅'},
+    {key:'status', label:'ステータス', icon:'🏷️'},
+    {key:'progress', label:'進捗％', icon:'⚡'},
+    {key:'deliveryDate', label:'納車予定日', icon:'🚗'},
+  ];
+  bar.innerHTML = `
+    <div class="ex-toolbar-label">並び替え</div>
+    ${items.map(it => `<button class="ex-sort-btn" data-key="${it.key}" onclick="setTableSort('${it.key}')">${it.icon} ${it.label}</button>`).join('')}
+    <div class="ex-toolbar-spacer"></div>
+    <div class="ex-total-label" id="table-total-label"></div>`;
+  // active 状態
+  bar.querySelectorAll('.ex-sort-btn').forEach(btn => {
+    if (btn.dataset.key === tableSort.key) {
+      btn.classList.add('active');
+      const arrow = document.createElement('span');
+      arrow.className = 'sort-arrow';
+      arrow.textContent = tableSort.dir === 'asc' ? '▲' : '▼';
+      btn.appendChild(arrow);
+    }
   });
-  tbl.appendChild(tbody);
+}
+
+function _makeTableHeadHtml() {
+  return `<thead><tr>
+    <th>管理番号</th><th>メーカー/車種</th><th>年式</th><th>ボディ</th>
+    <th>走行距離</th><th>販売金額</th><th>仕入日</th><th>在庫日数</th>
+    <th>ステータス</th><th>成約</th><th>納車予定</th><th>進捗</th>
+  </tr></thead>`;
+}
+
+function _makeTableRowHtml(car) {
+  const prog = calcProg(car);
+  const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const inv = car.purchaseDate ? daysSince(car.purchaseDate) : '—';
+  const wt = car.purchaseDate ? invWarnTier(daysSince(car.purchaseDate)) : null;
+  const invCls = wt ? (wt.days >= 45 ? 'dr' : wt.days >= 30 ? 'dw' : 'dg') : 'dg';
+  const invHtml = car.purchaseDate
+    ? `<span class="ex-card-inv ${invCls}" style="font-size:11px">${inv}日</span>`
+    : '—';
+  return `<tr onclick="openDetail('${car.id}')" style="cursor:pointer">
+    <td style="font-weight:600;color:var(--blue)">${car.num}</td>
+    <td>${car.maker} ${car.model}</td>
+    <td>${fmtYearDisplay(parseYearInput(car.year)||car.year)}</td>
+    <td>${car.size||'—'}</td>
+    <td>${Number(car.km||0).toLocaleString()}km</td>
+    <td style="color:var(--green);font-weight:600">${fmtPrice(car.price)}</td>
+    <td>${car.purchaseDate?fmtDate(car.purchaseDate):'—'}</td>
+    <td>${invHtml}</td>
+    <td><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></td>
+    <td>${car.contract?'<span class="pill pill-green">成約</span>':'<span class="pill pill-gray">未成約</span>'}</td>
+    <td>${car.deliveryDate?fmtDate(car.deliveryDate):'—'}</td>
+    <td><div style="display:flex;align-items:center;gap:5px"><div class="pbar" style="width:56px"><div class="pfill" style="width:${prog.pct}%"></div></div><span style="font-size:11px;color:var(--text3)">${prog.pct}%</span></div></td>
+  </tr>`;
+}
+
+function renderTable() {
+  _renderTableSortBar();
+
+  const wrap = document.getElementById('table-body-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  // 在庫日数グループ分け対象は「納車完了以外」
+  // 納車完了は 1グループにまとめて末尾
+  const sorter = _tableSorter();
+  const activeCars = cars.filter(c => c.col !== 'done').slice().sort(sorter);
+  const doneCars = cars.filter(c => c.col === 'done').slice().sort(sorter);
+
+  // 各車に group key を付与
+  const buckets = {};
+  _INV_GROUP_DEFS.forEach(g => { buckets[g.key] = []; });
+  activeCars.forEach(c => {
+    const days = c.purchaseDate ? daysSince(c.purchaseDate) : 0;
+    const k = _invGroupKey(days);
+    if (!buckets[k]) buckets[k] = [];
+    buckets[k].push(c);
+  });
+
+  // グループごとに描画
+  _INV_GROUP_DEFS.forEach(g => {
+    const list = buckets[g.key];
+    if (!list || !list.length) return;
+    const sec = document.createElement('div');
+    sec.className = 'tbl-group ' + g.cls;
+    sec.innerHTML = `
+      <div class="tbl-group-head">
+        <span class="tbl-group-icon">${g.icon}</span>
+        <span class="tbl-group-name">${g.key}</span>
+        <span class="tbl-group-desc">${g.desc}</span>
+        <span class="tbl-group-count">${list.length}台</span>
+      </div>
+      <div style="overflow-x:auto"><table class="dtable">${_makeTableHeadHtml()}<tbody>${list.map(_makeTableRowHtml).join('')}</tbody></table></div>`;
+    wrap.appendChild(sec);
+  });
+
+  // 納車完了グループ
+  if (doneCars.length) {
+    const sec = document.createElement('div');
+    sec.className = 'tbl-group g-done';
+    sec.innerHTML = `
+      <div class="tbl-group-head">
+        <span class="tbl-group-icon">🚗</span>
+        <span class="tbl-group-name">納車完了</span>
+        <span class="tbl-group-desc">月次集計締めまで残ります</span>
+        <span class="tbl-group-count">${doneCars.length}台</span>
+      </div>
+      <div style="overflow-x:auto"><table class="dtable">${_makeTableHeadHtml()}<tbody>${doneCars.map(_makeTableRowHtml).join('')}</tbody></table></div>`;
+    wrap.appendChild(sec);
+  }
+
+  // 合計
+  const total = activeCars.length + doneCars.length;
+  const totalEl = document.getElementById('table-total-label');
+  if (totalEl) totalEl.textContent = `合計 ${total}台`;
 }
 
 // ========================================
