@@ -1,6 +1,7 @@
 // ========================================
 // car-detail.js
 // 車両詳細モーダルの表示と操作
+// v0.8.9: その他はタスク非表示・メモ中心、削除ボタン追加
 // ========================================
 
 // 車両詳細を開く
@@ -13,12 +14,77 @@ function openDetail(carId) {
   document.getElementById('modal-detail').classList.add('open');
 }
 
+// その他用の詳細：タスクなしでメモ中心
+function _renderDetailBodyOther(car) {
+  const inv = daysSince(car.purchaseDate);
+  const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const coreMemo = (car.memo || '').trim();
+  const workMemo = (car.workMemo || '').trim();
+
+  const dayBlock = `
+    <div class="detail-days-box dg">
+      <div class="detail-days-num">${inv}<span class="detail-days-unit">日</span></div>
+      <div class="detail-days-label">仕入れから</div>
+    </div>`;
+
+  const coreMemoHtml = coreMemo
+    ? `<div class="core-memo" data-expanded="0" onclick="toggleCoreMemo(this)">
+         <div class="core-memo-label">📌 メモ</div>
+         <div class="core-memo-text">${escapeHtml(coreMemo).replace(/\n/g,'<br>')}</div>
+       </div>`
+    : `<div class="core-memo core-memo-empty">
+         <div class="core-memo-label">📌 メモ</div>
+         <div class="core-memo-text core-memo-placeholder">メモは未記入です（編集ボタンから記入）</div>
+       </div>`;
+
+  let html = `
+    <div class="detail-photo">
+      ${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}
+      <div class="detail-photo-edit" onclick="document.getElementById('dp-inp').click()">📷 変更</div>
+    </div>
+    <input type="file" id="dp-inp" accept="image/*" style="display:none" onchange="onDetailPhoto(this)">
+    <div class="detail-other-status">
+      <span class="pill ${pillMap[car.col]||'pill-other'}">📝 ${colLabel}</span>
+      <span class="detail-other-hint">身の振り方が決まっていない保留中の車両</span>
+    </div>
+    <div class="detail-head">
+      <div class="detail-head-left">
+        ${dayBlock}
+      </div>
+      <div class="detail-head-right">
+        <div class="detail-other-msg">タスクや進捗の管理対象外。<br>展示・再生・仕入れに動かすと売り物のフローに入ります。</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">管理番号</div><div style="font-size:13px;font-weight:600">${car.num}</div></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">年式</div><div style="font-size:13px;font-weight:600">${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">車体色</div><div style="font-size:13px;font-weight:600">${car.color||'—'}</div></div>
+      <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">走行距離</div><div style="font-size:13px;font-weight:600">${Number(car.km||0).toLocaleString()}km</div></div>
+    </div>
+    ${coreMemoHtml}
+    <button onclick="openCarModal('${car.id}')" style="width:100%;padding:9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:16px">✏️ 車両詳細を編集</button>
+    <div class="work-memo" id="work-memo-wrap">
+      <div class="work-memo-label">📝 作業メモ <span class="work-memo-hint">（保留中のメモ）</span></div>
+      <div class="work-memo-view" onclick="startEditWorkMemo('${car.id}')">${
+        workMemo
+          ? escapeHtml(workMemo).replace(/\n/g,'<br>')
+          : '<span class="work-memo-placeholder">タップしてメモを記入</span>'
+      }</div>
+    </div>
+    <div class="detail-danger-zone">
+      <button class="detail-delete-btn" onclick="confirmDeleteCar('${car.id}')">🗑️ この車両を削除</button>
+    </div>`;
+  document.getElementById('detail-body').innerHTML = html;
+}
+
 // 詳細モーダルの本体を描画
 function renderDetailBody(car) {
+  // v0.8.9: その他は専用ビュー
+  if (car.col === 'other') return _renderDetailBodyOther(car);
+
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
   const prog = calcProg(car);
-  // 在庫日数 / 売約日数 / 納車までの日数
   const inv = daysSince(car.purchaseDate);
   const contractedDays = daysSinceContract(car);
   const delDiff = car.deliveryDate ? daysDiff(car.deliveryDate) : null;
@@ -114,6 +180,9 @@ function renderDetailBody(car) {
           ? escapeHtml(workMemo).replace(/\n/g,'<br>')
           : '<span class="work-memo-placeholder">タップしてメモを記入</span>'
       }</div>
+    </div>
+    <div class="detail-danger-zone">
+      <button class="detail-delete-btn" onclick="confirmDeleteCar('${car.id}')">🗑️ この車両を削除</button>
     </div>`;
   document.getElementById('detail-body').innerHTML = html;
 }
@@ -196,4 +265,39 @@ function toggleTaskToggle(carId, taskId, isD) {
   renderDetailBody(car);
   renderAll();
   showToast(state[taskId] ? '✓ 完了しました' : '未完了に戻しました');
+}
+
+// ========================================
+// v0.8.9: 車両削除フロー
+// ========================================
+let _deletingCarId = null;
+
+function confirmDeleteCar(carId) {
+  const car = cars.find(c => c.id === carId);
+  if (!car) return;
+  _deletingCarId = carId;
+  const sub = document.getElementById('confirm-delete-sub');
+  if (sub) {
+    sub.innerHTML = `<strong>${escapeHtml(car.maker)} ${escapeHtml(car.model)}</strong>（${escapeHtml(car.num)}）<br>このデータは復元できません。本当に削除しますか？`;
+  }
+  document.getElementById('confirm-delete-car').classList.add('open');
+}
+
+function closeDeleteCarConfirm(doDelete) {
+  document.getElementById('confirm-delete-car').classList.remove('open');
+  if (!doDelete || !_deletingCarId) {
+    _deletingCarId = null;
+    return;
+  }
+  const idx = cars.findIndex(c => c.id === _deletingCarId);
+  if (idx < 0) { _deletingCarId = null; return; }
+  const removed = cars[idx];
+  cars.splice(idx, 1);
+  // 詳細モーダルを閉じる
+  closeModal('modal-detail');
+  // ダッシュボード等も再描画
+  if (typeof renderDashboard === 'function') renderDashboard();
+  renderAll();
+  showToast(`${removed.maker} ${removed.model} を削除しました`);
+  _deletingCarId = null;
 }

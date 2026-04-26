@@ -2,12 +2,13 @@
 // kanban.js
 // カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売約／取消／納車完了フロー
 // v0.8.5: 納車完了フロー＋祝福演出
+// v0.8.9: 「その他」列追加（保留車両用、メモ中心の専用カード）
 // ========================================
 
 const COMPACT_THRESHOLD = 4;
 let expandedCards = {};
 
-const COL_ORDER = ['purchase','regen','exhibit','delivery','done'];
+const COL_ORDER = ['other','purchase','regen','exhibit','delivery','done'];
 const colIdx = id => COL_ORDER.indexOf(id);
 
 // ========================================
@@ -21,7 +22,7 @@ function renderKanban() {
     const colCars = cars.filter(c => c.col === col.id);
     const isCompact = colCars.length >= COMPACT_THRESHOLD;
     const div = document.createElement('div');
-    div.className = 'k-col';
+    div.className = 'k-col' + (col.id === 'other' ? ' k-col-other' : '');
     div.innerHTML = `<div class="k-col-hdr"><div class="k-col-dot" style="background:${col.color}"></div><div class="k-col-title">${col.label}</div><div class="k-col-count">${colCars.length}</div></div><div class="k-cards" id="kc-${col.id}" data-col="${col.id}"></div>`;
     wrap.appendChild(div);
     const cd = div.querySelector('.k-cards');
@@ -45,7 +46,42 @@ function renderKanban() {
 // ========================================
 // 車両カード生成
 // ========================================
+// その他（other）専用：メモ＋仕入れから N 日のバーだけのシンプルカード
+function _makeOtherCard(car, isCompact) {
+  const inv = daysSince(car.purchaseDate);
+  const coreMemo = (car.memo || '').trim();
+  const workMemo = (car.workMemo || '').trim();
+  const memoBlock = `
+    <div class="cc-other-memo">
+      <div class="cc-other-memo-label">📌 メモ</div>
+      <div class="cc-other-memo-text">${coreMemo ? escapeHtml(coreMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
+    </div>
+    <div class="cc-other-memo">
+      <div class="cc-other-memo-label">📝 作業メモ</div>
+      <div class="cc-other-memo-text">${workMemo ? escapeHtml(workMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
+    </div>`;
+
+  const div = document.createElement('div');
+  div.className = 'car-card cc-other' + (isCompact ? ' compact' : '');
+  div.draggable = true;
+  div.dataset.carId = car.id;
+  div.dataset.col = car.col;
+  div.innerHTML = `
+    <div class="cc-other-head">
+      <div class="cc-other-title">${car.maker} ${car.model}</div>
+      <div class="cc-other-num">${car.num}</div>
+    </div>
+    ${memoBlock}
+    <div class="cc-bottom-bar">仕入れから${inv}日</div>`;
+  div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
+  div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
+  div.addEventListener('click', () => openDetail(car.id));
+  return div;
+}
+
 function makeCarCard(car, isCompact) {
+  // その他は専用カード
+  if (car.col === 'other') return _makeOtherCard(car, isCompact);
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
   const prog = calcProg(car);
@@ -132,6 +168,14 @@ function handleKanbanMove(car, targetCol) {
   const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const toLabel = COLS.find(c => c.id === targetCol)?.label || targetCol;
 
+  // ★禁止ルール（v0.8.9）：その他 ↔ 納車準備、その他 ↔ 納車完了
+  // 売約済みの車を保留に戻すのは矛盾、保留の車を一気に納車準備にもしない
+  if ((car.col === 'other' && (targetCol === 'delivery' || targetCol === 'done')) ||
+      ((car.col === 'delivery' || car.col === 'done') && targetCol === 'other')) {
+    showToast(`${fromLabel}と${toLabel}の間は移動できません`);
+    return;
+  }
+
   // パターン1: 仕入れ/再生中/展示中 → 納車準備（売約POP）
   if ((car.col === 'purchase' || car.col === 'regen' || car.col === 'exhibit') && targetCol === 'delivery') {
     pendingDragCar = car;
@@ -179,7 +223,7 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // それ以外（仕入れ↔再生中、再生中↔展示中など）はそのまま移動
+  // それ以外（その他↔仕入れ↔再生中↔展示中など）はそのまま移動
   applyKanbanMove(car, targetCol);
 }
 
@@ -305,10 +349,8 @@ function celebrateDelivery(car) {
   const carEl = document.getElementById('celebrate-car');
   if (carEl) carEl.textContent = `${car.maker} ${car.model}（${car.num}）`;
 
-  // 既存紙吹雪をクリア
   if (conf) conf.innerHTML = '';
 
-  // 紙吹雪を生成（120片）
   const colors = ['#fcd34d','#fb923c','#f87171','#60a5fa','#34d399','#a78bfa','#f472b6','#facc15'];
   const count = 120;
   for (let i = 0; i < count; i++) {
@@ -336,7 +378,6 @@ function celebrateDelivery(car) {
   overlay.classList.remove('fade-out');
   overlay.classList.add('show');
 
-  // 3秒後にフェードアウト
   setTimeout(() => {
     overlay.classList.add('fade-out');
     setTimeout(() => {

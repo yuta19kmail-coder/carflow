@@ -5,7 +5,9 @@
 // ========================================
 
 // カンバンの列定義
+// v0.8.9: 'other'（その他）を仕入れの左に追加。身の振り方未確定の保留車両用
 const COLS = [
+  {id:'other',    label:'その他',   color:'#8a8fa8'},
   {id:'purchase', label:'仕入れ',   color:'#8b5cf6'},
   {id:'regen',    label:'再生中',   color:'#f59e0b'},
   {id:'exhibit',  label:'展示中',   color:'#378ADD'},
@@ -19,6 +21,7 @@ let SIZES = [...SIZES_DEFAULT];
 
 // 列ごとのピル（ラベル）色マッピング
 const pillMap = {
+  other:    'pill-other',
   purchase: 'pill-purple',
   regen:    'pill-orange',
   exhibit:  'pill-blue',

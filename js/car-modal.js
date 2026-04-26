@@ -1,6 +1,7 @@
 // ========================================
 // car-modal.js
 // 車両登録/編集モーダル
+// v0.8.9: 新規登録時は「仕入れ車として登録」「その他として登録」の2ボタン
 // ========================================
 
 // --- ボディサイズ設定UI ---
@@ -124,7 +125,6 @@ function updateSellUI() {
       document.getElementById('inp-contract-date').value = todayStr();
     }
     if (!document.getElementById('inp-delivery').value) {
-      // 設定のリードタイム分後をデフォルトで埋める
       const lead = (typeof appSettings !== 'undefined' && appSettings.deliveryLeadDays) || 14;
       document.getElementById('inp-delivery').value = dateAddDays(todayStr(), lead);
     }
@@ -187,7 +187,24 @@ function openCarModal(carId) {
     ? `<img src="${car.photo}" style="width:100%;max-height:110px;object-fit:cover;border-radius:7px;margin-top:7px">`
     : '';
   document.getElementById('car-modal-title').textContent = car ? '車両情報を編集' : '新規車両登録';
-  document.getElementById('car-save-btn').textContent = car ? '更新する' : '登録する';
+
+  // v0.8.9: 新規登録時は「仕入れ車として登録」「その他として登録」の2ボタン
+  // 編集時は「更新する」1ボタン（その他ボタンは隠す）
+  const saveBtn = document.getElementById('car-save-btn');
+  const otherBtn = document.getElementById('car-save-other-btn');
+  if (car) {
+    if (saveBtn) {
+      saveBtn.textContent = '更新する';
+      saveBtn.setAttribute('onclick', `saveCarModal('__edit__')`);
+    }
+    if (otherBtn) otherBtn.style.display = 'none';
+  } else {
+    if (saveBtn) {
+      saveBtn.textContent = '仕入れ車として登録';
+      saveBtn.setAttribute('onclick', `saveCarModal('purchase')`);
+    }
+    if (otherBtn) otherBtn.style.display = '';
+  }
   document.getElementById('modal-car').classList.add('open');
 }
 
@@ -203,7 +220,8 @@ function onFormPhoto(inp) {
   r.readAsDataURL(file);
 }
 
-function saveCarModal() {
+function saveCarModal(initialCol) {
+  // v0.8.9: 新規登録時は initialCol で 'purchase' か 'other' を指定。編集時は無視。
   const num = document.getElementById('inp-num').value.trim();
   const maker = document.getElementById('inp-maker').value.trim();
   const model = document.getElementById('inp-model').value.trim();
@@ -236,6 +254,7 @@ function saveCarModal() {
     closeModal('modal-car');
     if (document.getElementById('modal-detail').classList.contains('open')) renderDetailBody(car);
   } else {
+    const startCol = (initialCol === 'other') ? 'other' : 'purchase';
     const car = {
       id:uid(), num, maker, model,
       year : yearNorm || '—',
@@ -249,16 +268,19 @@ function saveCarModal() {
       deliveryDate,
       memo : document.getElementById('inp-memo').value,
       photo: formPhotoData,
-      col: 'purchase',
+      col: startCol,
       regenTasks: mkTaskState(REGEN_TASKS),
       deliveryTasks: mkTaskState(DELIVERY_TASKS),
       logs: []
     };
-    addLog(car.id, '新規登録');
+    addLog(car.id, `新規登録（${startCol === 'other' ? 'その他' : '仕入れ'}として）`);
     cars.push(car);
     closeModal('modal-car');
     renderDashboard();
   }
   renderAll();
-  showToast(editingCarId ? '情報を更新しました' : `${maker} ${model} を登録しました`);
+  const okMsg = editingCarId
+    ? '情報を更新しました'
+    : (initialCol === 'other' ? `${maker} ${model} を「その他」として登録しました` : `${maker} ${model} を仕入れ車として登録しました`);
+  showToast(okMsg);
 }

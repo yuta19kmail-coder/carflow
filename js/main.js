@@ -13,7 +13,6 @@ function renderAll() {
     if (t.includes('タスク'))     renderKanban();
     if (t.includes('カレンダー')) renderCalendar();
     if (t.includes('展示'))       renderExhibit();
-    if (t.includes('ガント'))     renderGantt();
     if (t.includes('進捗'))       renderProgress();
     if (t.includes('全体'))       renderTable();
     if (t.includes('在庫'))       renderInventory();

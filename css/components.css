@@ -56,3 +56,21 @@
 /* btn-sm の hover 強化（既存にhoverがなかったので追加） */
 .btn-sm:hover{color:var(--text);border-color:var(--text3);background:var(--bg3)}
 .btn-sm:disabled{opacity:.4;cursor:not-allowed}
+
+/* ========================================
+   v0.8.9 「その他」用ピル色＋登録モーダルのその他ボタン
+   ======================================== */
+.pill-other{background:rgba(138,143,168,.18);color:#c5cad8;border:1px solid rgba(138,143,168,.35)}
+
+/* 「その他として登録」ボタン：サブ系の控えめスタイル */
+.btn-other{
+  font-size:13px;font-weight:600;
+  background:rgba(138,143,168,.15);
+  color:#c5cad8;
+  border:1px solid rgba(138,143,168,.4);
+  border-radius:var(--r);
+  padding:8px 14px;
+  cursor:pointer;
+  transition:.15s;
+}
+.btn-other:hover{background:rgba(138,143,168,.25);color:var(--text);border-color:#a3a8c0}

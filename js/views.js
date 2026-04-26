@@ -1,10 +1,11 @@
 // ========================================
 // views.js
-// その他のビュー（展示、ガント、進捗、全体一覧、在庫）
+// その他のビュー（展示、進捗、全体一覧、在庫）
 // エクスポート機能も含む
-// v0.8.6: 展示ビューを全面リライト（ストック列＋ボディサイズ別、上部一括ソート、空列表示）
-// v0.8.7: 進捗ビューを2枠グループ化、全体一覧に並び替えボタン
-// v0.8.8: 在庫日数ビューを設定invWarn連動グループ化（OK+ON段階）、全体一覧のグループ化は撤回
+// v0.8.6: 展示ビュー全面リライト
+// v0.8.7: 進捗2枠グループ化、全体一覧並び替えボタン
+// v0.8.8: 在庫日数ビューを invWarn 連動グループ化
+// v0.8.9: ガント削除、その他列対応（展示・進捗）
 // ========================================
 
 // ========================================
@@ -89,7 +90,7 @@ function _makeExhibitColumn(opts) {
   if (opts.cars.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'ex-col-empty';
-    empty.textContent = opts.isStock ? '仕入れ・再生中の車両はありません' : 'この区分の在庫はありません';
+    empty.textContent = opts.isStock ? '対象の車両はありません' : 'この区分の在庫はありません';
     body.appendChild(empty);
   } else {
     opts.cars.forEach(c => body.appendChild(_makeExhibitCard(c)));
@@ -118,12 +119,27 @@ function renderExhibit() {
   if (!cols) return;
   cols.innerHTML = '';
 
+  // v0.8.9: その他列を最左に追加
+  const otherCars = cars.filter(c => c.col === 'other');
   const stockCars = cars.filter(c => c.col === 'purchase' || c.col === 'regen');
   const exhibitCars = cars.filter(c => c.col === 'exhibit');
 
   const sorter = _exhibitSorter();
+  otherCars.sort(sorter);
   stockCars.sort(sorter);
   const exhibitTotal = exhibitCars.length;
+
+  const otherCol = _makeExhibitColumn({
+    key: 'other',
+    name: 'その他',
+    icon: '📝',
+    isStock: true,
+    count: otherCars.length,
+    pct: 0,
+    cars: otherCars,
+  });
+  otherCol.classList.add('other');
+  cols.appendChild(otherCol);
 
   const stockCol = _makeExhibitColumn({
     key: 'stock',
@@ -153,45 +169,54 @@ function renderExhibit() {
 
   const totalLabel = document.getElementById('ex-total-label');
   if (totalLabel) {
-    totalLabel.textContent = `ストック ${stockCars.length}台 / 展示中 ${exhibitTotal}台`;
+    totalLabel.textContent = `その他 ${otherCars.length}台 / ストック ${stockCars.length}台 / 展示中 ${exhibitTotal}台`;
   }
 
   _refreshExhibitSortBtns();
 }
 
 // ========================================
-// ガントチャートビュー
+// ガントチャートビュー（v0.8.9 で削除）
+// 互換性のため renderGantt は no-op スタブを残す
 // ========================================
-function renderGantt() {
-  const contracted = cars.filter(c => c.contract && c.deliveryDate);
-  const days = 14;
-  const now = new Date();
-  now.setHours(0,0,0,0);
-  let ths = '<th>車両</th><th>ステータス</th><th>進捗</th>';
-  for (let i = 0; i < days; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + i);
-    ths += `<th style="min-width:32px;text-align:center;font-size:10px">${d.getMonth()+1}/${d.getDate()}</th>`;
-  }
-  let rows = '';
-  contracted.forEach(car => {
-    const prog = calcProg(car);
-    const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
-    let cells = '';
-    for (let i = 0; i < days; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() + i);
-      cells += `<td style="text-align:center;padding:3px">${car.deliveryDate === d.toISOString().split('T')[0] ? '🚗' : ''}</td>`;
-    }
-    rows += `<tr onclick="openDetail('${car.id}')" style="cursor:pointer"><td><div style="font-size:12px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:10px;color:var(--text3)">${car.num}</div></td><td><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></td><td><div class="pbar" style="width:72px"><div class="pfill" style="width:${prog.pct}%"></div></div><div style="font-size:10px;color:var(--text3)">${prog.pct}%</div></td>${cells}</tr>`;
-  });
-  document.getElementById('gtable').innerHTML = `<thead><tr>${ths}</tr></thead><tbody>${rows}</tbody>`;
-}
+function renderGantt() { /* removed in v0.8.9 */ }
 
 // ========================================
-// 進捗ビュー：v0.8.7 で2枠グループ化（販売前／納車準備）
+// 進捗ビュー：2枠グループ化（販売前／納車準備）
+// v0.8.9: 「その他」を販売前グループに含める。その他はタスクなしのメモ重視カード
 // ========================================
+function _makeProgressCardOther(car) {
+  const inv = daysSince(car.purchaseDate);
+  const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
+  const coreMemo = (car.memo || '').trim();
+  const workMemo = (car.workMemo || '').trim();
+  const card = document.createElement('div');
+  card.className = 'pv-card pv-card-other';
+  card.innerHTML = `
+    <div class="pv-head">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div>
+        <div style="font-size:11px;color:var(--text2)">${car.num}</div>
+      </div>
+      <span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span>
+    </div>
+    <div class="pv-body">
+      <div class="pv-other-memo">
+        <div class="pv-other-memo-label">📌 メモ</div>
+        <div class="pv-other-memo-text">${coreMemo ? escapeHtml(coreMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
+      </div>
+      <div class="pv-other-memo">
+        <div class="pv-other-memo-label">📝 作業メモ</div>
+        <div class="pv-other-memo-text">${workMemo ? escapeHtml(workMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
+      </div>
+      <div style="margin-top:9px;font-size:11px;color:var(--text3)">仕入れから ${inv} 日経過</div>
+    </div>
+    <div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
+  return card;
+}
+
 function _makeProgressCard(car) {
+  if (car.col === 'other') return _makeProgressCardOther(car);
   const isD = car.col === 'delivery';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
   const prog = calcProg(car);
@@ -211,11 +236,12 @@ function renderProgress() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  const beforeSale = cars.filter(c => ['purchase','regen','exhibit'].includes(c.col));
+  // v0.8.9: その他も販売前グループに含める
+  const beforeSale = cars.filter(c => ['other','purchase','regen','exhibit'].includes(c.col));
   const inDelivery = cars.filter(c => c.col === 'delivery');
 
   const groups = [
-    {id:'before', label:'🏷️ 販売前（売約前）', sub:'仕入れ・再生中・展示中', cars: beforeSale, emptyMsg:'販売前の車両はありません'},
+    {id:'before', label:'🏷️ 販売前（売約前）', sub:'その他・仕入れ・再生中・展示中', cars: beforeSale, emptyMsg:'販売前の車両はありません'},
     {id:'delivery', label:'📦 納車準備', sub:'売約済み・納車に向けて準備中', cars: inDelivery, emptyMsg:'納車準備中の車両はありません'},
   ];
 
@@ -363,13 +389,11 @@ function renderTable() {
 }
 
 // ========================================
-// 在庫日数ビュー：v0.8.8 設定invWarn連動グループ化
-// グループ：OK ＋ appSettings.invWarn の on=true 段階
-// グループ内：在庫日数の長い順固定
+// 在庫日数ビュー：v0.8.8 invWarn 連動グループ化
+// v0.8.9: その他は対象外（売り物じゃないので）
 // ========================================
 function _invCardHtml(car) {
   const inv = daysSince(car.purchaseDate);
-  // 警告色（既存ルールに合わせる）
   const dc  = inv > 30 ? '#ef4444' : inv > 14 ? '#f59e0b' : '#1db97a';
   const dbg = inv > 30 ? 'rgba(239,68,68,.2)' : inv > 14 ? 'rgba(245,158,11,.2)' : 'rgba(29,185,122,.2)';
   return `<div class="inv-card" onclick="openDetail('${car.id}')">
@@ -382,7 +406,6 @@ function _invCardHtml(car) {
   </div>`;
 }
 
-// 警告段階ラベル → グループスタイルのclass
 function _invGroupCls(label) {
   if (label === 'OK') return 'g-ok';
   if (label === '注意') return 'g-warn';
@@ -403,28 +426,22 @@ function renderInventory() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  // 対象＝納車完了以外を在庫日数の長い順で
+  // v0.8.9: その他と納車完了は除外
   const list = cars
-    .filter(c => c.col !== 'done')
+    .filter(c => c.col !== 'done' && c.col !== 'other')
     .slice()
     .sort((a,b) => daysSince(b.purchaseDate) - daysSince(a.purchaseDate));
 
-  // 設定の on 段階を「閾値の小さい順」で取り出す（注意→要対応→危険）
   const onTiers = (appSettings?.invWarn || [])
     .filter(t => t.on)
     .slice()
     .sort((a,b) => a.days - b.days);
 
-  // グループ定義：OK ＋ ON段階（小さい順）
-  // グループの「days閾値」は invWarnTier と同じ判定でいい
-  // OK = どの ON 段階にも該当しない
-  // それ以外 = invWarnTier(days).label に一致
   const groupDefs = [
     {key:'OK', threshold:null},
     ...onTiers.map(t => ({key: t.label || `${t.days}日〜`, threshold: t.days, tier: t}))
   ];
 
-  // 各車を分類
   const buckets = {};
   groupDefs.forEach(g => buckets[g.key] = []);
   list.forEach(car => {
@@ -435,8 +452,6 @@ function renderInventory() {
     buckets[key].push(car);
   });
 
-  // 表示順は groupDefs どおり（OK → 注意 → 要対応 → 危険）
-  // 表示するときは「閾値が高いグループほど目立たせる」想定
   groupDefs.forEach(g => {
     const arr = buckets[g.key] || [];
     if (!arr.length) return;

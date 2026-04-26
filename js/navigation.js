@@ -30,7 +30,7 @@ function showPanel(name, el) {
   }
 }
 
-// タブ（カンバン、カレンダー、展示、ガント、進捗、一覧、在庫）切替
+// タブ（カンバン、カレンダー、展示、進捗、一覧、在庫）切替
 function switchTab(name, el) {
   document.querySelectorAll('.side-panel,.view').forEach(v => {
     v.classList.remove('open','active');
@@ -44,7 +44,6 @@ function switchTab(name, el) {
   if (name === 'kanban')    renderKanban();
   if (name === 'calendar')  renderCalendar();
   if (name === 'exhibit')   renderExhibit();
-  if (name === 'gantt')     renderGantt();
   if (name === 'progress')  renderProgress();
   if (name === 'table')     renderTable();
   if (name === 'inventory') renderInventory();
