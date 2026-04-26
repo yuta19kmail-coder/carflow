@@ -293,6 +293,8 @@ function _attachProgressDnD() {
   bodies.forEach(body => {
     const groupId = body.dataset.group;
     body.querySelectorAll('.pv-card').forEach(card => {
+      if (card.dataset.dndBound === '1') return; // 二重配線防止
+      card.dataset.dndBound = '1';
       const handle = card.querySelector('.pv-drag');
       if (!handle) return;
       // ハンドルにマウスダウンしたときだけドラッグ可能化
@@ -307,6 +309,18 @@ function _attachProgressDnD() {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/x-pv-group', groupId);
         e.dataTransfer.setData('text/x-pv-id', card.dataset.carId || '');
+      });
+      // クリックでカード単体の縮小⇄展開をトグル（drag/カードを開くボタンは除外）
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.pv-drag')) return;
+        if (e.target.closest('.pv-btn')) return;
+        const carId = card.dataset.carId;
+        const car = cars.find(c => c.id === carId);
+        if (!car) return;
+        const isCompact = card.classList.contains('is-compact');
+        const newCard = _makeProgressCard(car, !isCompact);
+        card.replaceWith(newCard);
+        _attachProgressDnD();
       });
     });
 

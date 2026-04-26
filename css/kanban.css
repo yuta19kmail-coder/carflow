@@ -301,6 +301,7 @@
 .pv-toggle-btn:hover{color:var(--text);background:var(--bg3);border-color:var(--border2)}
 .pv-card.is-compact .pv-body{padding:11px 13px}
 .pv-card.is-compact .pv-btn{margin:0 13px 11px}
+.pv-card.is-compact:hover{border-color:var(--blue);box-shadow:0 0 0 1px rgba(55,138,221,.25)}
 .pv-group-sub{font-size:11px;color:var(--text3);margin-left:auto}
 .pv-group-body{padding-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .pv-group-empty{grid-column:1/-1;font-size:12px;color:var(--text3);padding:12px 4px}
