@@ -2,6 +2,7 @@
 // car-modal.js
 // 車両登録/編集モーダル
 // v0.8.9: 新規登録時は「仕入れ車として登録」「その他として登録」の2ボタン
+// v0.9.0: 編集時のみ削除ボタン（危険ゾーン）を表示
 // ========================================
 
 // --- ボディサイズ設定UI ---
@@ -188,24 +189,37 @@ function openCarModal(carId) {
     : '';
   document.getElementById('car-modal-title').textContent = car ? '車両情報を編集' : '新規車両登録';
 
-  // v0.8.9: 新規登録時は「仕入れ車として登録」「その他として登録」の2ボタン
-  // 編集時は「更新する」1ボタン（その他ボタンは隠す）
+  // v0.8.9: 新規登録時は2ボタン、編集時は更新ボタン1つ
+  // v0.9.0: 編集時のみ「危険ゾーン（削除ボタン）」を表示
   const saveBtn = document.getElementById('car-save-btn');
   const otherBtn = document.getElementById('car-save-other-btn');
+  const dangerZone = document.getElementById('edit-danger-zone');
   if (car) {
     if (saveBtn) {
       saveBtn.textContent = '更新する';
       saveBtn.setAttribute('onclick', `saveCarModal('__edit__')`);
     }
     if (otherBtn) otherBtn.style.display = 'none';
+    if (dangerZone) dangerZone.style.display = '';
   } else {
     if (saveBtn) {
       saveBtn.textContent = '仕入れ車として登録';
       saveBtn.setAttribute('onclick', `saveCarModal('purchase')`);
     }
     if (otherBtn) otherBtn.style.display = '';
+    if (dangerZone) dangerZone.style.display = 'none';
   }
   document.getElementById('modal-car').classList.add('open');
+}
+
+// v0.9.0: 編集モーダル内の削除ボタンから呼ぶ
+function onEditDeleteClick() {
+  if (!editingCarId) return;
+  // 編集モーダルは開いたまま、確認POPを出す
+  // OKされたら closeDeleteCarConfirm 内で modal-car も閉じる
+  if (typeof confirmDeleteCar === 'function') {
+    confirmDeleteCar(editingCarId);
+  }
 }
 
 function onFormPhoto(inp) {

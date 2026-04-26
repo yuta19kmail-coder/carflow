@@ -236,12 +236,14 @@ function renderProgress() {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  // v0.8.9: その他も販売前グループに含める
-  const beforeSale = cars.filter(c => ['other','purchase','regen','exhibit'].includes(c.col));
+  // v0.9.0: その他／販売前／納車準備 の3枠化
+  const otherCars = cars.filter(c => c.col === 'other');
+  const beforeSale = cars.filter(c => ['purchase','regen','exhibit'].includes(c.col));
   const inDelivery = cars.filter(c => c.col === 'delivery');
 
   const groups = [
-    {id:'before', label:'🏷️ 販売前（売約前）', sub:'その他・仕入れ・再生中・展示中', cars: beforeSale, emptyMsg:'販売前の車両はありません'},
+    {id:'other',    label:'📝 その他', sub:'身の振り方が決まっていない保留中の車両', cars: otherCars, emptyMsg:'その他の車両はありません'},
+    {id:'before',   label:'🏷️ 販売前（売約前）', sub:'仕入れ・再生中・展示中', cars: beforeSale, emptyMsg:'販売前の車両はありません'},
     {id:'delivery', label:'📦 納車準備', sub:'売約済み・納車に向けて準備中', cars: inDelivery, emptyMsg:'納車準備中の車両はありません'},
   ];
 

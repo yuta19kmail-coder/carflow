@@ -1,7 +1,8 @@
 // ========================================
 // car-detail.js
 // 車両詳細モーダルの表示と操作
-// v0.8.9: その他はタスク非表示・メモ中心、削除ボタン追加
+// v0.8.9: その他はタスク非表示・メモ中心
+// v0.9.0: 削除ボタンは編集モーダル側に移動（誤タップ防止）
 // ========================================
 
 // 車両詳細を開く
@@ -70,16 +71,12 @@ function _renderDetailBodyOther(car) {
           ? escapeHtml(workMemo).replace(/\n/g,'<br>')
           : '<span class="work-memo-placeholder">タップしてメモを記入</span>'
       }</div>
-    </div>
-    <div class="detail-danger-zone">
-      <button class="detail-delete-btn" onclick="confirmDeleteCar('${car.id}')">🗑️ この車両を削除</button>
     </div>`;
   document.getElementById('detail-body').innerHTML = html;
 }
 
 // 詳細モーダルの本体を描画
 function renderDetailBody(car) {
-  // v0.8.9: その他は専用ビュー
   if (car.col === 'other') return _renderDetailBodyOther(car);
 
   const isD = car.col === 'delivery' || car.col === 'done';
@@ -180,20 +177,15 @@ function renderDetailBody(car) {
           ? escapeHtml(workMemo).replace(/\n/g,'<br>')
           : '<span class="work-memo-placeholder">タップしてメモを記入</span>'
       }</div>
-    </div>
-    <div class="detail-danger-zone">
-      <button class="detail-delete-btn" onclick="confirmDeleteCar('${car.id}')">🗑️ この車両を削除</button>
     </div>`;
   document.getElementById('detail-body').innerHTML = html;
 }
 
-// コアメモの展開/折りたたみ
 function toggleCoreMemo(el) {
   const cur = el.getAttribute('data-expanded') === '1';
   el.setAttribute('data-expanded', cur ? '0' : '1');
 }
 
-// HTML エスケープ（メモ表示用）
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g,'&amp;')
@@ -203,7 +195,6 @@ function escapeHtml(s) {
     .replace(/'/g,'&#39;');
 }
 
-// 作業メモを編集モードへ
 function startEditWorkMemo(carId) {
   const car = cars.find(c => c.id === carId);
   if (!car) return;
@@ -239,7 +230,6 @@ function saveWorkMemo(carId) {
   showToast('作業メモを保存しました');
 }
 
-// 詳細から写真を変更
 function onDetailPhoto(inp) {
   const car = cars.find(c => c.id === activeDetailCarId);
   if (!car) return;
@@ -255,7 +245,6 @@ function onDetailPhoto(inp) {
   r.readAsDataURL(file);
 }
 
-// トグル型タスクの完了/未完了切替
 function toggleTaskToggle(carId, taskId, isD) {
   const car = cars.find(c => c.id === carId);
   if (!car) return;
@@ -269,6 +258,7 @@ function toggleTaskToggle(carId, taskId, isD) {
 
 // ========================================
 // v0.8.9: 車両削除フロー
+// v0.9.0: 削除ボタンは編集モーダル内（誤タップ防止）
 // ========================================
 let _deletingCarId = null;
 
@@ -293,9 +283,9 @@ function closeDeleteCarConfirm(doDelete) {
   if (idx < 0) { _deletingCarId = null; return; }
   const removed = cars[idx];
   cars.splice(idx, 1);
-  // 詳細モーダルを閉じる
+  // 開いているモーダルを両方閉じる
+  closeModal('modal-car');
   closeModal('modal-detail');
-  // ダッシュボード等も再描画
   if (typeof renderDashboard === 'function') renderDashboard();
   renderAll();
   showToast(`${removed.maker} ${removed.model} を削除しました`);

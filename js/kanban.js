@@ -3,6 +3,7 @@
 // カンバンボード描画、車両カード生成、ドラッグ&ドロップ、売約／取消／納車完了フロー
 // v0.8.5: 納車完了フロー＋祝福演出
 // v0.8.9: 「その他」列追加（保留車両用、メモ中心の専用カード）
+// v0.9.0: その他カードを既存カード踏襲のレイアウトに刷新（写真あり・メモ2行打ち切り・左にグレー太枠）
 // ========================================
 
 const COMPACT_THRESHOLD = 4;
@@ -11,9 +12,6 @@ let expandedCards = {};
 const COL_ORDER = ['other','purchase','regen','exhibit','delivery','done'];
 const colIdx = id => COL_ORDER.indexOf(id);
 
-// ========================================
-// カンバン描画
-// ========================================
 function renderKanban() {
   expandedCards = {};
   const wrap = document.getElementById('kanban-wrap');
@@ -44,21 +42,27 @@ function renderKanban() {
 }
 
 // ========================================
-// 車両カード生成
+// その他カード（v0.9.0：既存カード踏襲）
+// 写真・メーカー・モデル・管理番号・サイズタグ・仕入れバーは通常カード同様
+// 金額・進捗ドット・進捗％・在庫日数バッジは省略
+// 代わりにコアメモ＋作業メモを2行打ち切りで表示
+// 左にグレーの太枠で売り物カードと区別
 // ========================================
-// その他（other）専用：メモ＋仕入れから N 日のバーだけのシンプルカード
 function _makeOtherCard(car, isCompact) {
   const inv = daysSince(car.purchaseDate);
   const coreMemo = (car.memo || '').trim();
   const workMemo = (car.workMemo || '').trim();
+
   const memoBlock = `
-    <div class="cc-other-memo">
-      <div class="cc-other-memo-label">📌 メモ</div>
-      <div class="cc-other-memo-text">${coreMemo ? escapeHtml(coreMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
-    </div>
-    <div class="cc-other-memo">
-      <div class="cc-other-memo-label">📝 作業メモ</div>
-      <div class="cc-other-memo-text">${workMemo ? escapeHtml(workMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
+    <div class="cc-other-memos">
+      <div class="cc-other-memo-row">
+        <span class="cc-other-memo-icon">📌</span>
+        <span class="cc-other-memo-body${coreMemo ? '' : ' empty'}">${coreMemo ? escapeHtml(coreMemo).replace(/\n/g,' ') : '未記入'}</span>
+      </div>
+      <div class="cc-other-memo-row">
+        <span class="cc-other-memo-icon">📝</span>
+        <span class="cc-other-memo-body${workMemo ? '' : ' empty'}">${workMemo ? escapeHtml(workMemo).replace(/\n/g,' ') : '未記入'}</span>
+      </div>
     </div>`;
 
   const div = document.createElement('div');
@@ -67,20 +71,39 @@ function _makeOtherCard(car, isCompact) {
   div.dataset.carId = car.id;
   div.dataset.col = car.col;
   div.innerHTML = `
-    <div class="cc-other-head">
-      <div class="cc-other-title">${car.maker} ${car.model}</div>
-      <div class="cc-other-num">${car.num}</div>
+    <div class="cc-thumb">${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}</div>
+    <div class="cc-body">
+      <div class="cc-info-row">
+        <div class="cc-info-left">
+          <div class="cc-maker">${car.maker} · ${car.num}</div>
+          <div class="cc-model">${car.model}</div>
+        </div>
+        <div class="cc-info-right">
+          <div class="cc-other-badge">📝 その他</div>
+          <div class="cc-tag">${car.size||'—'}</div>
+        </div>
+      </div>
+      ${memoBlock}
     </div>
-    ${memoBlock}
     <div class="cc-bottom-bar">仕入れから${inv}日</div>`;
   div.addEventListener('dragstart', () => { dragCard = car; div.classList.add('dragging'); });
   div.addEventListener('dragend', () => { dragCard = null; div.classList.remove('dragging'); });
-  div.addEventListener('click', () => openDetail(car.id));
+  div.addEventListener('click', () => {
+    if (!isCompact) { openDetail(car.id); return; }
+    const colId = car.col;
+    const currentExpanded = expandedCards[colId];
+    if (currentExpanded === div) {
+      openDetail(car.id);
+    } else {
+      if (currentExpanded) currentExpanded.classList.remove('expanded');
+      div.classList.add('expanded');
+      expandedCards[colId] = div;
+    }
+  });
   return div;
 }
 
 function makeCarCard(car, isCompact) {
-  // その他は専用カード
   if (car.col === 'other') return _makeOtherCard(car, isCompact);
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
@@ -168,15 +191,13 @@ function handleKanbanMove(car, targetCol) {
   const fromLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const toLabel = COLS.find(c => c.id === targetCol)?.label || targetCol;
 
-  // ★禁止ルール（v0.8.9）：その他 ↔ 納車準備、その他 ↔ 納車完了
-  // 売約済みの車を保留に戻すのは矛盾、保留の車を一気に納車準備にもしない
+  // ★禁止：その他 ↔ 納車準備、その他 ↔ 納車完了
   if ((car.col === 'other' && (targetCol === 'delivery' || targetCol === 'done')) ||
       ((car.col === 'delivery' || car.col === 'done') && targetCol === 'other')) {
     showToast(`${fromLabel}と${toLabel}の間は移動できません`);
     return;
   }
 
-  // パターン1: 仕入れ/再生中/展示中 → 納車準備（売約POP）
   if ((car.col === 'purchase' || car.col === 'regen' || car.col === 'exhibit') && targetCol === 'delivery') {
     pendingDragCar = car;
     pendingTargetCol = targetCol;
@@ -186,7 +207,6 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // パターン2: 仕入れ/再生中/展示中 → 納車完了（特例：売約POP→OKで一気に納車完了＋祝福演出）
   if ((car.col === 'purchase' || car.col === 'regen' || car.col === 'exhibit') && targetCol === 'done') {
     pendingDragCar = car;
     pendingTargetCol = targetCol;
@@ -196,7 +216,6 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // パターン3: 納車準備 → 納車完了（納車完了確認POP→OKで祝福演出）
   if (car.col === 'delivery' && targetCol === 'done') {
     pendingDragCar = car;
     pendingTargetCol = targetCol;
@@ -204,7 +223,6 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // パターン4: 納車準備/納車完了 → それより前（売約キャンセル確認）
   if ((car.col === 'delivery' || car.col === 'done') &&
       (targetCol === 'purchase' || targetCol === 'regen' || targetCol === 'exhibit')) {
     pendingDragCar = car;
@@ -215,7 +233,6 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // パターン5: 納車完了 → 納車準備（取り消し確認、売約は残す）
   if (car.col === 'done' && targetCol === 'delivery') {
     pendingDragCar = car;
     pendingTargetCol = targetCol;
@@ -223,7 +240,6 @@ function handleKanbanMove(car, targetCol) {
     return;
   }
 
-  // それ以外（その他↔仕入れ↔再生中↔展示中など）はそのまま移動
   applyKanbanMove(car, targetCol);
 }
 
@@ -237,10 +253,6 @@ function applyKanbanMove(car, targetCol) {
   showToast('ステータスを更新しました');
 }
 
-// ========================================
-// 売約確認ダイアログ
-// targetCol が done のときは売約データ設定後に祝福演出
-// ========================================
 function closeSellConfirm(sell) {
   document.getElementById('confirm-sell').classList.remove('open');
   if (!pendingDragCar) return;
@@ -266,13 +278,10 @@ function closeSellConfirm(sell) {
   } else {
     addLog(car.id, `売約設定：${fromLabel}→${toLabel}`);
     renderAll();
-    showToast('売約にしました！');
+    showToast('売約にしました!');
   }
 }
 
-// ========================================
-// 納車完了確認ダイアログ（納車準備 → 納車完了）
-// ========================================
 function closeDeliverConfirm(deliver) {
   document.getElementById('confirm-deliver').classList.remove('open');
   if (!pendingDragCar) return;
@@ -290,9 +299,6 @@ function closeDeliverConfirm(deliver) {
   celebrateDelivery(car);
 }
 
-// ========================================
-// 売約キャンセル確認ダイアログ
-// ========================================
 function closeUncontractConfirm(uncontract) {
   document.getElementById('confirm-uncontract').classList.remove('open');
   if (!pendingDragCar) return;
@@ -319,9 +325,6 @@ function closeUncontractConfirm(uncontract) {
   showToast('売約をキャンセルしました');
 }
 
-// ========================================
-// 納車完了取り消し確認ダイアログ
-// ========================================
 function closeUndeliverConfirm(undeliver) {
   document.getElementById('confirm-undeliver').classList.remove('open');
   if (!pendingDragCar) return;
@@ -339,9 +342,6 @@ function closeUndeliverConfirm(undeliver) {
   showToast('納車完了を取り消しました');
 }
 
-// ========================================
-// 納車完了の祝福演出（紙吹雪＋中央カード）
-// ========================================
 function celebrateDelivery(car) {
   const overlay = document.getElementById('celebrate-overlay');
   if (!overlay) return;
