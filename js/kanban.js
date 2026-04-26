@@ -14,8 +14,12 @@ function renderKanban() {
   const wrap = document.getElementById('kanban-wrap');
   wrap.innerHTML = '';
   COLS.forEach(col => {
-    const colCars = cars.filter(c => c.col === col.id);
-    const isCompact = colCars.length >= COMPACT_THRESHOLD;
+    let colCars = cars.filter(c => c.col === col.id);
+    // v1.0.14: 全列に一斉ソート（done＝納車完了は対象外）
+    if (kanbanSort.key && col.id !== 'done') {
+      colCars = _sortKanbanCars(colCars, kanbanSort);
+    }
+    const isCompact = colCars.length >= COMPACT_THRESHOLD && !kanbanForceExpand;
     const div = document.createElement('div');
     div.className = 'k-col' + (col.id === 'other' ? ' k-col-other' : '');
     div.innerHTML = `<div class="k-col-hdr"><div class="k-col-dot" style="background:${col.color}"></div><div class="k-col-title">${col.label}</div><div class="k-col-count">${colCars.length}</div></div><div class="k-cards" id="kc-${col.id}" data-col="${col.id}"></div>`;
@@ -36,6 +40,80 @@ function renderKanban() {
       handleKanbanMove(dragCard, col.id);
     });
   });
+  _refreshKanbanToolbar();
+}
+
+// v1.0.14: カンバン用ソート関数（done は呼ばれない前提）
+function _sortKanbanCars(arr, sort) {
+  const sign = sort.dir === 'asc' ? 1 : -1;
+  const key = sort.key;
+  const cmp = (a, b) => {
+    let av, bv;
+    if (key === 'num') {
+      av = (a.num || ''); bv = (b.num || '');
+      return av.localeCompare(bv) * sign;
+    }
+    if (key === 'price') {
+      av = Number(a.price) || 0; bv = Number(b.price) || 0;
+    } else if (key === 'progress') {
+      av = (calcProg(a)?.pct) || 0;
+      bv = (calcProg(b)?.pct) || 0;
+    } else if (key === 'date') {
+      // 売約済みなら売約日数、それ以外は仕入日数
+      av = a.contract ? daysSinceContract(a) : daysSince(a.purchaseDate);
+      bv = b.contract ? daysSinceContract(b) : daysSince(b.purchaseDate);
+    } else if (key === 'status') {
+      // 同列内ソートだから「売約フラグ優先＋仕入日数」で並べる
+      av = (a.contract ? 1 : 0); bv = (b.contract ? 1 : 0);
+      if (av === bv) {
+        av = daysSince(a.purchaseDate); bv = daysSince(b.purchaseDate);
+      }
+    } else {
+      return 0;
+    }
+    if (av < bv) return -1 * sign;
+    if (av > bv) return 1 * sign;
+    return 0;
+  };
+  return arr.slice().sort(cmp);
+}
+
+// v1.0.14: 並び替えキーをトグルセット
+function setKanbanSort(key) {
+  if (kanbanSort.key === key) {
+    kanbanSort.dir = kanbanSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    kanbanSort.key = key;
+    kanbanSort.dir = 'desc';
+  }
+  kanbanForceExpand = false;
+  renderKanban();
+}
+
+// v1.0.14: 「すべてのカードを開く」トグル
+function toggleKanbanExpandAll() {
+  kanbanForceExpand = !kanbanForceExpand;
+  renderKanban();
+}
+
+// v1.0.14: ツールバーのアクティブ状態を反映
+function _refreshKanbanToolbar() {
+  document.querySelectorAll('#kanban-toolbar .kt-sort-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.querySelectorAll('.kt-arrow').forEach(a => a.remove());
+    if (btn.dataset.key === kanbanSort.key) {
+      btn.classList.add('active');
+      const arrow = document.createElement('span');
+      arrow.className = 'kt-arrow';
+      arrow.textContent = kanbanSort.dir === 'asc' ? '▲' : '▼';
+      btn.appendChild(arrow);
+    }
+  });
+  const btn = document.getElementById('kt-expand-btn');
+  if (btn) {
+    btn.textContent = kanbanForceExpand ? '▲ 縮小表示に戻す' : '▼ すべてのカードを開く';
+    btn.classList.toggle('active', kanbanForceExpand);
+  }
 }
 
 // v0.9.1: その他カード（右上は仕入Nバッジのみ、下段帯なし）
@@ -106,7 +184,12 @@ function makeCarCard(car, isCompact) {
 
   const contractedDays = daysSinceContract(car);
   let topDayTag;
-  if (car.contract) {
+  if (car.col === 'done' && car.deliveryDate) {
+    // v1.0.14: 納車完了は日数→納車日付（M/D 納車）固定表示
+    const d = new Date(car.deliveryDate);
+    const md = `${d.getMonth() + 1}/${d.getDate()}`;
+    topDayTag = `<div class="cc-bigday cc-done-day">${md}<span class="cc-done-suffix">納車</span></div>`;
+  } else if (car.contract) {
     topDayTag = `<div class="cc-bigday db">売約<span class="cc-bigday-num">${contractedDays}</span>日</div>`;
   } else {
     const wt = invWarnTier(inv);
@@ -234,6 +317,7 @@ function applyKanbanMove(car, targetCol) {
   if (targetCol === 'delivery' && car.col !== 'delivery') car.workMemo = '';
   car.col = targetCol;
   addLog(car.id, `ステータス変更: ${fromLabel}→${toLabel}`);
+  kanbanForceExpand = false; // v1.0.14: 何かを触ったら元のルールに戻る
   renderAll();
   showToast('ステータスを更新しました');
 }

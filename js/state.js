@@ -36,6 +36,16 @@ let tableSort = { key: 'purchaseDate', dir: 'desc' };
 // 4枚以上で自動的に縮小、ユーザーが「すべて展開」を押すと true になりトグルで保持
 let progressExpanded = { other:false, before:false, delivery:false };
 
+// カンバン全列のソート設定（v1.0.14）
+// key: null|'num'|'price'|'progress'|'date'|'status'、dir: 'asc'|'desc'
+// 'date' は売約済みなら売約日数、未売約なら在庫日数で自動判定
+// 納車完了列（done）は対象外
+let kanbanSort = { key: null, dir: 'desc' };
+
+// 「すべてのカードを開く」フラグ。true の間は4台以上でも縮小せず通常表示
+// 何かの操作（並び替え変更／カード移動／新規登録など）があると false に戻る
+let kanbanForceExpand = false;
+
 // ========== 会社ごとの設定 ==========
 let appSettings = {
   // 在庫警告3段階（日数・ON/OFF）

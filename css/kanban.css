@@ -6,6 +6,52 @@
 /* カンバン全体 */
 .kanban-wrap{display:flex;gap:12px;min-width:max-content;height:100%;align-items:flex-start}
 
+/* v1.0.14: カンバン上部ツールバー */
+.kanban-toolbar{display:flex;align-items:center;gap:14px;padding:8px 4px 12px;flex-shrink:0;flex-wrap:wrap}
+.kt-sort-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.kt-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-right:4px}
+.kt-sort-btn{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:6px 12px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--text2);
+  cursor:pointer;
+  transition:.15s;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.kt-sort-btn:hover{color:var(--text);background:var(--bg3);border-color:var(--border2)}
+.kt-sort-btn.active{color:#fff;background:var(--blue);border-color:var(--blue)}
+.kt-sort-btn .kt-arrow{font-size:10px;line-height:1}
+.kt-expand-btn{
+  margin-left:auto;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:6px 14px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--text2);
+  cursor:pointer;
+  transition:.15s;
+}
+.kt-expand-btn:hover{color:var(--text);background:var(--bg3);border-color:var(--border2)}
+.kt-expand-btn.active{color:#fff;background:var(--green);border-color:var(--green)}
+
+/* v1.0.14: 納車完了カードの日付表示 */
+.cc-bigday.cc-done-day{
+  background:rgba(107,114,128,.18);
+  color:var(--text2);
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:.02em;
+}
+.cc-done-suffix{font-size:9px;font-weight:600;margin-left:3px;opacity:.85}
+
 /* カンバンの列 */
 .k-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);width:268px;flex-shrink:0;display:flex;flex-direction:column;max-height:100%}
 .k-col-hdr{padding:11px 13px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0}
