@@ -287,8 +287,6 @@ function _attachProgressDnD() {
       card.addEventListener('dragend',     () => {
         card.draggable = false;
         card.classList.remove('pv-dragging');
-        document.querySelectorAll('.pv-card.pv-drop-before, .pv-card.pv-drop-after')
-          .forEach(c => c.classList.remove('pv-drop-before','pv-drop-after'));
       });
       card.addEventListener('dragstart', (e) => {
         card.classList.add('pv-dragging');
@@ -307,33 +305,26 @@ function _attachProgressDnD() {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
 
-      // どのカードの前/後ろに挿入するか判定
+      // ドラッグ中のカードをリアルタイムで挿入し直し（ぷいっと動く）
       const target = e.target.closest('.pv-card');
-      document.querySelectorAll('.pv-card.pv-drop-before, .pv-card.pv-drop-after')
-        .forEach(c => c.classList.remove('pv-drop-before','pv-drop-after'));
       if (target && target !== dragging) {
         const r = target.getBoundingClientRect();
         const before = (e.clientY - r.top) < r.height / 2;
-        target.classList.add(before ? 'pv-drop-before' : 'pv-drop-after');
+        const ref = before ? target : target.nextSibling;
+        if (dragging.nextSibling !== ref && dragging !== ref) {
+          target.parentNode.insertBefore(dragging, ref);
+        }
+      } else if (!target && body.lastElementChild !== dragging) {
+        // 空白部分にホバー → 末尾へ
+        body.appendChild(dragging);
       }
     });
 
     body.addEventListener('drop', (e) => {
-      const dragging = document.querySelector('.pv-card.pv-dragging');
-      if (!dragging) return;
       const srcGroup = e.dataTransfer.getData('text/x-pv-group');
-      if (srcGroup !== groupId) return; // 別枠は弾く
+      if (srcGroup !== groupId) return;
       e.preventDefault();
-      const target = e.target.closest('.pv-card');
-      if (target && target !== dragging) {
-        const r = target.getBoundingClientRect();
-        const before = (e.clientY - r.top) < r.height / 2;
-        target.parentNode.insertBefore(dragging, before ? target : target.nextSibling);
-      } else if (!target) {
-        body.appendChild(dragging);
-      }
-      document.querySelectorAll('.pv-card.pv-drop-before, .pv-card.pv-drop-after')
-        .forEach(c => c.classList.remove('pv-drop-before','pv-drop-after'));
+      // 既に dragover で並びは確定しているので何もしない
     });
   });
 }
