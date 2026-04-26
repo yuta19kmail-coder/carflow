@@ -425,7 +425,7 @@ function renderInventory() {
   if (!grid) return;
   grid.innerHTML = '';
   const list = cars
-    .filter(c => c.col !== 'done' && c.col !== 'other')
+    .filter(c => c.col !== 'done' && c.col !== 'other' && c.col !== 'delivery')
     .slice()
     .sort((a,b) => daysSince(b.purchaseDate) - daysSince(a.purchaseDate));
   const onTiers = (appSettings?.invWarn || [])
@@ -487,4 +487,6 @@ function exportData() {
   a.download = 'carflow.json';
   a.click();
   showToast('エクスポートしました');
+}
+ートしました');
 }
