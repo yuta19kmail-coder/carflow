@@ -32,6 +32,10 @@ let exhibitSort = { key: 'invDays', dir: 'desc' };
 // key: 'num'|'purchaseDate'|'status'|'progress'|'deliveryDate'、dir: 'asc'|'desc'
 let tableSort = { key: 'purchaseDate', dir: 'desc' };
 
+// 進捗ビューの枠ごとの展開状態（v1.0.11）
+// 4枚以上で自動的に縮小、ユーザーが「すべて展開」を押すと true になりトグルで保持
+let progressExpanded = { other:false, before:false, delivery:false };
+
 // ========== 会社ごとの設定 ==========
 let appSettings = {
   // 在庫警告3段階（日数・ON/OFF）

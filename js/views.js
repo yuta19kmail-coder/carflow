@@ -162,24 +162,15 @@ function renderGantt() { /* removed in v0.8.9 */ }
 // ========================================
 // 進捗ビュー（v0.9.0で3枠化、v0.9.5で補足sub削除＋スマホ用タブ追加）
 // ========================================
-function _makeProgressCardOther(car) {
+function _makeProgressCardOther(car, compact) {
   const inv = daysSince(car.purchaseDate);
   const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const coreMemo = (car.memo || '').trim();
   const workMemo = (car.workMemo || '').trim();
   const card = document.createElement('div');
-  card.className = 'pv-card pv-card-other';
+  card.className = 'pv-card pv-card-other' + (compact ? ' is-compact' : '');
   card.dataset.carId = car.id;
-  card.innerHTML = `
-    <div class="pv-drag" title="ドラッグして並び替え">⋮⋮</div>
-    <div class="pv-head">
-      <div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div>
-        <div style="font-size:11px;color:var(--text2)">${car.num}</div>
-      </div>
-      <span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span>
-    </div>
+  const bodyHtml = compact ? '' : `
     <div class="pv-body">
       <div class="pv-other-memo">
         <div class="pv-other-memo-label">📌 メモ</div>
@@ -190,30 +181,46 @@ function _makeProgressCardOther(car) {
         <div class="pv-other-memo-text">${workMemo ? escapeHtml(workMemo).replace(/\n/g,'<br>') : '<span class="cc-other-empty">未記入</span>'}</div>
       </div>
       <div style="margin-top:9px;font-size:11px;color:var(--text3)">仕入れから ${inv} 日経過</div>
-    </div>
+    </div>`;
+  card.innerHTML = `
+    <div class="pv-drag" title="ドラッグして並び替え">⋮⋮</div>
+    <div class="pv-head">
+      <div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div>
+        <div style="font-size:11px;color:var(--text2)">${car.num}</div>
+      </div>
+      <span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span>
+    </div>${bodyHtml}
     <div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
   return card;
 }
 
-function _makeProgressCard(car) {
-  if (car.col === 'other') return _makeProgressCardOther(car);
+function _makeProgressCard(car, compact) {
+  if (car.col === 'other') return _makeProgressCardOther(car, compact);
   const isD = car.col === 'delivery';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
   const prog = calcProg(car);
   const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const card = document.createElement('div');
-  card.className = 'pv-card';
+  card.className = 'pv-card' + (compact ? ' is-compact' : '');
   card.dataset.carId = car.id;
-  const taskRows = tasks.map(t => {
+  const taskRows = compact ? '' : tasks.map(t => {
     const p = calcSingleProg(car, t.id, tasks);
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:14px">${t.icon}</span><div style="flex:1;font-size:12px">${t.name}</div><div class="pbar" style="width:52px"><div class="pfill" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);width:30px;text-align:right">${p.pct}%</div></div>`;
   }).join('');
-  card.innerHTML = `<div class="pv-drag" title="ドラッグして並び替え">⋮⋮</div><div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:9px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
+  card.innerHTML = `<div class="pv-drag" title="ドラッグして並び替え">⋮⋮</div><div class="pv-head"><div class="pv-thumb">${car.photo?`<img src="${car.photo}">`:carEmoji(car.size)}</div><div style="flex:1"><div style="font-size:13px;font-weight:600">${car.maker} ${car.model}</div><div style="font-size:11px;color:var(--text2)">${car.num} · ${fmtYearDisplay(parseYearInput(car.year)||car.year)}</div></div><span class="pill ${pillMap[car.col]||'pill-gray'}">${colLabel}</span></div><div class="pv-body">${taskRows}<div style="margin-top:${compact?'0':'9px'};display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>全体</span><span style="font-weight:700;color:var(--green)">${prog.pct}%</span></div><div class="pbar" style="height:6px;margin-top:5px"><div class="pfill" style="width:${prog.pct}%"></div></div></div><div class="pv-btn" onclick="openDetail('${car.id}')">▶ カードを開く</div>`;
   return card;
 }
 
 // v0.9.5: 進捗ビューのグループ選択（スマホ用、PCでは縦並び全表示）
 let progressActiveGroup = 'other';
+
+// v1.0.11: 進捗ビューの枠ごとの展開トグル
+function toggleProgressGroup(groupId) {
+  progressExpanded[groupId] = !progressExpanded[groupId];
+  renderProgress();
+}
 
 function setProgressGroup(groupId) {
   progressActiveGroup = groupId;
@@ -249,12 +256,19 @@ function renderProgress() {
   wrap.appendChild(tabBar);
 
   groups.forEach(g => {
+    const isMany = g.cars.length >= 4;
+    const expanded = !!progressExpanded[g.id];
+    const compact = isMany && !expanded;
+    const toggleBtn = isMany
+      ? `<button class="pv-toggle-btn" onclick="toggleProgressGroup('${g.id}')">${expanded ? '▲ 縮小表示に戻す' : '▼ すべて展開'}</button>`
+      : '';
     const sec = document.createElement('div');
     sec.className = 'pv-group' + (g.id === progressActiveGroup ? ' pv-active' : '');
     sec.dataset.group = g.id;
     sec.innerHTML = `
       <div class="pv-group-head">
         <div class="pv-group-title">${g.label} <span class="pv-group-count">${g.cars.length}台</span></div>
+        ${toggleBtn}
       </div>
       <div class="pv-group-body"></div>`;
     const body = sec.querySelector('.pv-group-body');
@@ -265,7 +279,7 @@ function renderProgress() {
       empty.textContent = g.emptyMsg;
       body.appendChild(empty);
     } else {
-      g.cars.forEach(car => body.appendChild(_makeProgressCard(car)));
+      g.cars.forEach(car => body.appendChild(_makeProgressCard(car, compact)));
     }
     wrap.appendChild(sec);
   });
