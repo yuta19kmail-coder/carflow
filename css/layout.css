@@ -47,3 +47,38 @@
 .action-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .action-chips{display:flex;gap:7px;overflow-x:auto;flex:1}
 .action-chips::-webkit-scrollbar{display:none}
+
+/* ========================================
+   v1.0.3 サイドバー折りたたみトグル
+   ======================================== */
+.sidebar-toggle{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-size:16px;
+  width:34px;
+  height:34px;
+  border-radius:var(--r);
+  cursor:pointer;
+  margin-right:6px;
+  transition:.15s;
+  font-family:inherit;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.sidebar-toggle:hover{
+  background:var(--bg3);
+  color:var(--text);
+  border-color:var(--text3);
+}
+
+/* 折りたたみ時：サイドバーを非表示 */
+body.sidebar-collapsed .sidebar{
+  display:none !important;
+}
+
+/* スマホクイックモード時はトグルボタン自体を隠す（mobile.css側で制御） */
+body.mobile .sidebar-toggle{
+  display:none !important;
+}
