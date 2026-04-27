@@ -1,0 +1,571 @@
+/* ========================================
+   equipment.css (v1.0.20〜)
+   装備品チェックページ＋装備詳細閲覧ビュー
+   スマホ前提（PCでも崩れない）
+   ======================================== */
+
+/* ===== 装備品チェックページ全画面 ===== */
+#eq-page {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 5000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#eq-page.open { display: flex; }
+
+/* 上部バー */
+.eq-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.eq-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.eq-back:active { transform: scale(0.96); }
+.eq-title {
+  font-size: 15px;
+  font-weight: 700;
+  flex: 1;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.eq-progress-badge {
+  font-size: 11px;
+  color: var(--text3);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--bg3);
+  white-space: nowrap;
+}
+
+/* 車両ヘッダー */
+.eq-vehicle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.eq-vehicle-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--bg3);
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.eq-vehicle-meta {
+  flex: 1;
+  min-width: 0;
+}
+.eq-vehicle-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.eq-vehicle-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* 本体スクロール領域 */
+.eq-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 100px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* カテゴリブロック */
+.eq-cat {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.eq-cat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg2);
+}
+.eq-cat-head:active { background: var(--bg3); }
+.eq-cat-icon { font-size: 22px; }
+.eq-cat-label {
+  font-size: 15px;
+  font-weight: 700;
+  flex: 1;
+  color: var(--text);
+}
+.eq-cat-count {
+  font-size: 11px;
+  color: var(--text3);
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--bg3);
+}
+.eq-cat-toggle {
+  font-size: 14px;
+  color: var(--text3);
+  transition: transform 0.2s;
+}
+.eq-cat[data-open="1"] .eq-cat-toggle { transform: rotate(180deg); }
+.eq-cat-items {
+  display: none;
+  padding: 4px 8px 8px;
+}
+.eq-cat[data-open="1"] .eq-cat-items { display: block; }
+
+/* グループ見出し */
+.eq-group-head {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 8px 4px;
+  margin-top: 4px;
+}
+.eq-group {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 4px;
+  margin: 0 0 8px;
+}
+
+/* 個別アイテム */
+.eq-item {
+  background: var(--bg2);
+  border-radius: 8px;
+  margin: 4px 0;
+  padding: 0;
+  overflow: hidden;
+  transition: background 0.1s;
+}
+.eq-group .eq-item { background: var(--bg2); }
+.eq-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  min-height: 48px;
+}
+.eq-item-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.eq-item-info {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg3);
+  color: var(--text3);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+.eq-item-info:active { transform: scale(0.92); }
+.eq-item[data-info-open="1"] .eq-item-info {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* ヘルプ展開 */
+.eq-item-help {
+  display: none;
+  padding: 0 14px 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text2);
+  border-top: 1px dashed var(--border);
+  margin-top: 0;
+  padding-top: 10px;
+}
+.eq-item[data-info-open="1"] .eq-item-help { display: block; }
+
+/* === 3状態トグル（tri） === */
+.eq-tri {
+  display: inline-flex;
+  background: var(--bg3);
+  border-radius: 999px;
+  padding: 3px;
+  flex-shrink: 0;
+  user-select: none;
+}
+.eq-tri-btn {
+  min-width: 44px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 0 12px;
+  transition: all 0.12s;
+}
+.eq-tri-btn[data-active="1"][data-state="on"]  { background: #16a34a; color: #fff; box-shadow: 0 1px 3px rgba(22,163,74,0.4); }
+.eq-tri-btn[data-active="1"][data-state="off"] { background: #dc2626; color: #fff; box-shadow: 0 1px 3px rgba(220,38,38,0.4); }
+.eq-tri-btn[data-active="1"][data-state="none"]{ background: var(--bg2); color: var(--text2); border:1px solid var(--border); }
+.eq-tri-btn:active { transform: scale(0.94); }
+
+/* === 選択肢（select） === */
+.eq-select-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+.eq-select-btn {
+  flex: 1 1 auto;
+  min-width: 70px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid transparent;
+  transition: all 0.1s;
+}
+.eq-select-btn:active { transform: scale(0.96); }
+.eq-select-btn[data-active="1"] {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+/* === ステータス（status: OK/NG/未確認） === */
+.eq-status {
+  display: inline-flex;
+  background: var(--bg3);
+  border-radius: 999px;
+  padding: 3px;
+  flex-shrink: 0;
+  user-select: none;
+}
+.eq-status-btn {
+  min-width: 50px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 0 10px;
+}
+.eq-status-btn[data-active="1"][data-state="ok"] { background: #16a34a; color: #fff; }
+.eq-status-btn[data-active="1"][data-state="ng"] { background: #dc2626; color: #fff; }
+.eq-status-btn[data-active="1"][data-state="none"] { background: var(--bg2); color: var(--text2); border:1px solid var(--border); }
+.eq-status-btn:active { transform: scale(0.94); }
+
+/* === 自由記述（text） === */
+.eq-text-row {
+  padding: 0 12px 12px;
+}
+.eq-text-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.eq-text-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* item の中身を縦に並べるバリアント（select / text 用） */
+.eq-item.eq-item-vertical .eq-item-row {
+  padding-bottom: 4px;
+}
+
+/* 下部固定アクションバー */
+.eq-actionbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  z-index: 10;
+}
+.eq-action-btn {
+  flex: 1;
+  padding: 14px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  font-family: inherit;
+}
+.eq-action-back {
+  background: var(--bg3);
+  color: var(--text2);
+}
+.eq-action-complete {
+  background: #16a34a;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(22,163,74,0.3);
+}
+.eq-action-complete[data-completed="1"] {
+  background: #6b7280;
+}
+.eq-action-btn:active { transform: scale(0.97); }
+
+/* 自動保存トースト（既存 toast と同じ要領） */
+.eq-saved-hint {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22,163,74,0.95);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+  z-index: 6000;
+}
+.eq-saved-hint.show { opacity: 1; }
+
+/* スマホ最適化 */
+@media (max-width: 768px) {
+  .eq-topbar { padding: 10px 12px; }
+  .eq-title { font-size: 14px; }
+  .eq-cat-head { padding: 14px 12px; }
+  .eq-cat-label { font-size: 14px; }
+  .eq-item-label { font-size: 14px; }
+  .eq-tri-btn,
+  .eq-status-btn { min-width: 50px; height: 36px; font-size: 12px; }
+  .eq-action-btn { padding: 16px 12px; font-size: 15px; }
+}
+
+/* PC で開いた時はやや幅を絞って中央配置 */
+@media (min-width: 769px) {
+  .eq-body {
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .eq-topbar > * { max-width: 800px; }
+  .eq-vehicle { max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  .eq-actionbar > * { max-width: 800px; }
+}
+
+/* ========================================
+   装備詳細 閲覧ビュー（モーダル内）
+   ======================================== */
+
+/* カード詳細の「装備詳細」ボタン */
+.detail-eq-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  border: none;
+  border-radius: var(--r);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.detail-eq-btn:active { transform: scale(0.98); }
+.detail-eq-btn-empty {
+  background: var(--bg3);
+  color: var(--text3);
+}
+
+/* 閲覧モーダル */
+.eq-view {
+  padding: 4px 0;
+}
+.eq-view-cat {
+  margin-bottom: 14px;
+}
+.eq-view-cat-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  padding: 6px 4px 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.eq-view-cat-head .icon { font-size: 16px; }
+.eq-view-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+}
+.eq-view-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 4px;
+  font-size: 13px;
+  border-bottom: 1px dashed var(--border);
+}
+.eq-view-row .label {
+  color: var(--text2);
+  flex: 1;
+  min-width: 0;
+}
+.eq-view-row .val {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.eq-view-row .val.on  { color: #16a34a; }
+.eq-view-row .val.off { color: #dc2626; }
+.eq-view-row .val.none{ color: var(--text3); font-weight: 500; }
+.eq-view-row .val.ok  { color: #16a34a; }
+.eq-view-row .val.ng  { color: #dc2626; }
+.eq-view-row .val.sel { color: #3b82f6; }
+.eq-view-row .val.txt { color: var(--text); font-weight: 500; font-size: 12px; }
+
+.eq-view-empty {
+  padding: 30px 10px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+  background: var(--bg3);
+  border-radius: 10px;
+}
+.eq-view-empty .big { font-size: 28px; margin-bottom: 8px; }
+
+.eq-view-summary {
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg3);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.eq-view-summary .num {
+  font-size: 20px;
+  font-weight: 800;
+  display: block;
+  line-height: 1;
+}
+.eq-view-summary .num.on { color: #16a34a; }
+.eq-view-summary .num.off { color: #dc2626; }
+.eq-view-summary .num.none { color: var(--text3); }
+.eq-view-summary .num.total { color: var(--text); }
+.eq-view-summary .col {
+  flex: 1;
+  text-align: center;
+  color: var(--text3);
+}
+.eq-view-summary .col .lbl { font-size: 10px; }
+
+@media (max-width: 480px) {
+  .eq-view-grid { grid-template-columns: 1fr; }
+}
+
+/* 商談モードでの装備詳細（モーフ表示） */
+.deal-popup-body[data-eq-mode="1"] .deal-main { display: none; }
+.deal-popup-body[data-eq-mode="0"] .deal-eq-panel { display: none; }
+.deal-eq-panel {
+  padding: 8px 4px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.deal-eq-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  user-select: none;
+  border: 1px solid var(--border);
+}
+.deal-eq-trigger {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.deal-eq-trigger:active { transform: scale(0.98); }

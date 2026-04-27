@@ -244,23 +244,37 @@ function renderDeal() {
 }
 
 // 商談用ポップアップ（カードクリック）
+// v1.0.20: 装備詳細を見る ボタンを追加。data-eq-mode で .deal-main / .deal-eq-panel を切替
 function openDealPopup(car) {
   const body = document.getElementById('deal-popup-body');
   if (!body) return;
   const km = Number(car.km || 0).toLocaleString();
   const yr = fmtYearDisplay(parseYearInput(car.year) || car.year);
+  // 装備詳細ボタンの表示文言（v1.0.20）
+  let eqBtnHtml = '';
+  if (typeof calcEquipmentProgress === 'function') {
+    const p = calcEquipmentProgress(car);
+    if (p.filled > 0) {
+      eqBtnHtml = `<button class="deal-eq-trigger" onclick="dealShowEquipment('${car.id}')">📋 装備詳細を見る（${p.filled}/${p.total}）</button>`;
+    }
+  }
+  body.setAttribute('data-eq-mode', '0');
   body.innerHTML = `
-    <div class="deal-popup-photo">${car.photo ? `<img src="${car.photo}">` : `<div class="deal-popup-emoji">${carEmoji(car.size)}</div>`}</div>
-    <div class="deal-popup-info">
-      <div class="deal-popup-title">${car.maker} ${car.model}</div>
-      <div class="deal-popup-stats">
-        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">年式</div><div class="deal-popup-stat-val">${yr}</div></div>
-        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">走行距離</div><div class="deal-popup-stat-val">${km}<span class="deal-popup-stat-unit">km</span></div></div>
-        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">ボディ</div><div class="deal-popup-stat-val">${car.size || '—'}</div></div>
-        <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">色</div><div class="deal-popup-stat-val">${car.color || '—'}</div></div>
+    <div class="deal-main">
+      <div class="deal-popup-photo">${car.photo ? `<img src="${car.photo}">` : `<div class="deal-popup-emoji">${carEmoji(car.size)}</div>`}</div>
+      <div class="deal-popup-info">
+        <div class="deal-popup-title">${car.maker} ${car.model}</div>
+        <div class="deal-popup-stats">
+          <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">年式</div><div class="deal-popup-stat-val">${yr}</div></div>
+          <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">走行距離</div><div class="deal-popup-stat-val">${km}<span class="deal-popup-stat-unit">km</span></div></div>
+          <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">ボディ</div><div class="deal-popup-stat-val">${car.size || '—'}</div></div>
+          <div class="deal-popup-stat"><div class="deal-popup-stat-lbl">色</div><div class="deal-popup-stat-val">${car.color || '—'}</div></div>
+        </div>
+        <div class="deal-popup-price">${fmtPrice(car.price)}</div>
+        ${eqBtnHtml}
       </div>
-      <div class="deal-popup-price">${fmtPrice(car.price)}</div>
-    </div>`;
+    </div>
+    <div class="deal-eq-panel"></div>`;
   document.getElementById('modal-deal').classList.add('open');
 }
 

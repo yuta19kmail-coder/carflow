@@ -62,6 +62,7 @@ function _renderDetailBodyOther(car) {
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">車体色</div><div style="font-size:13px;font-weight:600">${car.color||'—'}</div></div>
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">走行距離</div><div style="font-size:13px;font-weight:600">${Number(car.km||0).toLocaleString()}km</div></div>
     </div>
+    ${_renderEqDetailButton(car)}
     ${coreMemoHtml}
     <button onclick="openCarModal('${car.id}')" style="width:100%;padding:9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:16px">✏️ 車両詳細を編集</button>
     <div class="work-memo" id="work-memo-wrap">
@@ -136,6 +137,7 @@ function renderDetailBody(car) {
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">車体色</div><div style="font-size:13px;font-weight:600">${car.color}</div></div>
       <div style="background:var(--bg3);border-radius:7px;padding:10px"><div style="color:var(--text3);font-size:10px;margin-bottom:3px">走行距離</div><div style="font-size:13px;font-weight:600">${Number(car.km||0).toLocaleString()}km</div></div>
     </div>
+    ${_renderEqDetailButton(car)}
     ${coreMemoHtml}
     <button onclick="openCarModal('${car.id}')" style="width:100%;padding:9px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);font-size:13px;cursor:pointer;margin-bottom:16px">✏️ 車両詳細を編集</button>
     <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${isD?'納車準備':'業務タスク'}</div>
@@ -156,6 +158,18 @@ function renderDetailBody(car) {
         </div>
         <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${checked?'完了':'未完了'}</div></div>
         <div class="task-item-pct" style="margin-left:auto">${checked?'100':'0'}%</div>
+      </div></div>`;
+    } else if (task.id === 't_equip') {
+      // v1.0.20: 装備品チェックは専用ページへ
+      const eqCompleted = !!(car.equipment && car.equipment._completed);
+      const eqProg = (typeof calcEquipmentProgress === 'function') ? calcEquipmentProgress(car) : {filled:0,total:0,pct:0};
+      html += `<div class="task-item"><div class="task-item-row">
+        <div class="task-chk${eqCompleted?' done':eqProg.filled>0?' partial':''}">
+          ${eqCompleted ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : eqProg.filled>0 ? '<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>' : ''}
+        </div>
+        <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${eqCompleted?'完了':eqProg.filled>0?`${eqProg.filled}/${eqProg.total} 入力中`:'未着手'}</div></div>
+        <div class="task-item-pct">${eqCompleted?'100':eqProg.pct}%</div>
+        <button class="task-open-btn" onclick="openEquipmentCheck('${car.id}')">開く →</button>
       </div></div>`;
     } else {
       html += `<div class="task-item"><div class="task-item-row">
@@ -179,6 +193,25 @@ function renderDetailBody(car) {
       }</div>
     </div>`;
   document.getElementById('detail-body').innerHTML = html;
+}
+
+// 装備詳細ボタンの描画（v1.0.20〜）
+// 入力済み数で文言を変える。未入力なら控えめなトーンに
+function _renderEqDetailButton(car) {
+  if (typeof calcEquipmentProgress !== 'function') return '';
+  const p = calcEquipmentProgress(car);
+  const eq = (car.equipment || {});
+  const completed = !!eq._completed;
+  let label, cls = 'detail-eq-btn';
+  if (p.filled === 0) {
+    label = '📋 装備詳細を見る（未入力）';
+    cls += ' detail-eq-btn-empty';
+  } else if (completed) {
+    label = `📋 装備詳細を見る（✓ 完了済 ${p.filled}/${p.total}）`;
+  } else {
+    label = `📋 装備詳細を見る（${p.filled}/${p.total} 入力済）`;
+  }
+  return `<button class="${cls}" onclick="openEquipmentView('${car.id}')">${label}</button>`;
 }
 
 function toggleCoreMemo(el) {

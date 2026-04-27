@@ -4,6 +4,12 @@
 // 各車両のタスク進捗率を計算する関数
 // ========================================
 
+// v1.0.20: t_equip だけ装備品チェック専用ページに移行
+// 完了判定は car.equipment._completed（明示宣言）を見る
+function _isEquipmentCompleted(car) {
+  return !!(car && car.equipment && car.equipment._completed);
+}
+
 // 車両全体の進捗を計算
 function calcProg(car) {
   const isD = car.col === 'delivery' || car.col === 'done';
@@ -11,6 +17,12 @@ function calcProg(car) {
   const state = isD ? car.deliveryTasks : car.regenTasks;
   let total = 0, done = 0;
   tasks.forEach(t => {
+    // v1.0.20: t_equip は1タスクとして扱う（完了/未完了の二値）
+    if (t.id === 't_equip') {
+      total++;
+      if (_isEquipmentCompleted(car)) done++;
+      return;
+    }
     if (t.type === 'toggle') {
       total++;
       if (state[t.id]) done++;
@@ -30,6 +42,11 @@ function calcSingleProg(car, taskId, tasks) {
   const state = isD ? car.deliveryTasks : car.regenTasks;
   const task = tasks.find(t => t.id === taskId);
   if (!task) return {pct:0, done:0, total:0};
+  // v1.0.20: t_equip は装備品チェックの完了フラグだけ見る
+  if (taskId === 't_equip') {
+    const c = _isEquipmentCompleted(car);
+    return {pct: c ? 100 : 0, done: c ? 1 : 0, total: 1};
+  }
   if (task.type === 'toggle') {
     return {pct: state[taskId] ? 100 : 0, done: state[taskId] ? 1 : 0, total:1};
   }
