@@ -38,10 +38,11 @@ function isMilestoneDone(car, offset) {
 function _markerStyleFor(taskId) {
   // 既存 SCHED_POINTS の色味と整合（後方互換）
   const map = {
-    d_docs:  { bg:'#f9a825', color:'#333' },
-    d_maint: { bg:'#e65100', color:'#fff' },
-    d_reg:   { bg:'#6a1b9a', color:'#fff' },
-    d_prep:  { bg:'#1565c0', color:'#fff' },
+    d_docs:     { bg:'#f9a825', color:'#333' },
+    d_maint:    { bg:'#e65100', color:'#fff' },
+    d_reg:      { bg:'#6a1b9a', color:'#fff' },
+    d_prep:     { bg:'#1565c0', color:'#fff' },
+    d_complete: { bg:'#0d9488', color:'#fff' },  // v1.0.38: 完全完了（ティール）
   };
   return map[taskId] || { bg:'var(--blue)', color:'#fff' };
 }
@@ -68,40 +69,38 @@ function _getDeliveryMilestonePoints() {
   return points;
 }
 
-// 1台あたりの「1本バー」のセグメント配列
+// 1台あたりのバー配列（v1.0.38: タスクごとに独立した1本＝同日重複でも複数行で表示）
+// 各バーは「今日 → そのタスクの期限日」までの一続き
 function buildBarSegments(car, todayStr) {
   const del = car.deliveryDate;
   if (!del || del < todayStr) return [];
 
-  // v1.0.37: 動的マイルストーン
+  // v1.0.37: 動的マイルストーン（納車日含む）
   const SCHED = _getDeliveryMilestonePoints();
 
-  const pointsByDateAsc = [...SCHED]
+  // 各マイルストーンを日付昇順で並べ、それぞれ独立したバーとして返す
+  // taskId をキーにすることで、同日重複しても別バーとして扱える
+  const segments = [];
+  // 期日が早いタスクから上に並ぶよう、日付昇順でソート
+  const sorted = [...SCHED]
     .map(sp => ({...sp, date: dateAddDays(del, -sp.offset)}))
+    .filter(sp => sp.date >= todayStr)
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const segments = [];
-  let cursor = todayStr;
-
-  for (let i = 0; i < pointsByDateAsc.length; i++) {
-    const sp = pointsByDateAsc[i];
-    if (sp.date < todayStr) continue;
-    if (sp.date < cursor) continue;
-
+  sorted.forEach(sp => {
     segments.push({
       car,
       label: sp.label,
       bg: sp.bg,
       color: sp.color,
-      startDate: cursor,
-      endDate: sp.date,
-      isFinal: !!sp.isFinal,
+      startDate: todayStr,         // バー開始は常に今日
+      endDate: sp.date,            // バー終端はそのタスクの期限日
+      isFinal: !!sp.isFinal,       // 納車日（offset=0）だけ true
       milestoneOffset: sp.offset,
       taskId: sp.taskId,
       isDone: _isDeliveryTaskDone(car, sp.taskId),
     });
-    cursor = dateAddDays(sp.date, 1);
-  }
+  });
 
   return segments;
 }
@@ -240,13 +239,24 @@ function renderOneMonth(year, month, hostEl) {
       cellEls.push(cellEl);
     });
 
-    // レーン割り当て（1車種=1レーン）
-    const carLane = {};
+    // v1.0.38: レーン割り当て（1車両×1タスク=1レーン）
+    // → 同日重複でもタスクごとに独立した行に並ぶ
+    const taskLane = {};   // key: carId|taskId → lane index
     let nextLane = 0;
-    weekSegs.forEach(s => {
-      if (!(s.car.id in carLane)) {
-        carLane[s.car.id] = nextLane++;
-      }
+    // バー全体の並び順：車両ごとにグループ化したいので、まず車両出現順 → 車両内はタスクの期限日昇順
+    const carOrder = [];
+    weekSegs.forEach(s => { if (carOrder.indexOf(s.car.id) < 0) carOrder.push(s.car.id); });
+    carOrder.forEach(carId => {
+      // この車両のセグメントを期限日昇順で並べる
+      const sortedSegs = weekSegs
+        .filter(s => s.car.id === carId)
+        .sort((a, b) => a.endDate.localeCompare(b.endDate));
+      sortedSegs.forEach(s => {
+        const key = s.car.id + '|' + s.taskId;
+        if (!(key in taskLane)) {
+          taskLane[key] = nextLane++;
+        }
+      });
     });
 
     weekSegs.forEach(s => {
@@ -254,13 +264,18 @@ function renderOneMonth(year, month, hostEl) {
       const eIdx = weekCells.findLastIndex(c => c && c.ds <= s.endDate);
       s._s = sIdx < 0 ? weekCells.findIndex(c => c !== null) : sIdx;
       s._e = eIdx < 0 ? weekCells.findLastIndex(c => c !== null) : eIdx;
-      s._lane = carLane[s.car.id];
+      s._lane = taskLane[s.car.id + '|' + s.taskId];
     });
 
-    const carWeekStart = {};
+    // v1.0.38: 車両名ラベル位置（その車両の最初＝最も上のレーン＋週の開始）
+    const carWeekStart = {};   // carId → col
+    const carTopLane = {};     // carId → 最も上のレーン
     weekSegs.forEach(s => {
       if (!(s.car.id in carWeekStart) || s._s < carWeekStart[s.car.id]) {
         carWeekStart[s.car.id] = s._s;
+      }
+      if (!(s.car.id in carTopLane) || s._lane < carTopLane[s.car.id]) {
+        carTopLane[s.car.id] = s._lane;
       }
     });
 
@@ -275,10 +290,10 @@ function renderOneMonth(year, month, hostEl) {
       }
     });
 
-    // 車種名ラベル（週頭）
+    // 車種名ラベル（週頭、車両グループの最上レーン）
     Object.keys(carWeekStart).forEach(carId => {
       const startCol = carWeekStart[carId];
-      const lane = carLane[carId];
+      const lane = carTopLane[carId];
       const car = cars.find(c => c.id === carId);
       if (!car) return;
       const cellEl = cellEls[startCol];
@@ -299,19 +314,18 @@ function renderOneMonth(year, month, hostEl) {
       nameRow.appendChild(nameEl);
     });
 
-    // 車両全体のバーの開始/終了日を計算
-    const carBarBounds = {};
-    Object.keys(carLane).forEach(carId => {
-      const segs = allSegments.filter(x => x.car.id === carId);
-      if (!segs.length) return;
-      const start = segs.reduce((m, x) => x.startDate < m ? x.startDate : m, segs[0].startDate);
-      const end = segs.reduce((m, x) => x.endDate > m ? x.endDate : m, segs[0].endDate);
-      carBarBounds[carId] = {start, end};
+    // v1.0.38: バーごとの開始/終了日（タスク単位）
+    const barBounds = {};
+    Object.keys(taskLane).forEach(key => {
+      const [carId, taskId] = key.split('|');
+      const seg = allSegments.find(x => x.car.id === carId && x.taskId === taskId);
+      if (!seg) return;
+      barBounds[key] = { start: seg.startDate, end: seg.endDate };
     });
 
     // バー描画
     weekSegs.forEach(s => {
-      const bounds = carBarBounds[s.car.id];
+      const bounds = barBounds[s.car.id + '|' + s.taskId];
       for (let col = s._s; col <= s._e; col++) {
         const cellEl = cellEls[col];
         if (!cellEl) continue;
@@ -501,7 +515,6 @@ document.addEventListener('click', (e) => {
   if (!wrap || !wrap.classList.contains('cal-focused')) return;
   // クリックが wrap の外、または wrap 内でもバー/ラベル以外なら解除
   if (!wrap.contains(e.target)) return;
-  if (e.target.closest('.cal-ev-bar')) return;
-  if (e.target.closest('.cal-ev-name')) return;
+  if (e.target.closest('.cal-ev-bar') || e.target.closest('.cal-ev-name')) return;
   clearCalendarFocus();
 });

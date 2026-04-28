@@ -100,8 +100,10 @@ const DELIVERY_TASKS = [
     ]},
   ]},
 
-  {id:'d_docs', name:'書類', icon:'📄', type:'toggle'},
-  {id:'d_reg',  name:'登録', icon:'📝', type:'toggle'},
+  {id:'d_docs',     name:'書類', icon:'📄', type:'toggle'},
+  {id:'d_reg',      name:'登録', icon:'📝', type:'toggle'},
+  // v1.0.38: 完全完了（全タスク完了の節目マイルストーン）
+  {id:'d_complete', name:'完全完了', icon:'✅', type:'toggle'},
 ];
 
 // ========================================
@@ -129,10 +131,11 @@ let appTaskOrder = { regen: [], delivery: [] };
 let appTaskDeadline = {
   regen: {},
   delivery: {
-    d_docs:  5,  // 書類：納車5日前まで
-    d_maint: 3,  // 整備：納車3日前まで
-    d_reg:   2,  // 登録：納車2日前まで
-    d_prep:  1,  // 納車準備：納車1日前まで
+    d_docs:     5,  // 書類：納車5日前まで
+    d_maint:    3,  // 整備：納車3日前まで
+    d_reg:      2,  // 登録：納車2日前まで
+    d_prep:     1,  // 納車準備：納車1日前まで
+    d_complete: 1,  // 完全完了：納車1日前まで（v1.0.38）
   },
 };
 
