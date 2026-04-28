@@ -236,3 +236,41 @@
   flex-shrink: 0;
   letter-spacing: 0.02em;
 }
+
+
+/* v1.0.36: タスク行の列を固定幅で揃える */
+/* 列構成: [chk] [info(flex:1)] [badge(可変)] [pct(56px右寄)] [open(72px or 空)] */
+.task-item-row {
+  align-items: center;
+}
+.task-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.task-item-info .task-item-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-item-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+.task-item-badge:empty {
+  margin-left: 0;
+}
+.task-item-pct {
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+  margin-right: 0;
+}
+.task-item-open {
+  width: 72px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+.task-item-open .task-open-btn {
+  width: 100%;
+  text-align: center;
+}

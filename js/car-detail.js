@@ -155,6 +155,12 @@ function renderDetailBody(car) {
     if (!o) return '';
     return `<span class="task-overdue-badge" title="期限超過">⚠ 超過${o.overdueDays}日</span>`;
   }
+  // v1.0.36: 列を固定幅で揃える共通フォーマット
+  // [chk(30)] [info(flex:1)] [badge(可変・無くても占有なし)] [pct(56右寄)] [open(64 or プレースホルダー)]
+  function _badgeCol(taskId) {
+    const o = _overdueMap[taskId];
+    return `<div class="task-item-badge">${o ? `<span class="task-overdue-badge" title="期限超過">⚠ 超過${o.overdueDays}日</span>` : ''}</div>`;
+  }
   tasks.forEach(task => {
     const p = calcSingleProg(car, task.id, tasks);
     const isDone = p.pct === 100, isPartial = p.pct > 0 && p.pct < 100;
@@ -165,36 +171,38 @@ function renderDetailBody(car) {
         <div class="task-chk${checked?' done':''}" onclick="toggleTaskToggle('${car.id}','${task.id}',${isD})">
           ${checked ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
         </div>
-        <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${checked?'完了':'未完了'}</div></div>
-        ${_overdueBadge(task.id)}<div class="task-item-pct" style="margin-left:auto">${checked?'100':'0'}%</div>
+        <div class="task-item-info"><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${checked?'完了':'未完了'}</div></div>
+        ${_badgeCol(task.id)}
+        <div class="task-item-pct">${checked?'100':'0'}%</div>
+        <div class="task-item-open"></div>
       </div></div>`;
     } else if (task.id === 't_equip') {
       // v1.0.24: γ方針 — _completed フラグは ✓ マークだけに使い、％は常に入力比例
       const eqCompleted = !!(car.equipment && car.equipment._completed);
       const eqProg = (typeof calcEquipmentProgress === 'function') ? calcEquipmentProgress(car) : {filled:0,total:0,pct:0};
-      // チェックボックスの状態：完了マーク（✓）/ 入力途中（●）/ 未着手（空）
       const chkCls = eqCompleted ? ' done' : (eqProg.filled > 0 ? ' partial' : '');
       const chkInner = eqCompleted
         ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         : (eqProg.filled > 0 ? '<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>' : '');
-      // サブテキスト：完了済みなら「✓ 確認済」 / 入力中なら「N/M 入力中」 / 未着手
       const subText = eqCompleted
         ? `✓ 確認済（${eqProg.filled}/${eqProg.total}）`
         : (eqProg.filled > 0 ? `${eqProg.filled}/${eqProg.total} 入力中` : '未着手');
       html += `<div class="task-item"><div class="task-item-row">
         <div class="task-chk${chkCls}">${chkInner}</div>
-        <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${subText}</div></div>
-        ${_overdueBadge(task.id)}<div class="task-item-pct">${eqProg.pct}%</div>
-        <button class="task-open-btn" onclick="openEquipmentCheck('${car.id}')">開く →</button>
+        <div class="task-item-info"><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${subText}</div></div>
+        ${_badgeCol(task.id)}
+        <div class="task-item-pct">${eqProg.pct}%</div>
+        <div class="task-item-open"><button class="task-open-btn" onclick="openEquipmentCheck('${car.id}')">開く →</button></div>
       </div></div>`;
     } else {
       html += `<div class="task-item"><div class="task-item-row">
         <div class="task-chk${isDone?' done':isPartial?' partial':''}">
           ${isDone ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : isPartial ? '<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>' : ''}
         </div>
-        <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${p.done}/${p.total} 完了</div></div>
-        ${_overdueBadge(task.id)}<div class="task-item-pct">${p.pct}%</div>
-        <button class="task-open-btn" onclick="openWorkflow('${car.id}','${task.id}',${isD})">開く →</button>
+        <div class="task-item-info"><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${p.done}/${p.total} 完了</div></div>
+        ${_badgeCol(task.id)}
+        <div class="task-item-pct">${p.pct}%</div>
+        <div class="task-item-open"><button class="task-open-btn" onclick="openWorkflow('${car.id}','${task.id}',${isD})">開く →</button></div>
       </div></div>`;
     }
   });
