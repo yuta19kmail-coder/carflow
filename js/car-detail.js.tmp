@@ -330,8 +330,7 @@ function closeDeleteCarConfirm(doDelete) {
   // 開いているモーダルを両方閉じる
   closeModal('modal-car');
   closeModal('modal-detail');
-  if (typeof renderDashboard === 'function') renderDashboard();
-  renderAll();
+  if (typeof renderDashboard === 'function') renderDashboard();  renderAll();
   showToast(`${removed.maker} ${removed.model} を削除しました`);
   _deletingCarId = null;
 }

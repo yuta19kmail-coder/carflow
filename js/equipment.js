@@ -21,9 +21,8 @@ function getCarEquipment(car) {
 
 // 値を保存（自動保存トリガー）
 function setEquipmentValue(carId, itemId, value) {
-  console.log('[EQ-DEBUG] setEquipmentValue called: carId=' + carId + ' itemId=' + itemId + ' value=' + value);
   const car = cars.find(c => c.id === carId);
-  if (!car) { console.warn('[EQ-DEBUG] car not found for', carId); return; }
+  if (!car) return;
   const eq = getCarEquipment(car);
   if (value == null || value === '') {
     delete eq[itemId];
@@ -35,7 +34,6 @@ function setEquipmentValue(carId, itemId, value) {
   if (eq._completed) eq._completed = false;
   _showEqSavedHint();
   _updateEqProgressBadge();
-  console.log('[EQ-DEBUG] saved. JSON =', JSON.stringify(car.equipment));
 }
 
 // 全項目数と入力済み数（_completed と _updatedAt を除外）
@@ -79,29 +77,28 @@ function openEquipmentCheck(carId) {
 }
 
 function closeEquipmentCheck() {
-  console.log('[EQ-DEBUG] closeEquipmentCheck. _eqActiveCarId=' + _eqActiveCarId);
   document.getElementById('eq-page').classList.remove('open');
   document.body.style.overflow = '';
-  // 詳細を再描画（ボタンの色など更新）
-  // v1.0.21: モーダル open 判定を外し、_eqActiveCarId が detail と一致してれば常に再描画
-  if (_eqActiveCarId) {
-    const car = cars.find(c => c.id === _eqActiveCarId);
-    if (car) {
-      console.log('[EQ-DEBUG] car.equipment JSON at close = ' + JSON.stringify(car.equipment || {}));
-      if (typeof calcEquipmentProgress === 'function') {
-        const p = calcEquipmentProgress(car);
-        console.log('[EQ-DEBUG] calcEquipmentProgress at close: filled=' + p.filled + ' total=' + p.total + ' pct=' + p.pct);
-      }
-      // detail-body が DOM 上にあれば再描画。display:none でも次回開いた時に最新値が反映される
+
+  // v1.0.24: 確実に「詳細モーダル」と「カンバン等の全ビュー」を再描画
+  // - detail-body は modal-detail が open でなくても DOM に存在するので、
+  //   activeDetailCarId が _eqActiveCarId と一致していれば再描画して次回表示時に最新化
+  // - renderAll() でカンバン上のカード（進捗ドット・％）も更新
+  const targetCarId = _eqActiveCarId;
+  _eqActiveCarId = null;
+
+  if (targetCarId) {
+    const car = cars.find(c => c.id === targetCarId);
+    // 詳細モーダル側の再描画（activeDetailCarId と一致する時のみ）
+    if (car && typeof activeDetailCarId !== 'undefined' && activeDetailCarId === targetCarId) {
       const dbody = document.getElementById('detail-body');
-      console.log('[EQ-DEBUG] detail-body exists? ' + !!dbody + ' modal-detail open? ' + document.getElementById('modal-detail')?.classList.contains('open'));
-      if (dbody) {
-        try { renderDetailBody(car); } catch(e) { console.warn('renderDetailBody error', e); }
+      if (dbody && typeof renderDetailBody === 'function') {
+        try { renderDetailBody(car); } catch(e) {}
       }
     }
-    if (typeof renderAll === 'function') renderAll();
   }
-  _eqActiveCarId = null;
+  // 全ビュー再描画（カンバン・進捗・ガント等）
+  if (typeof renderAll === 'function') renderAll();
 }
 
 // 「完了する」ボタン
@@ -293,10 +290,9 @@ function onEqSelectClick(el) {
 // ====================================================================
 
 function cycleEqTri(itemId) {
-  console.log('[EQ-DEBUG] cycleEqTri called', {itemId, _eqActiveCarId});
-  if (!_eqActiveCarId) { console.warn('[EQ-DEBUG] no _eqActiveCarId, abort'); return; }
+  if (!_eqActiveCarId) return;
   const car = cars.find(c => c.id === _eqActiveCarId);
-  if (!car) { console.warn('[EQ-DEBUG] car not found in cycleEqTri'); return; }
+  if (!car) return;
   const cur = getCarEquipment(car)[itemId] || 'none';
   // none → on → off → none
   const next = cur === 'none' ? 'on' : cur === 'on' ? 'off' : 'none';
@@ -518,17 +514,8 @@ function renderEquipmentView(car, opts) {
   return `<div class="eq-view">${html}</div>`;
 }
 
-// v1.0.21: カード詳細モーダルでの装備詳細はアコーディオン展開方式
-// （旧 openEquipmentView / closeEquipmentView は撤廃。互換のため空関数を残す）
-function openEquipmentView(carId) {
-  // 互換用：直接呼ばれたらアコーディオンを開く
-  toggleEquipmentAccordion(carId, true);
-}
-function closeEquipmentView(carId) {
-  toggleEquipmentAccordion(carId, false);
-}
-
 // アコーディオンの開閉（カード詳細モーダル内）
+// v1.0.21: 新規画面置換 → アコーディオン展開方式に変更
 function toggleEquipmentAccordion(carId, forceOpen) {
   const wrap = document.getElementById(`eq-acc-${carId}`);
   const btn = document.getElementById(`eq-acc-btn-${carId}`);

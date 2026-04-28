@@ -1,0 +1,4 @@
+  renderAll();
+  showToast(`${removed.maker} ${removed.model} を削除しました`);
+  _deletingCarId = null;
+}

@@ -10,6 +10,16 @@ function _isEquipmentCompleted(car) {
   return !!(car && car.equipment && car.equipment._completed);
 }
 
+// v1.0.24: t_equip は常に入力比例で進捗％を返す（_completed フラグは UI の✓表示にのみ利用）
+// 全項目数 / 入力済み項目数 で計算。EQUIPMENT_CATEGORIES が無い時は 0/1 を返す。
+function _calcEquipProgUnified(car) {
+  if (typeof calcEquipmentProgress === 'function') {
+    const p = calcEquipmentProgress(car);
+    return { pct: p.pct, done: p.filled, total: p.total || 1 };
+  }
+  return { pct: 0, done: 0, total: 1 };
+}
+
 // 車両全体の進捗を計算
 function calcProg(car) {
   const isD = car.col === 'delivery' || car.col === 'done';
@@ -17,10 +27,12 @@ function calcProg(car) {
   const state = isD ? car.deliveryTasks : car.regenTasks;
   let total = 0, done = 0;
   tasks.forEach(t => {
-    // v1.0.20: t_equip は1タスクとして扱う（完了/未完了の二値）
+    // v1.0.24: t_equip は装備品チェックの全項目を1項目1カウントで集計
+    // → タスク行の％（calcSingleProg）と全体進捗バーの分母・分子を一致させる
     if (t.id === 't_equip') {
-      total++;
-      if (_isEquipmentCompleted(car)) done++;
+      const ep = _calcEquipProgUnified(car);
+      total += ep.total;
+      done += ep.done;
       return;
     }
     if (t.type === 'toggle') {
@@ -42,15 +54,10 @@ function calcSingleProg(car, taskId, tasks) {
   const state = isD ? car.deliveryTasks : car.regenTasks;
   const task = tasks.find(t => t.id === taskId);
   if (!task) return {pct:0, done:0, total:0};
-  // v1.0.20: t_equip は装備品チェックの完了フラグだけ見る
-  // v1.0.21: 完了押せば100%、それ以外は入力済み数を割合で返す（途中状態を反映）
+  // v1.0.24: t_equip は常に入力比例で進捗％を返す
+  // _completed フラグは「確認済みかどうか」の別概念として UI 側で別表示する
   if (taskId === 't_equip') {
-    if (_isEquipmentCompleted(car)) return {pct: 100, done: 1, total: 1};
-    if (typeof calcEquipmentProgress === 'function') {
-      const p = calcEquipmentProgress(car);
-      return {pct: p.pct, done: p.filled, total: p.total};
-    }
-    return {pct: 0, done: 0, total: 1};
+    return _calcEquipProgUnified(car);
   }
   if (task.type === 'toggle') {
     return {pct: state[taskId] ? 100 : 0, done: state[taskId] ? 1 : 0, total:1};
