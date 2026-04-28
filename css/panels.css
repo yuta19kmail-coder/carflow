@@ -572,3 +572,72 @@
   color: var(--text2);
   cursor: pointer;
 }
+
+/* v1.0.33: タスクエディタの並び替えボタン・期日入力欄 */
+.task-edit-phase-deadline-hint {
+  font-size: 11px;
+  color: var(--text3);
+  padding: 4px 12px 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.task-edit-phase-deadline-hint strong {
+  color: var(--text2);
+  font-weight: 700;
+}
+
+.task-edit-order-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.task-edit-order-btn {
+  width: 22px;
+  height: 13px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  border-radius: 3px;
+  font-size: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  line-height: 1;
+}
+.task-edit-order-btn:hover:not([disabled]) {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+.task-edit-order-btn[disabled] {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.task-edit-deadline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.task-edit-deadline-inp {
+  width: 48px;
+  padding: 4px 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: right;
+  outline: none;
+}
+.task-edit-deadline-inp:focus { border-color: var(--blue); }
+.task-edit-deadline-suffix {
+  font-size: 11px;
+  color: var(--text3);
+}

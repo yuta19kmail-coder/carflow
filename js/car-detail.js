@@ -203,9 +203,16 @@ function renderDetailBody(car) {
 }
 
 // 装備詳細ボタン＋アコーディオンパネルの描画
-// v1.0.20: 新規追加 / v1.0.21: アコーディオン化 / v1.0.24: ラベル統一・デバッグ削除
+// v1.0.20: 新規追加 / v1.0.21: アコーディオン化 / v1.0.24: ラベル統一 / v1.0.33: タスクOFF時は非表示
 function _renderEqDetailButton(car) {
   if (typeof calcEquipmentProgress !== 'function') return '';
+  // v1.0.33: 装備品チェックタスクが OFF なら、ボタン自体を出さない
+  // 再生・納車 どちらかのフェーズで t_equip が有効なら表示する
+  if (typeof isTaskActive === 'function') {
+    const onRegen    = isTaskActive('t_equip', 'regen');
+    const onDelivery = isTaskActive('t_equip', 'delivery');
+    if (!onRegen && !onDelivery) return '';
+  }
   const p = calcEquipmentProgress(car);
   const completed = !!(car.equipment && car.equipment._completed);
   let label, cls = 'detail-eq-btn';

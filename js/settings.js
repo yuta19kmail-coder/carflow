@@ -331,31 +331,48 @@ if (document.readyState === 'loading') {
 }
 
 // ========================================
-// v1.0.32: タスク ON/OFF ＋ カスタムタスク追加 UI
+// v1.0.32〜33: タスク ON/OFF ＋ 並び替え ＋ 期日 ＋ カスタム追加 UI
 // ========================================
 function renderTasksEditor() {
   const root = document.getElementById('tasks-editor');
   if (!root) return;
 
   const phases = [
-    { key: 'regen',    label: '🔧 再生フェーズ' },
-    { key: 'delivery', label: '📦 納車フェーズ' },
+    { key: 'regen',    label: '🔧 再生フェーズ', deadlineHint: '仕入れから', deadlineSuffix: '日以内' },
+    { key: 'delivery', label: '📦 納車フェーズ', deadlineHint: '納車まで',   deadlineSuffix: '日前' },
   ];
 
   let html = '';
   phases.forEach(ph => {
     const tasks = (typeof getAllTasksForUI === 'function') ? getAllTasksForUI(ph.key) : [];
-    html += `<div class="task-edit-phase"><div class="task-edit-phase-head">${ph.label}</div>`;
+    html += `<div class="task-edit-phase">
+      <div class="task-edit-phase-head">${ph.label}</div>
+      <div class="task-edit-phase-deadline-hint">期日：<strong>${ph.deadlineHint} N ${ph.deadlineSuffix}</strong>（空欄なら期限なし）</div>`;
     if (!tasks.length) {
       html += '<div class="task-edit-empty">タスクが定義されていません</div>';
     } else {
-      tasks.forEach(t => {
+      tasks.forEach((t, idx) => {
         const customCls = t.builtin ? '' : ' task-edit-custom';
+        const isFirst = idx === 0;
+        const isLast  = idx === tasks.length - 1;
+        const dlVal   = t.deadline != null ? t.deadline : '';
         html += `
           <div class="task-edit-row${customCls}" data-task-id="${escapeHtml(t.id)}" data-phase="${ph.key}">
+            <div class="task-edit-order-btns">
+              <button class="task-edit-order-btn" onclick="moveTaskUp('${escapeHtml(t.id)}', '${ph.key}')" ${isFirst ? 'disabled' : ''} title="上へ">▲</button>
+              <button class="task-edit-order-btn" onclick="moveTaskDown('${escapeHtml(t.id)}', '${ph.key}')" ${isLast ? 'disabled' : ''} title="下へ">▼</button>
+            </div>
             <span class="task-edit-icon">${t.icon || '📋'}</span>
             <span class="task-edit-name">${escapeHtml(t.name)}</span>
             ${t.builtin ? '<span class="task-edit-tag">組込</span>' : '<span class="task-edit-tag custom">追加</span>'}
+            <div class="task-edit-deadline">
+              <input type="number" min="1" max="365" value="${dlVal}"
+                     placeholder="—"
+                     onchange="setTaskDeadline('${escapeHtml(t.id)}', '${ph.key}', this.value)"
+                     class="task-edit-deadline-inp"
+                     title="${ph.deadlineHint} N ${ph.deadlineSuffix}">
+              <span class="task-edit-deadline-suffix">${ph.deadlineSuffix.replace(/日.*/,'日')}</span>
+            </div>
             <label class="task-edit-toggle">
               <input type="checkbox" ${t.enabled ? 'checked' : ''}
                      onchange="toggleTaskEnabled('${escapeHtml(t.id)}', '${ph.key}', this.checked)">
@@ -395,15 +412,32 @@ function renderTasksEditor() {
 function toggleTaskEnabled(taskId, phase, enabled) {
   if (!appTaskEnabled[phase]) appTaskEnabled[phase] = {};
   appTaskEnabled[phase][taskId] = !!enabled;
-  // 永続化
-  if (typeof appSettings !== 'undefined') {
-    if (!appSettings.taskEnabled) appSettings.taskEnabled = { regen:{}, delivery:{} };
-    appSettings.taskEnabled[phase] = { ...appTaskEnabled[phase] };
-    if (typeof saveAppSettings === 'function') saveAppSettings();
-  }
-  // 全ビュー再描画（タスク追加/削除と同じく、設定パネル中なので display:none ビューも更新）
   if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
   showToast(enabled ? 'タスクを有効化しました' : 'タスクを無効化しました');
+}
+
+// v1.0.33: 並び替え
+function moveTaskUp(taskId, phase) {
+  if (typeof moveTaskOrder === 'function') moveTaskOrder(taskId, phase, -1);
+  renderTasksEditor();
+  if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
+}
+function moveTaskDown(taskId, phase) {
+  if (typeof moveTaskOrder === 'function') moveTaskOrder(taskId, phase, 1);
+  renderTasksEditor();
+  if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
+}
+
+// v1.0.33: 期日設定
+function setTaskDeadline(taskId, phase, value) {
+  if (!appTaskDeadline[phase]) appTaskDeadline[phase] = {};
+  const v = (value == null || value === '') ? null : Number(value);
+  if (v == null || !Number.isFinite(v) || v <= 0) {
+    delete appTaskDeadline[phase][taskId];
+  } else {
+    appTaskDeadline[phase][taskId] = v;
+  }
+  if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
 }
 
 // カスタムタスク追加
@@ -414,21 +448,13 @@ function addCustomTask() {
   const useDelivery = document.getElementById('new-task-phase-delivery').checked;
   if (!name) { showToast('タスク名を入力してください'); return; }
   if (!useRegen && !useDelivery) { showToast('適用フェーズを選んでください'); return; }
-  // ID 生成（重複しないよう time+random）
   const id = 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   const phases = [];
   if (useRegen) phases.push('regen');
   if (useDelivery) phases.push('delivery');
   appCustomTasks.push({ id, name, icon, phases });
-  // 永続化
-  if (typeof appSettings !== 'undefined') {
-    appSettings.customTasks = appCustomTasks.slice();
-    if (typeof saveAppSettings === 'function') saveAppSettings();
-  }
-  // フォームクリア
   document.getElementById('new-task-icon').value = '';
   document.getElementById('new-task-name').value = '';
-  // 既存車両の状態オブジェクトに該当キーを追加（後方互換）
   cars.forEach(c => {
     if (useRegen    && c.regenTasks    && !(id in c.regenTasks))    c.regenTasks[id] = false;
     if (useDelivery && c.deliveryTasks && !(id in c.deliveryTasks)) c.deliveryTasks[id] = false;
@@ -444,20 +470,17 @@ function deleteCustomTask(taskId) {
   if (!t) return;
   if (!confirm(`「${t.name}」を削除しますか？\n（既に進捗が入っていても消えます）`)) return;
   appCustomTasks = appCustomTasks.filter(x => x.id !== taskId);
-  // 既存車両の状態からも削除
   cars.forEach(c => {
     if (c.regenTasks)    delete c.regenTasks[taskId];
     if (c.deliveryTasks) delete c.deliveryTasks[taskId];
   });
-  // taskEnabled からも削除
   if (appTaskEnabled.regen)    delete appTaskEnabled.regen[taskId];
   if (appTaskEnabled.delivery) delete appTaskEnabled.delivery[taskId];
-  // 永続化
-  if (typeof appSettings !== 'undefined') {
-    appSettings.customTasks = appCustomTasks.slice();
-    appSettings.taskEnabled = { regen: {...appTaskEnabled.regen}, delivery: {...appTaskEnabled.delivery} };
-    if (typeof saveAppSettings === 'function') saveAppSettings();
-  }
+  if (appTaskDeadline.regen)    delete appTaskDeadline.regen[taskId];
+  if (appTaskDeadline.delivery) delete appTaskDeadline.delivery[taskId];
+  // 並び順からも除外
+  if (appTaskOrder.regen)    appTaskOrder.regen    = appTaskOrder.regen.filter(id => id !== taskId);
+  if (appTaskOrder.delivery) appTaskOrder.delivery = appTaskOrder.delivery.filter(id => id !== taskId);
   renderTasksEditor();
   if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
   showToast('タスクを削除しました');
@@ -474,5 +497,17 @@ function restoreTasksFromSettings() {
   }
   if (Array.isArray(appSettings.customTasks)) {
     appCustomTasks = appSettings.customTasks.slice();
+  }
+  if (appSettings.taskOrder) {
+    appTaskOrder = {
+      regen:    appSettings.taskOrder.regen    || [],
+      delivery: appSettings.taskOrder.delivery || [],
+    };
+  }
+  if (appSettings.taskDeadline) {
+    appTaskDeadline = {
+      regen:    appSettings.taskDeadline.regen    || {},
+      delivery: appSettings.taskDeadline.delivery || {},
+    };
   }
 }

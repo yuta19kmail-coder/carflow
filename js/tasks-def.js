@@ -105,8 +105,8 @@ const DELIVERY_TASKS = [
 ];
 
 // ========================================
-// v1.0.32: タスク ON/OFF ＋ カスタムタスク追加
-// 設定UIで管理。appSettings.taskEnabled / appSettings.customTasks に永続化
+// v1.0.32〜33: タスク ON/OFF ＋ 並び替え ＋ カスタム追加 ＋ 期日
+// 設定UIで管理（メモリ上、リロードで初期化）
 // ========================================
 
 // 組み込みタスクの enabled 状態（true=有効、false=無効）
@@ -118,6 +118,15 @@ let appTaskEnabled = { regen: {}, delivery: {} };
 // 形：[{ id, name, icon, phases:['regen'|'delivery'] }]
 let appCustomTasks = [];
 
+// v1.0.33: タスク並び順（フェーズごと、ID配列）
+// 配列に無い ID は末尾に元の定義順で追加される
+let appTaskOrder = { regen: [], delivery: [] };
+
+// v1.0.33: タスク期日（フェーズごと、{taskId: 日数 or null}）
+// 再生：仕入れから N 日以内（N = 数値）
+// 納車：納車まで N 日前まで（N = 数値）
+let appTaskDeadline = { regen: {}, delivery: {} };
+
 // タスクが有効か判定（未定義は true 扱い）
 function isTaskActive(taskId, phase) {
   const map = (appTaskEnabled && appTaskEnabled[phase]) || {};
@@ -125,37 +134,67 @@ function isTaskActive(taskId, phase) {
   return true; // 未定義は有効
 }
 
-// 再生フェーズで有効なタスクのリスト（組み込み＋カスタム）
+// v1.0.33: タスク期日を取得（数値 or null）
+function getTaskDeadline(taskId, phase) {
+  const map = (appTaskDeadline && appTaskDeadline[phase]) || {};
+  const v = map[taskId];
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+// v1.0.33: 並び順を反映してタスク配列をソート
+// order 配列に書かれている順を優先、未記載のものは元の定義順で末尾
+function _sortByTaskOrder(tasks, phase) {
+  const order = (appTaskOrder && appTaskOrder[phase]) || [];
+  if (!order.length) return tasks;
+  const indexed = tasks.map((t, i) => {
+    const oi = order.indexOf(t.id);
+    return { t, key: oi >= 0 ? oi : 1000 + i };
+  });
+  indexed.sort((a, b) => a.key - b.key);
+  return indexed.map(x => x.t);
+}
+
+// 組み込み＋カスタム の合体配列を作る（フェーズ別）
+function _allTasksForPhase(phase) {
+  const builtin = (phase === 'delivery' ? DELIVERY_TASKS : REGEN_TASKS).map(t => ({
+    id: t.id, name: t.name, icon: t.icon, type: t.type, sections: t.sections, builtin: true,
+  }));
+  const custom = (appCustomTasks || [])
+    .filter(t => (t.phases || []).includes(phase))
+    .map(t => ({ id: t.id, name: t.name, icon: t.icon, type: 'toggle', _custom: true, builtin: false }));
+  return _sortByTaskOrder(builtin.concat(custom), phase);
+}
+
+// 再生フェーズで有効なタスクのリスト（組み込み＋カスタム、並び順反映）
 function getActiveRegenTasks() {
-  const builtin = REGEN_TASKS.filter(t => isTaskActive(t.id, 'regen'));
-  const custom  = (appCustomTasks || []).filter(t =>
-    (t.phases || []).includes('regen') && isTaskActive(t.id, 'regen')
-  ).map(t => ({ id: t.id, name: t.name, icon: t.icon, type: 'toggle', _custom: true }));
-  return builtin.concat(custom);
+  return _allTasksForPhase('regen').filter(t => isTaskActive(t.id, 'regen'));
 }
 
 // 納車フェーズで有効なタスクのリスト
 function getActiveDeliveryTasks() {
-  const builtin = DELIVERY_TASKS.filter(t => isTaskActive(t.id, 'delivery'));
-  const custom  = (appCustomTasks || []).filter(t =>
-    (t.phases || []).includes('delivery') && isTaskActive(t.id, 'delivery')
-  ).map(t => ({ id: t.id, name: t.name, icon: t.icon, type: 'toggle', _custom: true }));
-  return builtin.concat(custom);
+  return _allTasksForPhase('delivery').filter(t => isTaskActive(t.id, 'delivery'));
 }
 
-// 設定UI用：組み込み＋カスタムを enabled 状態付きで全部返す（フェーズ別）
+// 設定UI用：組み込み＋カスタムを enabled 状態付きで全部返す（並び順反映）
 function getAllTasksForUI(phase) {
-  const builtin = (phase === 'delivery' ? DELIVERY_TASKS : REGEN_TASKS).map(t => ({
+  return _allTasksForPhase(phase).map(t => ({
     id: t.id, name: t.name, icon: t.icon, type: t.type,
     enabled: isTaskActive(t.id, phase),
-    builtin: true,
+    builtin: t.builtin,
+    deadline: getTaskDeadline(t.id, phase),
   }));
-  const custom = (appCustomTasks || [])
-    .filter(t => (t.phases || []).includes(phase))
-    .map(t => ({
-      id: t.id, name: t.name, icon: t.icon, type: 'toggle',
-      enabled: isTaskActive(t.id, phase),
-      builtin: false,
-    }));
-  return builtin.concat(custom);
+}
+
+// v1.0.33: 並び替え（1個分上下）
+function moveTaskOrder(taskId, phase, dir) {
+  // 現在の表示順を取得
+  const cur = _allTasksForPhase(phase).map(t => t.id);
+  const i = cur.indexOf(taskId);
+  if (i < 0) return;
+  const j = i + dir;
+  if (j < 0 || j >= cur.length) return;
+  [cur[i], cur[j]] = [cur[j], cur[i]];
+  appTaskOrder[phase] = cur;
 }
