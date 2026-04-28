@@ -202,7 +202,7 @@ function _renderEqDetailButton(car) {
   const p = calcEquipmentProgress(car);
   const eq = (car.equipment || {});
   const completed = !!eq._completed;
-  console.log('[EQ-DEBUG] _renderEqDetailButton', {carId: car.id, p, equipment: JSON.parse(JSON.stringify(car.equipment || {}))});
+  console.log('[EQ-DEBUG] _renderEqDetailButton: carId=' + car.id + ' filled=' + p.filled + ' total=' + p.total + ' pct=' + p.pct + ' equipmentJSON=' + JSON.stringify(car.equipment || {}));
   let label, cls = 'detail-eq-btn';
   if (p.filled === 0) {
     label = '📋 装備詳細を見る（未入力）';

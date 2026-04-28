@@ -21,7 +21,7 @@ function getCarEquipment(car) {
 
 // 値を保存（自動保存トリガー）
 function setEquipmentValue(carId, itemId, value) {
-  console.log('[EQ-DEBUG] setEquipmentValue called', {carId, itemId, value, _eqActiveCarId});
+  console.log('[EQ-DEBUG] setEquipmentValue called: carId=' + carId + ' itemId=' + itemId + ' value=' + value);
   const car = cars.find(c => c.id === carId);
   if (!car) { console.warn('[EQ-DEBUG] car not found for', carId); return; }
   const eq = getCarEquipment(car);
@@ -35,7 +35,7 @@ function setEquipmentValue(carId, itemId, value) {
   if (eq._completed) eq._completed = false;
   _showEqSavedHint();
   _updateEqProgressBadge();
-  console.log('[EQ-DEBUG] saved. car.equipment now =', JSON.parse(JSON.stringify(car.equipment)));
+  console.log('[EQ-DEBUG] saved. JSON =', JSON.stringify(car.equipment));
 }
 
 // 全項目数と入力済み数（_completed と _updatedAt を除外）
@@ -79,7 +79,7 @@ function openEquipmentCheck(carId) {
 }
 
 function closeEquipmentCheck() {
-  console.log('[EQ-DEBUG] closeEquipmentCheck. _eqActiveCarId=', _eqActiveCarId);
+  console.log('[EQ-DEBUG] closeEquipmentCheck. _eqActiveCarId=' + _eqActiveCarId);
   document.getElementById('eq-page').classList.remove('open');
   document.body.style.overflow = '';
   // 詳細を再描画（ボタンの色など更新）
@@ -87,10 +87,14 @@ function closeEquipmentCheck() {
   if (_eqActiveCarId) {
     const car = cars.find(c => c.id === _eqActiveCarId);
     if (car) {
-      console.log('[EQ-DEBUG] car.equipment at close =', JSON.parse(JSON.stringify(car.equipment || {})));
+      console.log('[EQ-DEBUG] car.equipment JSON at close = ' + JSON.stringify(car.equipment || {}));
+      if (typeof calcEquipmentProgress === 'function') {
+        const p = calcEquipmentProgress(car);
+        console.log('[EQ-DEBUG] calcEquipmentProgress at close: filled=' + p.filled + ' total=' + p.total + ' pct=' + p.pct);
+      }
       // detail-body が DOM 上にあれば再描画。display:none でも次回開いた時に最新値が反映される
       const dbody = document.getElementById('detail-body');
-      console.log('[EQ-DEBUG] detail-body exists?', !!dbody, 'modal-detail open?', document.getElementById('modal-detail')?.classList.contains('open'));
+      console.log('[EQ-DEBUG] detail-body exists? ' + !!dbody + ' modal-detail open? ' + document.getElementById('modal-detail')?.classList.contains('open'));
       if (dbody) {
         try { renderDetailBody(car); } catch(e) { console.warn('renderDetailBody error', e); }
       }
