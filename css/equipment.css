@@ -210,6 +210,12 @@
   background: #3b82f6;
   color: #fff;
 }
+/* v1.0.21: ℹ がない項目でも幅が揃うよう placeholder */
+.eq-item-info-placeholder {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
 
 /* ヘルプ展開 */
 .eq-item-help {
@@ -424,7 +430,7 @@
 /* カード詳細の「装備詳細」ボタン */
 .detail-eq-btn {
   width: 100%;
-  padding: 11px;
+  padding: 11px 14px;
   background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
   border: none;
   border-radius: var(--r);
@@ -432,16 +438,51 @@
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 8px;
+}
+.detail-eq-btn .detail-eq-btn-label {
+  flex: 1;
+  text-align: center;
+}
+.detail-eq-btn .detail-eq-btn-arrow {
+  font-size: 11px;
+  transition: transform 0.2s;
+  opacity: 0.85;
+}
+.detail-eq-btn[data-open="1"] .detail-eq-btn-arrow {
+  transform: rotate(180deg);
 }
 .detail-eq-btn:active { transform: scale(0.98); }
 .detail-eq-btn-empty {
   background: var(--bg3);
   color: var(--text3);
+}
+
+/* v1.0.21: 装備詳細アコーディオン */
+.detail-eq-accordion {
+  display: none;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--r) var(--r);
+  padding: 10px 12px 12px;
+  margin-bottom: 12px;
+  margin-top: -2px;
+}
+.detail-eq-accordion[data-open="1"] {
+  display: block;
+}
+.detail-eq-btn[data-open="1"] {
+  border-radius: var(--r) var(--r) 0 0;
+  margin-bottom: 0;
+}
+/* アコーディオン展開時の閉じてないボタンの下マージンを 0 にして繋がって見せる */
+.detail-eq-btn:not([data-open="1"]) {
+  margin-bottom: 12px;
 }
 
 /* 閲覧モーダル */

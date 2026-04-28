@@ -198,9 +198,10 @@ function _renderItem(car, item, value) {
   const helpHtml = item.help
     ? `<div class="eq-item-help">${escapeHtml(item.help)}</div>`
     : '';
+  // v1.0.21: ℹボタンを左寄せ（チェックを右端へ）
   const infoBtn = item.help
     ? `<div class="eq-item-info" onclick="toggleEqInfo('${item.id}')">ℹ</div>`
-    : '';
+    : '<div class="eq-item-info-placeholder"></div>';
 
   // 入力部の生成
   let controlHtml = '';
@@ -210,7 +211,7 @@ function _renderItem(car, item, value) {
     controlHtml = _renderTriControl(item.id, value);
   } else if (item.type === 'select') {
     // ラベル行は名前＋ℹ️、選択ボタン群は下の行
-    extraRow = `<div class="eq-select-row">${_renderSelectButtons(item, value)}</div>`;
+    extraRow = `<div class="eq-select-row" data-select-row="${item.id}">${_renderSelectButtons(item, value)}</div>`;
   } else if (item.type === 'status') {
     controlHtml = _renderStatusControl(item.id, value);
   } else if (item.type === 'text') {
@@ -220,12 +221,13 @@ function _renderItem(car, item, value) {
 
   const verticalCls = (item.type === 'select' || item.type === 'text') ? ' eq-item-vertical' : '';
 
+  // v1.0.21: 順序を「ℹ → ラベル → コントロール」に。右手でチェックが押しやすい
   return `
     <div class="eq-item${verticalCls}" data-item="${item.id}" data-info-open="0">
       <div class="eq-item-row">
+        ${infoBtn}
         <div class="eq-item-label">${escapeHtml(item.label)}</div>
         ${controlHtml}
-        ${infoBtn}
       </div>
       ${extraRow}
       ${helpHtml}
@@ -253,10 +255,22 @@ function _renderStatusControl(itemId, value) {
 }
 
 function _renderSelectButtons(item, value) {
+  // v1.0.21: 日本語の選択肢を onclick 文字列に直接埋め込むとエスケープが壊れる事故が発生したので、
+  // data-* 属性方式に変更。クリックは data-item / data-opt から値を取り出す。
   return (item.options || []).map(opt =>
     `<span class="eq-select-btn" data-active="${value===opt?1:0}"
-       onclick="setEqSelect('${item.id}', ${JSON.stringify(opt).replace(/'/g,"\\'")})">${escapeHtml(opt)}</span>`
+       data-item="${escapeHtml(item.id)}" data-opt="${escapeHtml(opt)}"
+       onclick="onEqSelectClick(this)">${escapeHtml(opt)}</span>`
   ).join('');
+}
+
+// v1.0.21: select ボタンクリックハンドラ
+function onEqSelectClick(el) {
+  if (!el) return;
+  const itemId = el.getAttribute('data-item');
+  const opt = el.getAttribute('data-opt');
+  if (!itemId || opt == null) return;
+  setEqSelect(itemId, opt);
 }
 
 // ====================================================================
@@ -334,8 +348,8 @@ function _updateSelectUI(itemId, value) {
   const el = document.querySelector(`.eq-item[data-item="${itemId}"]`);
   if (!el) return;
   el.querySelectorAll('.eq-select-btn').forEach(b => {
-    // value が null の場合は全て非アクティブ
-    const opt = b.textContent;
+    // value が null の場合は全て非アクティブ。data-opt 属性で比較（textContent はエスケープで揺れるため）
+    const opt = b.getAttribute('data-opt');
     b.setAttribute('data-active', (value != null && opt === value) ? '1' : '0');
   });
 }
@@ -488,31 +502,36 @@ function renderEquipmentView(car, opts) {
   return `<div class="eq-view">${html}</div>`;
 }
 
-// カード詳細モーダル → 装備詳細ボタンが押された時
+// v1.0.21: カード詳細モーダルでの装備詳細はアコーディオン展開方式
+// （旧 openEquipmentView / closeEquipmentView は撤廃。互換のため空関数を残す）
 function openEquipmentView(carId) {
-  const car = cars.find(c => c.id === carId);
-  if (!car) return;
-  // 既存の modal-detail の中身を一時的に置き換える
-  const body = document.getElementById('detail-body');
-  if (!body) return;
-  // バックアップ用に元 carId を覚えておく
-  body.setAttribute('data-eq-view', '1');
-  body.innerHTML = `
-    <div style="margin-bottom:12px">
-      <button class="deal-eq-back" onclick="closeEquipmentView('${carId}')">← 詳細に戻る</button>
-    </div>
-    ${renderEquipmentView(car, {})}
-  `;
+  // 互換用：直接呼ばれたらアコーディオンを開く
+  toggleEquipmentAccordion(carId, true);
+}
+function closeEquipmentView(carId) {
+  toggleEquipmentAccordion(carId, false);
 }
 
-function closeEquipmentView(carId) {
-  const car = cars.find(c => c.id === carId);
-  if (!car) return;
-  const body = document.getElementById('detail-body');
-  if (!body) return;
-  body.removeAttribute('data-eq-view');
-  // 元の詳細を再描画
-  if (typeof renderDetailBody === 'function') renderDetailBody(car);
+// アコーディオンの開閉（カード詳細モーダル内）
+function toggleEquipmentAccordion(carId, forceOpen) {
+  const wrap = document.getElementById(`eq-acc-${carId}`);
+  const btn = document.getElementById(`eq-acc-btn-${carId}`);
+  if (!wrap || !btn) return;
+  const isOpen = wrap.getAttribute('data-open') === '1';
+  const next = (typeof forceOpen === 'boolean') ? forceOpen : !isOpen;
+  if (next) {
+    const car = cars.find(c => c.id === carId);
+    if (!car) return;
+    // 中身をその場で生成（最新値を反映）
+    wrap.innerHTML = renderEquipmentView(car, {});
+    wrap.setAttribute('data-open', '1');
+    btn.setAttribute('data-open', '1');
+  } else {
+    wrap.setAttribute('data-open', '0');
+    btn.setAttribute('data-open', '0');
+    // 中身は残しても閉じれば見えないが、再展開時に最新値で描き直すので消しておく
+    wrap.innerHTML = '';
+  }
 }
 
 // 商談ポップアップ用：装備詳細モード切替

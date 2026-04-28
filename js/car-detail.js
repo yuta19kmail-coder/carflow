@@ -195,7 +195,7 @@ function renderDetailBody(car) {
   document.getElementById('detail-body').innerHTML = html;
 }
 
-// 装備詳細ボタンの描画（v1.0.20〜）
+// 装備詳細ボタン＋アコーディオンパネルの描画（v1.0.20〜 / v1.0.21 でアコーディオン化）
 // 入力済み数で文言を変える。未入力なら控えめなトーンに
 function _renderEqDetailButton(car) {
   if (typeof calcEquipmentProgress !== 'function') return '';
@@ -211,7 +211,13 @@ function _renderEqDetailButton(car) {
   } else {
     label = `📋 装備詳細を見る（${p.filled}/${p.total} 入力済）`;
   }
-  return `<button class="${cls}" onclick="openEquipmentView('${car.id}')">${label}</button>`;
+  // v1.0.21: アコーディオン方式に変更（従来は新規画面に置き換えていた）
+  return `
+    <button id="eq-acc-btn-${car.id}" class="${cls}" data-open="0" onclick="toggleEquipmentAccordion('${car.id}')">
+      <span class="detail-eq-btn-label">${label}</span>
+      <span class="detail-eq-btn-arrow">▼</span>
+    </button>
+    <div id="eq-acc-${car.id}" class="detail-eq-accordion" data-open="0"></div>`;
 }
 
 function toggleCoreMemo(el) {
