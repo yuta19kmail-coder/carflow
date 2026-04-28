@@ -1,24 +1,18 @@
 // ========================================
-// worksheet.js (v1.2.0)
+// worksheet.js (v1.2.1)
 // 中古車作業管理票（再生 / 納車時）の専用フルスクリーン画面
 //
-// equipment.js を参考にした作業項目チェック UI。
-// 装備品との違い：
-//   - 値は2状態のみ（未完了 / 完了）
-//   - 詳細は注意点（detail / points）として下に展開
-//   - 「全項目完了」になるまで完了ボタンが押せない
-//   - 途中で「✕戻る」できる（保存はその場で car.regenTasks/deliveryTasks に反映）
-//
-// 開き方：openWorksheet(carId, taskId)
-//   taskId は 't_regen' または 'd_prep'（または将来の任意の workflow タスク）
+// v1.2.1: 各項目のレイアウトを「タイトル + 概要 + ⓘ展開 / 右端に○」に変更。
+//        将来的に detail/points に画像や図解を埋める拡張を想定。
+//        チェック○は最右に配置（右手親指で押しやすく）。
 // ========================================
 
 let _wsActiveCarId = null;
 let _wsActiveTaskId = null;
 let _wsActiveCatIdx = 0;
+let _wsExpanded = {}; // { itemId: true } で詳細展開フラグ
 
 function _wsGetTaskDef(taskId) {
-  // REGEN_TASKS / DELIVERY_TASKS 両方から探す
   const all = (typeof REGEN_TASKS !== 'undefined' ? REGEN_TASKS : [])
     .concat(typeof DELIVERY_TASKS !== 'undefined' ? DELIVERY_TASKS : []);
   return all.find(t => t.id === taskId) || null;
@@ -64,6 +58,7 @@ function openWorksheet(carId, taskId) {
   _wsActiveCarId = carId;
   _wsActiveTaskId = taskId;
   _wsActiveCatIdx = 0;
+  _wsExpanded = {};
   _renderWorksheetPage(car, taskDef);
   document.getElementById('ws-page').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -75,6 +70,7 @@ function closeWorksheet() {
   const targetCarId = _wsActiveCarId;
   _wsActiveCarId = null;
   _wsActiveTaskId = null;
+  _wsExpanded = {};
   if (targetCarId) {
     const car = cars.find(c => c.id === targetCarId);
     if (car && typeof activeDetailCarId !== 'undefined' && activeDetailCarId === targetCarId) {
@@ -106,7 +102,6 @@ function markWorksheetComplete() {
 // レンダリング
 // ---------------------------------------------------------------
 function _renderWorksheetPage(car, taskDef) {
-  // ヘッダー
   document.getElementById('ws-title').textContent = `${taskDef.icon || ''} ${taskDef.name}`;
   const thumb = document.getElementById('ws-vehicle-thumb');
   if (thumb) {
@@ -127,7 +122,6 @@ function _renderWorksheetPage(car, taskDef) {
 
   _wsUpdateProgressBadge();
 
-  // タブ
   const tabs = document.getElementById('ws-tabs');
   tabs.innerHTML = (taskDef.sections || []).map((sec, i) => {
     const filled = _wsCountSectionFilled(car, sec);
@@ -138,13 +132,13 @@ function _renderWorksheetPage(car, taskDef) {
     </button>`;
   }).join('');
 
-  // 本体（アクティブセクションのみ表示）
   _renderWorksheetSectionItems(car, taskDef);
 
   _refreshWsCompleteBtn(car, taskDef);
   _refreshWsNavBtns(taskDef);
 }
 
+// v1.2.1: 「タイトル+概要+ⓘ展開 / 右に○」レイアウト
 function _renderWorksheetSectionItems(car, taskDef) {
   const sec = (taskDef.sections || [])[_wsActiveCatIdx];
   const body = document.getElementById('ws-body-inner');
@@ -152,24 +146,39 @@ function _renderWorksheetSectionItems(car, taskDef) {
   const state = _wsGetTaskState(car, taskDef.id);
   body.innerHTML = (sec.items || []).map(item => {
     const done = !!state[item.id];
-    const subHtml = item.sub ? `<div class="ws-item-sub">${escapeHtml(item.sub)}</div>` : '';
-    const detailHtml = (item.detail || (item.points && item.points.length))
-      ? `<div class="ws-item-detail">
+    const expanded = !!_wsExpanded[item.id];
+    const hasDetail = !!(item.detail || (item.points && item.points.filter(p=>p).length));
+
+    const subHtml = item.sub
+      ? `<div class="ws-item-sub">${escapeHtml(item.sub)}</div>`
+      : '';
+
+    const detailHtml = hasDetail
+      ? `<div class="ws-item-detail ${expanded ? 'open' : ''}" id="ws-detail-${item.id}">
            ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ''}
-           ${item.points && item.points.length
+           ${item.points && item.points.filter(p=>p).length
              ? `<ul>${item.points.filter(p=>p).map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`
              : ''}
+           <!-- v1.2.1: ここに将来 <img> や <figure> を入れる想定 -->
          </div>`
       : '';
+
+    const infoBtn = hasDetail
+      ? `<button class="ws-info-btn ${expanded ? 'open' : ''}" onclick="toggleWsExpand('${item.id}')" aria-label="詳細を見る">ⓘ</button>`
+      : '';
+
     return `
       <div class="ws-item ${done ? 'done' : ''}" data-id="${item.id}">
-        <button class="ws-item-toggle" onclick="toggleWsItem('${item.id}')">
-          <div class="ws-item-chk">${done ? '✓' : ''}</div>
+        <div class="ws-item-row">
           <div class="ws-item-body">
             <div class="ws-item-name">${escapeHtml(item.name || '')}</div>
             ${subHtml}
           </div>
-        </button>
+          ${infoBtn}
+          <button class="ws-item-chk-btn" onclick="toggleWsItem('${item.id}')" aria-label="完了切替">
+            <div class="ws-item-chk">${done ? '✓' : ''}</div>
+          </button>
+        </div>
         ${detailHtml}
       </div>`;
   }).join('');
@@ -180,13 +189,11 @@ function switchWorksheetTab(idx) {
   const car = cars.find(c => c.id === _wsActiveCarId);
   const taskDef = _wsGetTaskDef(_wsActiveTaskId);
   if (!car || !taskDef) return;
-  // タブのアクティブ切替＋本体再描画
   document.querySelectorAll('#ws-tabs .ws-tab').forEach((el, i) => {
     el.classList.toggle('active', i === idx);
   });
   _renderWorksheetSectionItems(car, taskDef);
   _refreshWsNavBtns(taskDef);
-  // 本体を上にスクロール
   const inner = document.getElementById('ws-body-inner');
   if (inner && inner.parentElement) inner.parentElement.scrollTop = 0;
 }
@@ -197,14 +204,12 @@ function toggleWsItem(itemId) {
   if (!car || !taskDef) return;
   const state = _wsGetTaskState(car, taskDef.id);
   state[itemId] = !state[itemId];
-  // 該当 item 行だけ更新
   const row = document.querySelector(`.ws-item[data-id="${itemId}"]`);
   if (row) {
     row.classList.toggle('done', !!state[itemId]);
     const chk = row.querySelector('.ws-item-chk');
     if (chk) chk.textContent = state[itemId] ? '✓' : '';
   }
-  // タブのカウント更新
   const sec = (taskDef.sections || [])[_wsActiveCatIdx];
   if (sec) {
     const tab = document.querySelectorAll('#ws-tabs .ws-tab')[_wsActiveCatIdx];
@@ -215,6 +220,15 @@ function toggleWsItem(itemId) {
   }
   _wsUpdateProgressBadge();
   _refreshWsCompleteBtn(car, taskDef);
+}
+
+// v1.2.1: 詳細を展開／折りたたみ
+function toggleWsExpand(itemId) {
+  _wsExpanded[itemId] = !_wsExpanded[itemId];
+  const detail = document.getElementById(`ws-detail-${itemId}`);
+  if (detail) detail.classList.toggle('open', !!_wsExpanded[itemId]);
+  const btn = document.querySelector(`.ws-item[data-id="${itemId}"] .ws-info-btn`);
+  if (btn) btn.classList.toggle('open', !!_wsExpanded[itemId]);
 }
 
 function _wsCountSectionFilled(car, sec) {

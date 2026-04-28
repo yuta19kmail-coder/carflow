@@ -1,10 +1,9 @@
 /* ============================================================
-   worksheet.css (v1.2.0)
+   worksheet.css (v1.2.1)
    中古車作業管理票（再生 / 納車時）専用画面
-   equipment.css のテイストに合わせつつ、項目はチェック2状態のみ
+   v1.2.1: 「タイトル+概要+ⓘ展開 / 右に○」レイアウトへ変更
    ============================================================ */
 
-/* フルスクリーン土台 */
 #ws-page {
   display: none;
   position: fixed;
@@ -15,7 +14,6 @@
 }
 #ws-page.open { display: flex; }
 
-/* トップバー */
 .ws-topbar {
   height: var(--topbar);
   background: var(--bg2);
@@ -55,7 +53,6 @@
   border: 1px solid var(--border);
 }
 
-/* 車両ヘッダー */
 .ws-vehicle {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
@@ -91,7 +88,6 @@
   margin-top: 2px;
 }
 
-/* 進捗バー（細線） */
 .ws-progress-bar {
   height: 3px;
   background: var(--bg4);
@@ -104,7 +100,6 @@
   transition: width .3s;
 }
 
-/* タブ（セクション切替） */
 .ws-tabs {
   display: flex;
   gap: 6px;
@@ -139,10 +134,7 @@
   border-color: var(--blue);
   color: var(--blue);
 }
-.ws-tab-label {
-  font-size: 12px;
-  white-space: nowrap;
-}
+.ws-tab-label { font-size: 12px; white-space: nowrap; }
 .ws-tab-count {
   font-size: 10px;
   color: var(--text3);
@@ -150,7 +142,6 @@
 }
 .ws-tab.active .ws-tab-count { color: var(--blue); }
 
-/* 本体スクロール領域 */
 .ws-body {
   flex: 1;
   overflow-y: auto;
@@ -162,7 +153,9 @@
   gap: 8px;
 }
 
-/* 1項目カード */
+/* ============================================================
+   1項目カード（v1.2.1: タイトル+概要+ⓘ / 右に○）
+   ============================================================ */
 .ws-item {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -174,45 +167,23 @@
   background: rgba(34, 197, 94, 0.08);
   border-color: rgba(34, 197, 94, 0.45);
 }
-.ws-item-toggle {
-  width: 100%;
+
+.ws-item-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 14px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  color: var(--text);
-}
-.ws-item-toggle:hover { background: rgba(255,255,255,.02); }
-
-.ws-item-chk {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid var(--border2);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-  color: #fff;
-  background: var(--bg3);
-  transition: .2s;
-}
-.ws-item.done .ws-item-chk {
-  background: var(--green);
-  border-color: var(--green);
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
 }
 
-.ws-item-body { flex: 1; min-width: 0; }
+.ws-item-body {
+  flex: 1;
+  min-width: 0;
+}
 .ws-item-name {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
 }
 .ws-item.done .ws-item-name {
   color: var(--text2);
@@ -222,31 +193,92 @@
 .ws-item-sub {
   font-size: 11px;
   color: var(--text3);
-  margin-top: 3px;
+  margin-top: 4px;
+  line-height: 1.45;
 }
 
-/* 注意点（detail / points） */
+/* ⓘボタン（詳細展開） */
+.ws-info-btn {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: .15s;
+}
+.ws-info-btn:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+.ws-info-btn.open {
+  background: rgba(55, 138, 221, 0.18);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* チェック○ボタン（最右・大きめ） */
+.ws-item-chk-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ws-item-chk {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  background: var(--bg3);
+  transition: .2s;
+}
+.ws-item.done .ws-item-chk {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+/* 詳細（展開時のみ表示） */
 .ws-item-detail {
+  display: none;
   border-top: 1px dashed var(--border);
-  padding: 10px 16px 12px 60px;
+  padding: 12px 16px 14px 16px;
   background: rgba(0, 0, 0, 0.12);
 }
+.ws-item-detail.open { display: block; }
 .ws-item-detail p {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text2);
-  line-height: 1.6;
-  margin: 0 0 6px 0;
+  line-height: 1.65;
+  margin: 0 0 8px 0;
 }
 .ws-item-detail ul {
   list-style: none;
-  margin: 0;
+  margin: 6px 0 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 .ws-item-detail li {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text3);
   padding-left: 14px;
   position: relative;
@@ -259,8 +291,24 @@
   left: 4px;
   top: 0;
 }
+/* 将来 detail 内に画像を入れる用の枠スタイル */
+.ws-item-detail figure {
+  margin: 10px 0 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ws-item-detail figure img {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.ws-item-detail figcaption {
+  font-size: 11px;
+  color: var(--text3);
+}
 
-/* フッター（戻る・進む・完了） */
+/* フッター */
 .ws-footer {
   padding: 12px 14px;
   background: var(--bg2);
@@ -317,10 +365,11 @@ body.mobile .ws-title { font-size: 13px; }
 body.mobile .ws-vehicle { padding: 9px 12px; gap: 10px; }
 body.mobile .ws-tab { min-width: 100px; padding: 8px 10px; }
 body.mobile .ws-body { padding: 10px; }
-body.mobile .ws-item-toggle { padding: 13px 12px; gap: 11px; }
-body.mobile .ws-item-chk { width: 30px; height: 30px; font-size: 15px; }
+body.mobile .ws-item-row { padding: 12px 10px 12px 12px; gap: 8px; }
 body.mobile .ws-item-name { font-size: 14px; }
-body.mobile .ws-item-detail { padding: 10px 14px 12px 53px; }
+body.mobile .ws-info-btn { width: 28px; height: 28px; font-size: 13px; }
+body.mobile .ws-item-chk { width: 38px; height: 38px; font-size: 19px; }
+body.mobile .ws-item-detail { padding: 12px 14px 14px 14px; }
 body.mobile .ws-footer { padding: 11px; gap: 6px; }
 body.mobile .ws-nav-btn { padding: 11px 12px; font-size: 12px; }
 body.mobile .ws-complete-btn { font-size: 14px; padding: 13px; }

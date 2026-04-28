@@ -42,11 +42,40 @@
 .view{display:none;flex:1;overflow:auto;padding:14px;flex-direction:column}
 .view.active{display:flex}
 
-/* アクションエリア（下部） */
-.action-area{height:var(--action);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 14px;flex-shrink:0}
+/* アクションエリア（下部） v1.2.1：1〜2行で自動表示、3行目以降は2行のまま横スクロール */
+.action-area{
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 14px;
+  flex-shrink:0;
+  min-height:var(--action);
+  max-height:84px; /* 2行ぶん */
+}
 .action-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.action-chips{display:flex;gap:7px;overflow-x:auto;flex:1}
-.action-chips::-webkit-scrollbar{display:none}
+.action-chips{
+  flex:1;
+  min-width:0;
+  display:grid;
+  grid-auto-flow:column;          /* 横方向に追加 */
+  grid-auto-columns:max-content;
+  grid-template-rows:repeat(2, min-content);  /* 2行固定 */
+  gap:6px 7px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  align-content:start;
+  align-items:center;
+  padding:2px 0;
+}
+.action-chips::-webkit-scrollbar{height:4px}
+.action-chips::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+/* チップ自体は折り返さない */
+.action-chips .chip{white-space:nowrap}
+
+/* v1.2.1: ダッシュボード表示中は下部アクションエリアを非表示（C と被るため） */
+body.panel-dashboard-active .action-area{display:none !important;}
 
 /* ========================================
    v1.0.3 サイドバー折りたたみトグル

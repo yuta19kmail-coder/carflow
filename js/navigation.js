@@ -14,6 +14,8 @@ function showPanel(name, el) {
   if (el) el.classList.add('active');
   const p = document.getElementById('panel-' + name);
   if (p) { p.style.display = 'flex'; p.classList.add('open'); }
+  // v1.2.1: ダッシュボード表示中は下部アクションエリアを隠す
+  document.body.classList.toggle('panel-dashboard-active', name === 'dashboard');
   if (name === 'log') renderLogPanel();
   if (name === 'members') renderMembers();
   if (name === 'dashboard') renderDashboard();
@@ -46,6 +48,8 @@ function switchTab(name, el) {
   el.classList.add('active');
   const v = document.getElementById('view-' + name);
   if (v) { v.style.display = 'flex'; v.classList.add('active'); }
+  // v1.2.1: タブ切替時はダッシュボードフラグを外す
+  document.body.classList.remove('panel-dashboard-active');
   if (name === 'kanban')    renderKanban();
   if (name === 'calendar')  renderCalendar();
   if (name === 'exhibit')   renderExhibit();
