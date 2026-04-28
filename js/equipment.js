@@ -103,10 +103,16 @@ function closeEquipmentCheck() {
 }
 
 // 「完了する」ボタン
+// v1.0.28: 全項目入力済みの時のみ完了可能（UIでもdisabled、念のため関数側でもガード）
 function markEquipmentComplete() {
   if (!_eqActiveCarId) return;
   const car = cars.find(c => c.id === _eqActiveCarId);
   if (!car) return;
+  const p = calcEquipmentProgress(car);
+  if (p.total === 0 || p.filled < p.total) {
+    if (typeof showToast === 'function') showToast(`あと ${p.total - p.filled} 項目チェックしてください`);
+    return;
+  }
   const eq = getCarEquipment(car);
   eq._completed = true;
   eq._updatedAt = new Date().toISOString();
@@ -164,10 +170,26 @@ function _renderEquipmentPage(car) {
   body.innerHTML = html;
 
   // 完了ボタンの状態
+  _refreshCompleteBtn(car);
+}
+
+// v1.0.28: 完了ボタンの状態更新（全項目チェック必須）
+function _refreshCompleteBtn(car) {
   const completeBtn = document.querySelector('.eq-action-complete');
-  if (completeBtn) {
-    const eq = getCarEquipment(car);
-    completeBtn.setAttribute('data-completed', eq._completed ? '1' : '0');
+  if (!completeBtn) return;
+  const eq = getCarEquipment(car);
+  const p = calcEquipmentProgress(car);
+  const allFilled = (p.total > 0 && p.filled >= p.total);
+  completeBtn.setAttribute('data-completed', eq._completed ? '1' : '0');
+  // 全項目入力されていない時は disabled
+  if (!allFilled && !eq._completed) {
+    completeBtn.disabled = true;
+    completeBtn.setAttribute('data-disabled', '1');
+    const remain = Math.max(0, p.total - p.filled);
+    completeBtn.textContent = `あと ${remain} 項目`;
+  } else {
+    completeBtn.disabled = false;
+    completeBtn.setAttribute('data-disabled', '0');
     completeBtn.textContent = eq._completed ? '✓ 完了済（更新する）' : '完了する';
   }
 }
@@ -387,13 +409,8 @@ function _updateCatCount(itemId) {
   const el = document.getElementById(`eq-cat-count-${found.category.id}`);
   if (el) el.textContent = `${filled}/${found.category.items.length}`;
   _updateEqProgressBadge();
-  // 値が1つでも変わったので完了ボタンの表示も再評価
-  const completeBtn = document.querySelector('.eq-action-complete');
-  if (completeBtn) {
-    const eq = getCarEquipment(car);
-    completeBtn.setAttribute('data-completed', eq._completed ? '1' : '0');
-    completeBtn.textContent = eq._completed ? '✓ 完了済（更新する）' : '完了する';
-  }
+  // 値が1つでも変わったので完了ボタンの表示・disabled状態も再評価
+  _refreshCompleteBtn(car);
 }
 function _updateEqProgressBadge() {
   if (!_eqActiveCarId) return;
@@ -458,14 +475,7 @@ function renderEquipmentView(car, opts) {
     html += `<div class="deal-eq-back" onclick="${opts.backHandler}">← 戻る</div>`;
   }
 
-  // サマリー
-  html += `
-    <div class="eq-view-summary">
-      <div class="col"><span class="num on">${sum.on}</span><span class="lbl">あり / OK</span></div>
-      <div class="col"><span class="num off">${sum.off}</span><span class="lbl">なし / NG</span></div>
-      <div class="col"><span class="num none">${sum.none}</span><span class="lbl">未</span></div>
-      <div class="col"><span class="num total">${sum.total}</span><span class="lbl">全項目</span></div>
-    </div>`;
+  // v1.0.28: サマリー（あり/なし/未/全項目）は廃止 — 一覧だけ表示する方針
 
   if (sum.on === 0 && sum.off === 0 && sum.sel === 0 && sum.txt === 0) {
     html += `
@@ -478,31 +488,27 @@ function renderEquipmentView(car, opts) {
   }
 
   EQUIPMENT_CATEGORIES.forEach(cat => {
-    // 表示する項目があるかチェック（未だけのカテゴリは省略）
+    // v1.0.28: ○×・色分けは廃止。装備名: 値（あり/なし/—/値）のプレーン一覧
     const rows = cat.items.map(it => {
       const v = eq[it.id];
-      let valHtml = '';
-      let cls = '';
+      let valHtml = '—';
       if (v == null || v === '') {
         valHtml = '—';
-        cls = 'none';
       } else if (it.type === 'tri') {
-        if (v === 'on')  { valHtml = '○'; cls = 'on'; }
-        else if (v === 'off') { valHtml = '×'; cls = 'off'; }
-        else { valHtml = '—'; cls = 'none'; }
+        if (v === 'on') valHtml = 'あり';
+        else if (v === 'off') valHtml = 'なし';
+        else valHtml = '—';
       } else if (it.type === 'status') {
-        if (v === 'ok')  { valHtml = 'OK'; cls = 'ok'; }
-        else if (v === 'ng') { valHtml = 'NG'; cls = 'ng'; }
-        else { valHtml = '—'; cls = 'none'; }
+        if (v === 'ok') valHtml = 'OK';
+        else if (v === 'ng') valHtml = 'NG';
+        else valHtml = '—';
       } else if (it.type === 'select') {
         valHtml = escapeHtml(v);
-        cls = 'sel';
       } else if (it.type === 'text') {
         const t = (v || '').trim();
-        if (!t) { valHtml = '—'; cls = 'none'; }
-        else { valHtml = escapeHtml(t); cls = 'txt'; }
+        valHtml = t ? escapeHtml(t) : '—';
       }
-      return `<div class="eq-view-row"><span class="label">${escapeHtml(it.label)}</span><span class="val ${cls}">${valHtml}</span></div>`;
+      return `<div class="eq-view-row"><span class="label">${escapeHtml(it.label)}</span><span class="val">${valHtml}</span></div>`;
     }).join('');
 
     html += `
