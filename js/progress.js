@@ -43,9 +43,14 @@ function calcSingleProg(car, taskId, tasks) {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return {pct:0, done:0, total:0};
   // v1.0.20: t_equip は装備品チェックの完了フラグだけ見る
+  // v1.0.21: 完了押せば100%、それ以外は入力済み数を割合で返す（途中状態を反映）
   if (taskId === 't_equip') {
-    const c = _isEquipmentCompleted(car);
-    return {pct: c ? 100 : 0, done: c ? 1 : 0, total: 1};
+    if (_isEquipmentCompleted(car)) return {pct: 100, done: 1, total: 1};
+    if (typeof calcEquipmentProgress === 'function') {
+      const p = calcEquipmentProgress(car);
+      return {pct: p.pct, done: p.filled, total: p.total};
+    }
+    return {pct: 0, done: 0, total: 1};
   }
   if (task.type === 'toggle') {
     return {pct: state[taskId] ? 100 : 0, done: state[taskId] ? 1 : 0, total:1};

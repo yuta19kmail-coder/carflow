@@ -80,10 +80,14 @@ function closeEquipmentCheck() {
   document.getElementById('eq-page').classList.remove('open');
   document.body.style.overflow = '';
   // 詳細を再描画（ボタンの色など更新）
+  // v1.0.21: モーダル open 判定を外し、_eqActiveCarId が detail と一致してれば常に再描画
   if (_eqActiveCarId) {
     const car = cars.find(c => c.id === _eqActiveCarId);
-    if (car && document.getElementById('modal-detail')?.classList.contains('open')) {
-      renderDetailBody(car);
+    if (car) {
+      // detail-body が DOM 上にあれば再描画。display:none でも次回開いた時に最新値が反映される
+      if (document.getElementById('detail-body')) {
+        try { renderDetailBody(car); } catch(e) { console.warn('renderDetailBody error', e); }
+      }
     }
     if (typeof renderAll === 'function') renderAll();
   }
@@ -221,12 +225,13 @@ function _renderItem(car, item, value) {
 
   const verticalCls = (item.type === 'select' || item.type === 'text') ? ' eq-item-vertical' : '';
 
-  // v1.0.21: 順序を「ℹ → ラベル → コントロール」に。右手でチェックが押しやすい
+  // v1.0.21: 順序は「ラベル → ℹ → コントロール」。ℹはチェックボタンのすぐ左に置いて、
+  // 右手親指でチェックを押す動線にℹが近接するよう配置。
   return `
     <div class="eq-item${verticalCls}" data-item="${item.id}" data-info-open="0">
       <div class="eq-item-row">
-        ${infoBtn}
         <div class="eq-item-label">${escapeHtml(item.label)}</div>
+        ${infoBtn}
         ${controlHtml}
       </div>
       ${extraRow}
