@@ -16,7 +16,9 @@ function renderSummaryCards() {
     <div class="stat-box"><div class="stat-num" style="color:var(--text3)">${done}</div><div class="stat-label">納車完了</div></div>`;
 }
 
-function renderActionChips() {
+// v1.2.4: 共通関数。要対応アクションのチップHTML配列を返す。
+// ダッシュボードC と 下部要対応エリア両方から使う。
+function _buildActionChipsHtml() {
   const chips = [];
   const notif = appSettings.notif;
   cars.forEach(car => {
@@ -45,7 +47,14 @@ function renderActionChips() {
       }
     }
   });
-  document.getElementById('dash-actions').innerHTML = chips.length
+  return chips;
+}
+
+function renderActionChips() {
+  const chips = _buildActionChipsHtml();
+  const el = document.getElementById('dash-actions');
+  if (!el) return;
+  el.innerHTML = chips.length
     ? `<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px">${chips.join('')}</div>`
     : '<div style="font-size:13px;color:var(--text3);padding:8px 0">要対応アクションなし ✓</div>';
 }
@@ -388,27 +397,14 @@ function renderMembers() {
   ).join('');
 }
 
-// 下部アクションチップ（v1.1.1: ダッシュボードの「🚨 要対応アクション」と完全に同内容）
-// v1.2.2: chip だけ抜き出して .action-chips-inner で包む（2行wrap+横スクロール用）
+// 下部アクションチップ
+// v1.2.4: ダッシュボードと完全に同じ chips 配列を直接生成（DOM抽出方式から変更）
 function renderActions() {
   const chips = document.getElementById('action-chips');
   if (!chips) return;
-  if (typeof renderActionChips === 'function') {
-    try { renderActionChips(); } catch(e) {}
-  }
-  const dash = document.getElementById('dash-actions');
-  // dash 側の chip 群を抜き出す
-  let chipsHtml = '';
-  if (dash) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = dash.innerHTML;
-    const items = tmp.querySelectorAll('.chip');
-    if (items.length > 0) {
-      chipsHtml = Array.from(items).map(el => el.outerHTML).join('');
-    }
-  }
-  if (chipsHtml) {
-    chips.innerHTML = `<div class="action-chips-inner">${chipsHtml}</div>`;
+  const list = (typeof _buildActionChipsHtml === 'function') ? _buildActionChipsHtml() : [];
+  if (list.length > 0) {
+    chips.innerHTML = `<div class="action-chips-inner">${list.join('')}</div>`;
   } else {
     chips.innerHTML = '<div style="font-size:12px;color:var(--text3)">要対応アクションなし ✓</div>';
   }
