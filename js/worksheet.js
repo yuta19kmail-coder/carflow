@@ -138,7 +138,9 @@ function _renderWorksheetPage(car, taskDef) {
   _refreshWsNavBtns(taskDef);
 }
 
-// v1.2.1: 「タイトル+概要+ⓘ展開 / 右に○」レイアウト
+// v1.2.3: 3層構造
+//   常時表示：タイトル / 概要(sub) / 説明文(detail)
+//   展開時のみ：注意点リスト(points) ＋ 画像・図解（将来追加）
 function _renderWorksheetSectionItems(car, taskDef) {
   const sec = (taskDef.sections || [])[_wsActiveCatIdx];
   const body = document.getElementById('ws-body-inner');
@@ -147,24 +149,30 @@ function _renderWorksheetSectionItems(car, taskDef) {
   body.innerHTML = (sec.items || []).map(item => {
     const done = !!state[item.id];
     const expanded = !!_wsExpanded[item.id];
-    const hasDetail = !!(item.detail || (item.points && item.points.filter(p=>p).length));
+    const validPoints = (item.points || []).filter(p => p);
+    const hasExpandable = validPoints.length > 0; // 将来は item.images もここに含める
 
+    // 常時表示エリア
     const subHtml = item.sub
       ? `<div class="ws-item-sub">${escapeHtml(item.sub)}</div>`
       : '';
+    const detailHtml = item.detail
+      ? `<div class="ws-item-detail-summary">${escapeHtml(item.detail)}</div>`
+      : '';
 
-    const detailHtml = hasDetail
-      ? `<div class="ws-item-detail ${expanded ? 'open' : ''}" id="ws-detail-${item.id}">
-           ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ''}
-           ${item.points && item.points.filter(p=>p).length
-             ? `<ul>${item.points.filter(p=>p).map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`
+    // 展開エリア：points と将来の画像
+    const expandHtml = hasExpandable
+      ? `<div class="ws-item-expand ${expanded ? 'open' : ''}" id="ws-detail-${item.id}">
+           ${validPoints.length
+             ? `<div class="ws-item-points-label">注意点</div>
+                <ul>${validPoints.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`
              : ''}
-           <!-- v1.2.1: ここに将来 <img> や <figure> を入れる想定 -->
+           <!-- v1.2.3: ここに将来 <figure><img>...</figure> を入れる想定 -->
          </div>`
       : '';
 
-    const infoBtn = hasDetail
-      ? `<button class="ws-info-btn ${expanded ? 'open' : ''}" onclick="toggleWsExpand('${item.id}')" aria-label="詳細を見る">ⓘ</button>`
+    const infoBtn = hasExpandable
+      ? `<button class="ws-info-btn ${expanded ? 'open' : ''}" onclick="toggleWsExpand('${item.id}')" aria-label="さらに詳しく">ⓘ</button>`
       : '';
 
     return `
@@ -173,13 +181,14 @@ function _renderWorksheetSectionItems(car, taskDef) {
           <div class="ws-item-body">
             <div class="ws-item-name">${escapeHtml(item.name || '')}</div>
             ${subHtml}
+            ${detailHtml}
           </div>
           ${infoBtn}
           <button class="ws-item-chk-btn" onclick="toggleWsItem('${item.id}')" aria-label="完了切替">
             <div class="ws-item-chk">${done ? '✓' : ''}</div>
           </button>
         </div>
-        ${detailHtml}
+        ${expandHtml}
       </div>`;
   }).join('');
 }

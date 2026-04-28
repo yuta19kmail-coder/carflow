@@ -373,3 +373,79 @@ body.mobile .ws-item-detail { padding: 12px 14px 14px 14px; }
 body.mobile .ws-footer { padding: 11px; gap: 6px; }
 body.mobile .ws-nav-btn { padding: 11px 12px; font-size: 12px; }
 body.mobile .ws-complete-btn { font-size: 14px; padding: 13px; }
+
+
+/* ============================================================
+   v1.2.3: 3層構造のスタイル
+   常時表示：sub + detail-summary
+   展開時：expand（points + 将来の画像）
+   ============================================================ */
+.ws-item-detail-summary {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.55;
+  margin-top: 6px;
+  padding-right: 4px;
+}
+.ws-item.done .ws-item-detail-summary {
+  color: var(--text3);
+}
+
+/* 展開エリア（注意点・画像など） */
+.ws-item-expand {
+  display: none;
+  border-top: 1px dashed var(--border);
+  padding: 12px 16px 14px 16px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.ws-item-expand.open { display: block; }
+.ws-item-points-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--orange);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ws-item-expand ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ws-item-expand li {
+  font-size: 12px;
+  color: var(--text2);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.55;
+}
+.ws-item-expand li::before {
+  content: "•";
+  color: var(--orange);
+  position: absolute;
+  left: 4px;
+  top: 0;
+}
+/* 将来の画像枠 */
+.ws-item-expand figure {
+  margin: 12px 0 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ws-item-expand figure img {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.ws-item-expand figcaption {
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* スマホ調整 */
+body.mobile .ws-item-detail-summary { font-size: 12px; }
+body.mobile .ws-item-expand { padding: 12px 14px 14px 14px; }
