@@ -41,9 +41,9 @@ function _renderDetailBodyOther(car) {
   let html = `
     <div class="detail-photo">
       ${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}
-      <div class="detail-photo-edit" onclick="document.getElementById('dp-inp').click()">📷 変更</div>
+<!-- v1.0.43: 写真変更は新規/編集モーダルのヘッダー枠に集約。詳細からは除去 -->
     </div>
-    <input type="file" id="dp-inp" accept="image/*" style="display:none" onchange="onDetailPhoto(this)">
+<!-- v1.0.43: 写真の変更はモーダルから集約管理。dp-inp は削除 -->
     <div class="detail-other-status">
       <span class="pill ${pillMap[car.col]||'pill-other'}">📝 ${colLabel}</span>
       <span class="detail-other-hint">身の振り方が決まっていない保留中の車両</span>
@@ -119,9 +119,9 @@ function renderDetailBody(car) {
   let html = `
     <div class="detail-photo">
       ${car.photo ? `<img src="${car.photo}">` : carEmoji(car.size)}
-      <div class="detail-photo-edit" onclick="document.getElementById('dp-inp').click()">📷 変更</div>
+<!-- v1.0.43: 写真変更は新規/編集モーダルのヘッダー枠に集約。詳細からは除去 -->
     </div>
-    <input type="file" id="dp-inp" accept="image/*" style="display:none" onchange="onDetailPhoto(this)">
+<!-- v1.0.43: 写真の変更はモーダルから集約管理。dp-inp は削除 -->
     <div class="detail-head">
       <div class="detail-head-left">
         ${dayBlock}

@@ -3,6 +3,7 @@
 // 車両登録/編集モーダル
 // v0.8.9: 新規登録時は「仕入れ車として登録」「その他として登録」の2ボタン
 // v0.9.0: 編集時のみ削除ボタン（危険ゾーン）を表示
+// v1.0.43: 写真UIをモーダル最上部にヘッダー風で配置／管理番号必須を解除／写真反映バグ修正
 // ========================================
 
 // --- ボディサイズ設定UI ---
@@ -31,13 +32,11 @@ function addSizeOption() {
   SIZES.push(v);
   inp.value = '';
   renderSizeEditor();
-  // v1.0.31: 即時反映 — renderAll はアクティブビューのみだが、SIZES依存ビューは強制再描画
   _refreshSizesDependentViews();
   showToast(`「${v}」を追加しました`);
 }
 
 // v1.0.31: SIZES（ボディサイズ区分）に依存する全ビューを強制再描画
-// 設定パネルは display:none の他ビューを再描画しないので、SIZES変更時はここで明示的に呼ぶ
 function _refreshSizesDependentViews() {
   if (typeof renderExhibit === 'function') try { renderExhibit(); } catch(e){}
   if (typeof renderDeal === 'function')    try { renderDeal(); } catch(e){}
@@ -198,13 +197,14 @@ function openCarModal(carId) {
   const sw = document.getElementById('sell-switch');
   if (car?.contract) sw.classList.add('on'); else sw.classList.remove('on');
   updateSellUI();
-  document.getElementById('inp-photo-prev').innerHTML = car?.photo
-    ? `<img src="${car.photo}" style="width:100%;max-height:110px;object-fit:cover;border-radius:7px;margin-top:7px">`
-    : '';
+  // v1.0.43: ヘッダー風プレビュー（モーダル最上部）。新規・編集 両方で表示
+  _updateFormPhotoPreview(car?.photo || null);
+  // ファイル input をリセット（同じファイルを連続で選んでも change が発火するように）
+  const fileInp = document.getElementById('inp-photo-file');
+  if (fileInp) fileInp.value = '';
   document.getElementById('car-modal-title').textContent = car ? '車両情報を編集' : '新規車両登録';
 
-  // v0.8.9: 新規登録時は2ボタン、編集時は更新ボタン1つ
-  // v0.9.0: 編集時のみ「危険ゾーン（削除ボタン）」を表示
+  // 新規登録時は2ボタン、編集時は更新ボタン1つ＋削除ボタン
   const saveBtn = document.getElementById('car-save-btn');
   const otherBtn = document.getElementById('car-save-other-btn');
   const dangerZone = document.getElementById('edit-danger-zone');
@@ -226,36 +226,76 @@ function openCarModal(carId) {
   document.getElementById('modal-car').classList.add('open');
 }
 
-// v0.9.0: 編集モーダル内の削除ボタンから呼ぶ
 function onEditDeleteClick() {
   if (!editingCarId) return;
-  // 編集モーダルは開いたまま、確認POPを出す
-  // OKされたら closeDeleteCarConfirm 内で modal-car も閉じる
   if (typeof confirmDeleteCar === 'function') {
     confirmDeleteCar(editingCarId);
   }
 }
 
-function onFormPhoto(inp) {
+// v1.0.43: event/this 両対応に修正。プレビューはヘッダー風（モーダル最上部）
+function onFormPhoto(inpOrEvent) {
+  const inp = (inpOrEvent && inpOrEvent.target) ? inpOrEvent.target : inpOrEvent;
+  if (!inp || !inp.files) return;
   const file = inp.files[0];
   if (!file) return;
   const r = new FileReader();
   r.onload = e => {
     formPhotoData = e.target.result;
-    document.getElementById('inp-photo-prev').innerHTML =
-      `<img src="${formPhotoData}" style="width:100%;max-height:110px;object-fit:cover;border-radius:7px;margin-top:7px">`;
+    _updateFormPhotoPreview(formPhotoData);
   };
   r.readAsDataURL(file);
 }
 
+// v1.0.43: ヘッダー風プレビューを更新
+function _updateFormPhotoPreview(src) {
+  const hero = document.getElementById('inp-photo-hero');
+  if (!hero) return;
+  if (src) {
+    hero.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+    hero.classList.add('has-photo');
+  } else {
+    hero.innerHTML = '<div class="hero-empty">📷<br><span>写真未設定</span></div>';
+    hero.classList.remove('has-photo');
+  }
+}
+
+// v1.0.43: 写真変更ボタン経由で hidden input をクリック
+function triggerFormPhotoPick() {
+  const inp = document.getElementById('inp-photo-file');
+  if (inp) inp.click();
+}
+
+// v1.0.43: 写真をクリアして未設定に戻す
+function clearFormPhoto() {
+  formPhotoData = null;
+  const inp = document.getElementById('inp-photo-file');
+  if (inp) inp.value = '';
+  // 編集時：すでに保存済みの photo もクリアの意思表示として null マーク
+  if (editingCarId) {
+    const car = cars.find(c => c.id === editingCarId);
+    if (car) car.photo = '';
+  }
+  _updateFormPhotoPreview(null);
+}
+
 function saveCarModal(initialCol) {
-  // v0.8.9: 新規登録時は initialCol で 'purchase' か 'other' を指定。編集時は無視。
-  const num = document.getElementById('inp-num').value.trim();
+  // 新規登録時は initialCol で 'purchase' か 'other' を指定。編集時は無視。
+  // v1.0.43: 管理番号は必須を解除。空ならIDから自動採番（KM-xxxx）
+  let num = document.getElementById('inp-num').value.trim();
   const maker = document.getElementById('inp-maker').value.trim();
   const model = document.getElementById('inp-model').value.trim();
-  if (!num || !maker || !model) {
-    showToast('管理番号・メーカー・車種は必須です');
+  if (!maker || !model) {
+    showToast('メーカー・車種は必須です');
     return;
+  }
+  if (!num) {
+    // 自動採番：KM + 4桁ランダム数字（重複チェック簡易）
+    let tries = 0;
+    do {
+      num = 'KM' + String(Math.floor(1000 + Math.random()*9000));
+      tries++;
+    } while (tries < 20 && cars.some(c => c.num === num && c.id !== editingCarId));
   }
   const sellOn = document.getElementById('sell-switch').classList.contains('on');
   const contractDate = sellOn ? (document.getElementById('inp-contract-date').value || todayStr()) : '';
