@@ -365,6 +365,7 @@ function renderTasksEditor() {
             <span class="task-edit-icon">${t.icon || '📋'}</span>
             <span class="task-edit-name">${escapeHtml(t.name)}</span>
             ${t.builtin ? '<span class="task-edit-tag">組込</span>' : '<span class="task-edit-tag custom">追加</span>'}
+            ${t.id === 'd_complete' ? '<span class="task-edit-tag auto" title="他のタスク全完了で自動ON">自動</span>' : ''}
             <div class="task-edit-deadline">
               <input type="number" min="1" max="365" value="${dlVal}"
                      placeholder="—"

@@ -166,12 +166,21 @@ function renderDetailBody(car) {
     const isDone = p.pct === 100, isPartial = p.pct > 0 && p.pct < 100;
     const state = isD ? car.deliveryTasks : car.regenTasks;
     if (task.type === 'toggle') {
-      const checked = !!state[task.id];
+      // v1.0.41: d_complete は自動判定（他の有効タスク全完了で ON）。手動チェック不可
+      const isAuto = (task.id === 'd_complete');
+      const checked = isAuto
+        ? (typeof isDeliveryAllOtherTasksDone === 'function' && isDeliveryAllOtherTasksDone(car))
+        : !!state[task.id];
+      const onclickAttr = isAuto ? '' : ` onclick="toggleTaskToggle('${car.id}','${task.id}',${isD})"`;
+      const subText = isAuto
+        ? (checked ? '✓ 自動完了（他タスク全完了）' : '他タスク完了で自動ON')
+        : (checked ? '完了' : '未完了');
+      const chkExtraCls = isAuto ? ' auto' : '';
       html += `<div class="task-item"><div class="task-item-row">
-        <div class="task-chk${checked?' done':''}" onclick="toggleTaskToggle('${car.id}','${task.id}',${isD})">
+        <div class="task-chk${checked?' done':''}${chkExtraCls}"${onclickAttr}>
           ${checked ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
         </div>
-        <div class="task-item-info"><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${checked?'完了':'未完了'}</div></div>
+        <div class="task-item-info"><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${subText}</div></div>
         ${_badgeCol(task.id)}
         <div class="task-item-pct">${checked?'100':'0'}%</div>
         <div class="task-item-open"></div>

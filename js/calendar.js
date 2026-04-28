@@ -14,6 +14,13 @@
 // task: { id, type, sections? }, state: car.deliveryTasks
 function _isDeliveryTaskDone(car, taskId) {
   if (taskId === '__deliver') return car.col === 'done';
+  // v1.0.41: 完全完了は他の有効タスクが全部完了したら自動 ON
+  if (taskId === 'd_complete') {
+    if (typeof isDeliveryAllOtherTasksDone === 'function') {
+      return isDeliveryAllOtherTasksDone(car);
+    }
+    return false;
+  }
   const tasks = (typeof DELIVERY_TASKS !== 'undefined') ? DELIVERY_TASKS : [];
   const t = tasks.find(x => x.id === taskId);
   const dt = car.deliveryTasks || {};
@@ -69,6 +76,37 @@ function _getDeliveryMilestonePoints() {
   return points;
 }
 
+// v1.0.41: 定休日・祝日判定（カレンダー内部用）
+// closedDays, customHolidays, jpHolidays, isClosedByRules を見る
+function _isCalendarOff(dateStr) {
+  // 定休日ルール
+  if (typeof isClosedByRules === 'function') {
+    if (isClosedByRules(dateStr)) return true;
+  } else {
+    const dow = new Date(dateStr + 'T00:00:00').getDay();
+    if (Array.isArray(closedDays) && closedDays.includes(dow)) return true;
+  }
+  // 日曜
+  const dow2 = new Date(dateStr + 'T00:00:00').getDay();
+  if (dow2 === 0) return true;
+  // 日本の祝日
+  if (typeof jpHolidays !== 'undefined' && jpHolidays[dateStr]) return true;
+  // カスタム休業日
+  if (Array.isArray(customHolidays) && customHolidays.find(h => h.date === dateStr)) return true;
+  return false;
+}
+
+// v1.0.41: マイルストーン日付を営業日まで前倒し
+// 最大 30 日前まで遡って探索（無限ループ防止）。それでも見つからなければ元の日付を返す。
+function _shiftToBusinessDay(dateStr) {
+  let d = dateStr;
+  for (let i = 0; i < 30; i++) {
+    if (!_isCalendarOff(d)) return d;
+    d = dateAddDays(d, -1);
+  }
+  return dateStr; // フォールバック
+}
+
 // 1台あたりのバー配列（v1.0.39: B案＝1車両1本のバー、同日マイルストーンは統合）
 // 日付セグメント方式：cursor を進めながら、各セグメントは1日付（マイルストーン日）まで
 // 同じ日付に複数のマイルストーンがあれば labels[] に統合（後で複数ラベル並べる）
@@ -80,9 +118,14 @@ function buildBarSegments(car, todayStr) {
   const SCHED = _getDeliveryMilestonePoints();
 
   // 同日重複をマージするため、日付ごとにグルーピング
+  // v1.0.41: 納車日以外のマイルストーンが定休日・祝日にかぶる場合は前倒し
   const byDate = {};
   SCHED.forEach(sp => {
-    const date = dateAddDays(del, -sp.offset);
+    let date = dateAddDays(del, -sp.offset);
+    // 納車日（offset=0）は前倒ししない（納車予定日そのもの）
+    if (sp.offset > 0 && typeof _shiftToBusinessDay === 'function') {
+      date = _shiftToBusinessDay(date);
+    }
     if (date < todayStr) return;
     if (!byDate[date]) byDate[date] = [];
     byDate[date].push(sp);

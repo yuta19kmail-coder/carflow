@@ -22,8 +22,12 @@ function _calcEquipProgUnified(car) {
 
 // タスクが「完了」かどうかの判定（全体進捗用、二値）
 // v1.0.27: t_equip は _completed フラグを見る。それ以外は pct === 100。
+// v1.0.41: d_complete は自動判定（他の有効タスク全完了で ON）
 function _isTaskComplete(car, task, tasks) {
   if (task.id === 't_equip') return _isEquipmentCompleted(car);
+  if (task.id === 'd_complete' && typeof isDeliveryAllOtherTasksDone === 'function') {
+    return isDeliveryAllOtherTasksDone(car);
+  }
   const p = calcSingleProg(car, task.id, tasks);
   return p.pct >= 100;
 }
@@ -54,6 +58,11 @@ function calcSingleProg(car, taskId, tasks) {
   // _completed フラグは「確認済みかどうか」の別概念として UI 側で別表示する
   if (taskId === 't_equip') {
     return _calcEquipProgUnified(car);
+  }
+  // v1.0.41: d_complete は自動判定（他タスク全完了で 100%）
+  if (taskId === 'd_complete' && typeof isDeliveryAllOtherTasksDone === 'function') {
+    const ok = isDeliveryAllOtherTasksDone(car);
+    return { pct: ok ? 100 : 0, done: ok ? 1 : 0, total: 1 };
   }
   if (task.type === 'toggle') {
     return {pct: state[taskId] ? 100 : 0, done: state[taskId] ? 1 : 0, total:1};

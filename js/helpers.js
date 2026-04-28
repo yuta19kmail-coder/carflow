@@ -347,3 +347,22 @@ function getCarsWithOverdueTasks() {
   });
   return result;
 }
+
+// v1.0.41: 「完全完了」(d_complete) の自動判定
+// 有効な納車タスク（d_complete を除く）が全部完了していれば true
+function isDeliveryAllOtherTasksDone(car) {
+  if (!car) return false;
+  const tasks = (typeof getActiveDeliveryTasks === 'function') ? getActiveDeliveryTasks() : [];
+  // d_complete 自身は除外
+  const others = tasks.filter(t => t.id !== 'd_complete');
+  if (!others.length) return false; // 他にタスクがなければ自動 ON しない
+  return others.every(t => {
+    if (t.type === 'workflow' && Array.isArray(t.sections)) {
+      const st = (car.deliveryTasks || {})[t.id] || {};
+      return t.sections.every(sec => sec.items.every(i => st[i.id]));
+    }
+    // toggle 型・カスタム
+    const dt = car.deliveryTasks || {};
+    return !!dt[t.id];
+  });
+}

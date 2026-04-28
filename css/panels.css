@@ -641,3 +641,9 @@
   font-size: 11px;
   color: var(--text3);
 }
+
+/* v1.0.41: 自動連動タスクのタグ */
+.task-edit-tag.auto {
+  background: rgba(13,148,136,.18);
+  color: #14b8a6;
+}

@@ -274,3 +274,8 @@
   width: 100%;
   text-align: center;
 }
+
+/* v1.0.41: 自動完了タスクのチェックボックスは操作不可なカーソル */
+.task-chk.auto {
+  cursor: default;
+}

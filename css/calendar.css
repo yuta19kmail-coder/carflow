@@ -35,16 +35,17 @@
 /* 月セクション（2か月表示用ラッパ） */
 .cal-month-section{margin-bottom:18px;flex-shrink:0}
 .cal-month-section:last-child{margin-bottom:0}
+/* v1.0.41: テーマ変数を使ってダーク時は白め、ライト時は濃いめに自動対応 */
 .cal-section-label{
   font-size:14px;
   font-weight:700;
-  color:#333;
+  color:var(--text);
   margin-bottom:8px;
   padding-left:4px;
-  border-left:4px solid #4a4a4a;
+  border-left:4px solid var(--blue);
   padding:4px 0 4px 10px;
 }
-.cal-section-label.next{border-left-color:#a0a0a0;color:#555}
+.cal-section-label.next{border-left-color:var(--text3);color:var(--text2)}
 
 /* カレンダーグリッド */
 .cal-wrap{background:#fff;border-radius:var(--r2);overflow:hidden;border:1px solid #ddd;flex-shrink:0}
@@ -167,20 +168,19 @@
 }
 
 
-/* v1.0.40: 1本のバー上に複数ラベル — 全部並べてテキスト個別省略 */
+/* v1.0.40〜41: 1本のバー上に複数ラベル — 全部並べてテキスト個別省略
+   v1.0.41: 背景色を削除しバーの色そのまま、素直にテキストが乗るだけに */
 .cal-ev-label-chip {
   display: inline-flex;
   align-items: center;
   gap: 2px;
   font-size: 9px;
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(0,0,0,0.18);
+  padding: 1px 4px;
   color: #fff;
   /* 個別チップは伸縮させて、はみ出る分は中の name に ellipsis */
   flex: 1 1 auto;
-  min-width: 28px;        /* アイコン + 数文字は確保 */
+  min-width: 28px;
   max-width: 120px;
   overflow: hidden;
   white-space: nowrap;
