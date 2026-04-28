@@ -69,8 +69,9 @@ function _getDeliveryMilestonePoints() {
   return points;
 }
 
-// 1台あたりのバー配列（v1.0.38: タスクごとに独立した1本＝同日重複でも複数行で表示）
-// 各バーは「今日 → そのタスクの期限日」までの一続き
+// 1台あたりのバー配列（v1.0.39: B案＝1車両1本のバー、同日マイルストーンは統合）
+// 日付セグメント方式：cursor を進めながら、各セグメントは1日付（マイルストーン日）まで
+// 同じ日付に複数のマイルストーンがあれば labels[] に統合（後で複数ラベル並べる）
 function buildBarSegments(car, todayStr) {
   const del = car.deliveryDate;
   if (!del || del < todayStr) return [];
@@ -78,28 +79,54 @@ function buildBarSegments(car, todayStr) {
   // v1.0.37: 動的マイルストーン（納車日含む）
   const SCHED = _getDeliveryMilestonePoints();
 
-  // 各マイルストーンを日付昇順で並べ、それぞれ独立したバーとして返す
-  // taskId をキーにすることで、同日重複しても別バーとして扱える
-  const segments = [];
-  // 期日が早いタスクから上に並ぶよう、日付昇順でソート
-  const sorted = [...SCHED]
-    .map(sp => ({...sp, date: dateAddDays(del, -sp.offset)}))
-    .filter(sp => sp.date >= todayStr)
-    .sort((a, b) => a.date.localeCompare(b.date));
+  // 同日重複をマージするため、日付ごとにグルーピング
+  const byDate = {};
+  SCHED.forEach(sp => {
+    const date = dateAddDays(del, -sp.offset);
+    if (date < todayStr) return;
+    if (!byDate[date]) byDate[date] = [];
+    byDate[date].push(sp);
+  });
 
-  sorted.forEach(sp => {
+  // 日付昇順
+  const datesAsc = Object.keys(byDate).sort();
+
+  const segments = [];
+  let cursor = todayStr;
+
+  datesAsc.forEach(date => {
+    if (date < cursor) return;
+    const points = byDate[date];
+    // 同日複数マイルストーン → ラベル配列＋色は最も優先度高い（offset小=納車近い、納車日は別格）
+    points.sort((a, b) => a.offset - b.offset);
+    const primary = points[0]; // offset 最小のものを代表色に（納車日は最後だが offset=0 なのでこれが先頭になる）
+    const labels = points.map(p => ({
+      label: p.label,
+      taskId: p.taskId,
+      bg: p.bg,
+      color: p.color,
+      isFinal: !!p.isFinal,
+      isDone: _isDeliveryTaskDone(car, p.taskId),
+    }));
+    // セグメント全体の done 判定：このセグメントの全ラベルが done か
+    const allDone = labels.every(l => l.isDone);
+    // セグメント全体の isFinal：いずれかが納車日なら true（バーをドラッグ可能にする）
+    const hasFinal = labels.some(l => l.isFinal);
+
     segments.push({
       car,
-      label: sp.label,
-      bg: sp.bg,
-      color: sp.color,
-      startDate: todayStr,         // バー開始は常に今日
-      endDate: sp.date,            // バー終端はそのタスクの期限日
-      isFinal: !!sp.isFinal,       // 納車日（offset=0）だけ true
-      milestoneOffset: sp.offset,
-      taskId: sp.taskId,
-      isDone: _isDeliveryTaskDone(car, sp.taskId),
+      labels,                       // v1.0.39: 複数ラベル
+      label: primary.label,         // 後方互換用
+      bg: primary.bg,
+      color: primary.color,
+      startDate: cursor,
+      endDate: date,
+      isFinal: hasFinal,
+      milestoneOffset: primary.offset,
+      taskId: primary.taskId,       // 後方互換用（最優先タスクID）
+      isDone: allDone,
     });
+    cursor = dateAddDays(date, 1);
   });
 
   return segments;
@@ -239,24 +266,13 @@ function renderOneMonth(year, month, hostEl) {
       cellEls.push(cellEl);
     });
 
-    // v1.0.38: レーン割り当て（1車両×1タスク=1レーン）
-    // → 同日重複でもタスクごとに独立した行に並ぶ
-    const taskLane = {};   // key: carId|taskId → lane index
+    // v1.0.39: レーン割り当て（1車両=1レーン、B案）
+    const carLane = {};
     let nextLane = 0;
-    // バー全体の並び順：車両ごとにグループ化したいので、まず車両出現順 → 車両内はタスクの期限日昇順
-    const carOrder = [];
-    weekSegs.forEach(s => { if (carOrder.indexOf(s.car.id) < 0) carOrder.push(s.car.id); });
-    carOrder.forEach(carId => {
-      // この車両のセグメントを期限日昇順で並べる
-      const sortedSegs = weekSegs
-        .filter(s => s.car.id === carId)
-        .sort((a, b) => a.endDate.localeCompare(b.endDate));
-      sortedSegs.forEach(s => {
-        const key = s.car.id + '|' + s.taskId;
-        if (!(key in taskLane)) {
-          taskLane[key] = nextLane++;
-        }
-      });
+    weekSegs.forEach(s => {
+      if (!(s.car.id in carLane)) {
+        carLane[s.car.id] = nextLane++;
+      }
     });
 
     weekSegs.forEach(s => {
@@ -264,18 +280,13 @@ function renderOneMonth(year, month, hostEl) {
       const eIdx = weekCells.findLastIndex(c => c && c.ds <= s.endDate);
       s._s = sIdx < 0 ? weekCells.findIndex(c => c !== null) : sIdx;
       s._e = eIdx < 0 ? weekCells.findLastIndex(c => c !== null) : eIdx;
-      s._lane = taskLane[s.car.id + '|' + s.taskId];
+      s._lane = carLane[s.car.id];
     });
 
-    // v1.0.38: 車両名ラベル位置（その車両の最初＝最も上のレーン＋週の開始）
-    const carWeekStart = {};   // carId → col
-    const carTopLane = {};     // carId → 最も上のレーン
+    const carWeekStart = {};
     weekSegs.forEach(s => {
       if (!(s.car.id in carWeekStart) || s._s < carWeekStart[s.car.id]) {
         carWeekStart[s.car.id] = s._s;
-      }
-      if (!(s.car.id in carTopLane) || s._lane < carTopLane[s.car.id]) {
-        carTopLane[s.car.id] = s._lane;
       }
     });
 
@@ -290,10 +301,10 @@ function renderOneMonth(year, month, hostEl) {
       }
     });
 
-    // 車種名ラベル（週頭、車両グループの最上レーン）
+    // 車種名ラベル（週頭）
     Object.keys(carWeekStart).forEach(carId => {
       const startCol = carWeekStart[carId];
-      const lane = carTopLane[carId];
+      const lane = carLane[carId];
       const car = cars.find(c => c.id === carId);
       if (!car) return;
       const cellEl = cellEls[startCol];
@@ -314,18 +325,19 @@ function renderOneMonth(year, month, hostEl) {
       nameRow.appendChild(nameEl);
     });
 
-    // v1.0.38: バーごとの開始/終了日（タスク単位）
-    const barBounds = {};
-    Object.keys(taskLane).forEach(key => {
-      const [carId, taskId] = key.split('|');
-      const seg = allSegments.find(x => x.car.id === carId && x.taskId === taskId);
-      if (!seg) return;
-      barBounds[key] = { start: seg.startDate, end: seg.endDate };
+    // v1.0.39: 車両全体のバーの開始/終了日を計算（B案＝1車両1本）
+    const carBarBounds = {};
+    Object.keys(carLane).forEach(carId => {
+      const segs = allSegments.filter(x => x.car.id === carId);
+      if (!segs.length) return;
+      const start = segs.reduce((m, x) => x.startDate < m ? x.startDate : m, segs[0].startDate);
+      const end = segs.reduce((m, x) => x.endDate > m ? x.endDate : m, segs[0].endDate);
+      carBarBounds[carId] = {start, end};
     });
 
     // バー描画
     weekSegs.forEach(s => {
-      const bounds = barBounds[s.car.id + '|' + s.taskId];
+      const bounds = carBarBounds[s.car.id];
       for (let col = s._s; col <= s._e; col++) {
         const cellEl = cellEls[col];
         if (!cellEl) continue;
@@ -355,11 +367,36 @@ function renderOneMonth(year, month, hostEl) {
         const rightRadius = (isBarEnd || isWeekEnd) && isSegLast ? '8px' : '0';
         bar.style.borderRadius = `${leftRadius} ${rightRadius} ${rightRadius} ${leftRadius}`;
 
-        // ラベル：マイルストーン日（=セグメント末尾）に右寄せで表示
+        // v1.0.39: ラベル — 同日マイルストーンを並べる＋幅不足なら +N件 で短縮
         if (isSegLast) {
-          bar.textContent = s.label;
           bar.style.justifyContent = 'flex-end';
-          bar.title = `${s.car.maker} ${s.car.model} — ${s.label}${s.isDone ? '（完了）' : ''}`;
+          const labels = s.labels || [{ label: s.label, isDone: s.isDone }];
+          // セグメント長（コラム数）に応じて表示数を決定
+          // 1日(1col)=1個, 2col=1個, 3col以上で複数
+          const segWidthCols = (s._e - s._s) + 1;
+          const maxShow = segWidthCols >= 5 ? 4 : segWidthCols >= 3 ? 2 : 1;
+          const shown = labels.slice(0, maxShow);
+          const rest = labels.length - shown.length;
+          // ラベル要素を組み立て（小さなチップ風に複数並べる）
+          bar.innerHTML = '';
+          const labelWrap = document.createElement('div');
+          labelWrap.style.cssText = 'display:flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow:hidden;padding-right:4px;width:100%;justify-content:flex-end';
+          shown.forEach(l => {
+            const chip = document.createElement('span');
+            chip.className = 'cal-ev-label-chip';
+            chip.textContent = l.label;
+            if (l.isDone) chip.classList.add('done');
+            labelWrap.appendChild(chip);
+          });
+          if (rest > 0) {
+            const more = document.createElement('span');
+            more.className = 'cal-ev-label-more';
+            more.textContent = `+${rest}件`;
+            labelWrap.appendChild(more);
+          }
+          bar.appendChild(labelWrap);
+          // タイトル（hover）に全ラベル
+          bar.title = `${s.car.maker} ${s.car.model}\n` + labels.map(l => `${l.label}${l.isDone ? '（完了）' : ''}`).join('\n');
         }
 
         bar.dataset.carId = s.car.id;

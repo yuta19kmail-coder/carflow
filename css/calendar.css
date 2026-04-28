@@ -165,3 +165,32 @@
   border-radius: 999px;
   letter-spacing: 0.02em;
 }
+
+
+/* v1.0.39: 1本のバー上に複数ラベルを並べる */
+.cal-ev-label-chip {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.18);
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+.cal-ev-label-chip.done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.cal-ev-label-more {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.28);
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
