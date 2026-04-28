@@ -367,33 +367,40 @@ function renderOneMonth(year, month, hostEl) {
         const rightRadius = (isBarEnd || isWeekEnd) && isSegLast ? '8px' : '0';
         bar.style.borderRadius = `${leftRadius} ${rightRadius} ${rightRadius} ${leftRadius}`;
 
-        // v1.0.39: ラベル — 同日マイルストーンを並べる＋幅不足なら +N件 で短縮
+        // v1.0.40: ラベル — 全マイルストーンを横並びで出し、はみ出る個々を「納車整…」のようにテキスト省略
         if (isSegLast) {
           bar.style.justifyContent = 'flex-end';
           const labels = s.labels || [{ label: s.label, isDone: s.isDone }];
-          // セグメント長（コラム数）に応じて表示数を決定
-          // 1日(1col)=1個, 2col=1個, 3col以上で複数
-          const segWidthCols = (s._e - s._s) + 1;
-          const maxShow = segWidthCols >= 5 ? 4 : segWidthCols >= 3 ? 2 : 1;
-          const shown = labels.slice(0, maxShow);
-          const rest = labels.length - shown.length;
-          // ラベル要素を組み立て（小さなチップ風に複数並べる）
           bar.innerHTML = '';
           const labelWrap = document.createElement('div');
-          labelWrap.style.cssText = 'display:flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow:hidden;padding-right:4px;width:100%;justify-content:flex-end';
-          shown.forEach(l => {
+          labelWrap.className = 'cal-ev-label-wrap';
+          labelWrap.style.cssText = 'display:flex;align-items:center;gap:3px;flex-wrap:nowrap;overflow:hidden;padding-right:4px;width:100%;justify-content:flex-end;min-width:0';
+          // ラベルから先頭の絵文字（アイコン）を分離（例：'📄 書類作成完了' → icon='📄', name='書類作成完了'）
+          // 絵文字 + 半角スペース + テキスト の構造を想定
+          const splitLabel = (full) => {
+            // surrogate pair を含む先頭1文字を抜き出す
+            const m = full.match(/^([\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2700}-\u{27FF}\u{1F300}-\u{1F9FF}]+)\s*(.*)$/u);
+            if (m) return { icon: m[1], name: m[2] };
+            return { icon: '', name: full };
+          };
+          labels.forEach(l => {
+            const {icon, name} = splitLabel(l.label);
             const chip = document.createElement('span');
             chip.className = 'cal-ev-label-chip';
-            chip.textContent = l.label;
             if (l.isDone) chip.classList.add('done');
+            // アイコン（絵文字）は固定幅、名前は省略可
+            if (icon) {
+              const iconEl = document.createElement('span');
+              iconEl.className = 'cal-ev-label-icon';
+              iconEl.textContent = icon;
+              chip.appendChild(iconEl);
+            }
+            const nameEl = document.createElement('span');
+            nameEl.className = 'cal-ev-label-name';
+            nameEl.textContent = name;
+            chip.appendChild(nameEl);
             labelWrap.appendChild(chip);
           });
-          if (rest > 0) {
-            const more = document.createElement('span');
-            more.className = 'cal-ev-label-more';
-            more.textContent = `+${rest}件`;
-            labelWrap.appendChild(more);
-          }
           bar.appendChild(labelWrap);
           // タイトル（hover）に全ラベル
           bar.title = `${s.car.maker} ${s.car.model}\n` + labels.map(l => `${l.label}${l.isDone ? '（完了）' : ''}`).join('\n');

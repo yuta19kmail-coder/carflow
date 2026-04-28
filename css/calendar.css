@@ -167,30 +167,37 @@
 }
 
 
-/* v1.0.39: 1本のバー上に複数ラベルを並べる */
+/* v1.0.40: 1本のバー上に複数ラベル — 全部並べてテキスト個別省略 */
 .cal-ev-label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   font-size: 9px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
   background: rgba(0,0,0,0.18);
   color: #fff;
-  white-space: nowrap;
+  /* 個別チップは伸縮させて、はみ出る分は中の name に ellipsis */
+  flex: 1 1 auto;
+  min-width: 28px;        /* アイコン + 数文字は確保 */
+  max-width: 120px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100px;
+  white-space: nowrap;
 }
 .cal-ev-label-chip.done {
   opacity: 0.55;
   text-decoration: line-through;
 }
-.cal-ev-label-more {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.28);
-  color: #fff;
-  white-space: nowrap;
+.cal-ev-label-icon {
   flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1;
+}
+.cal-ev-label-name {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
