@@ -257,3 +257,93 @@ function recogDateAny(car) {
   if (car._archivedAt || car.col === 'done') return car.deliveryDate || null;
   return null;
 }
+
+// ========================================
+// v1.0.35: タスク期日超過判定
+// ========================================
+
+// タスクが「完了」かどうか（getOverdueTasks 内部用）
+// 装備品チェックは _completed フラグ、その他は state[taskId] が true（toggle 型）
+// または全 sections の全 items が完了（workflow 型）
+function _isTaskDoneForOverdue(car, task, isDelivery) {
+  if (task.id === 't_equip') {
+    return !!(car.equipment && car.equipment._completed);
+  }
+  const state = isDelivery ? car.deliveryTasks : car.regenTasks;
+  if (!state) return false;
+  if (task.type === 'toggle') return !!state[task.id];
+  if (task.type === 'workflow' && Array.isArray(task.sections)) {
+    let allDone = true;
+    task.sections.forEach(s => s.items.forEach(i => {
+      if (!state[task.id] || !state[task.id][i.id]) allDone = false;
+    }));
+    return allDone;
+  }
+  return !!state[task.id];
+}
+
+// 車両の期日超過タスク一覧を返す
+// 戻り値：[{ taskId, name, icon, phase, deadline, overdueDays, kind:'regen'|'delivery' }, ...]
+//   regen: 仕入れから N 日経過 → overdueDays = (経過日数 - N)
+//   delivery: 納車予定まで残 N 日切ってる → overdueDays = (N - 残日数)
+// 完了済みタスクは含めない
+// 期日設定がないタスクは含めない
+function getOverdueTasks(car) {
+  if (!car) return [];
+  // その他列・納車完了は対象外
+  if (car.col === 'other' || car.col === 'done') return [];
+  const result = [];
+
+  // === 再生フェーズ ===
+  // 在庫扱い（delivery 列以外）かつ regen 期日が設定されているタスクを評価
+  if (car.col !== 'delivery') {
+    const inv = (typeof daysSince === 'function') ? daysSince(car.purchaseDate) : 0;
+    const regenTasks = (typeof getActiveRegenTasks === 'function') ? getActiveRegenTasks() : [];
+    regenTasks.forEach(t => {
+      const dl = (typeof getTaskDeadline === 'function') ? getTaskDeadline(t.id, 'regen') : null;
+      if (dl == null) return;
+      const overdue = inv - dl; // 仕入れから dl 日以内が期限。inv > dl で超過
+      if (overdue <= 0) return;
+      if (_isTaskDoneForOverdue(car, t, false)) return;
+      result.push({
+        taskId: t.id, name: t.name, icon: t.icon || '📋',
+        phase: 'regen', deadline: dl, overdueDays: overdue, kind: 'regen',
+      });
+    });
+  }
+
+  // === 納車フェーズ ===
+  // delivery 列で、納車予定日が設定されており、納車まで残り日数 < dl のタスクを評価
+  if (car.col === 'delivery' && car.deliveryDate) {
+    const remain = (typeof daysDiff === 'function') ? daysDiff(car.deliveryDate) : null;
+    if (remain != null) {
+      const delTasks = (typeof getActiveDeliveryTasks === 'function') ? getActiveDeliveryTasks() : [];
+      delTasks.forEach(t => {
+        const dl = (typeof getTaskDeadline === 'function') ? getTaskDeadline(t.id, 'delivery') : null;
+        if (dl == null) return;
+        // 納車まで dl 日前まで完了しておくべき。残り remain < dl で超過
+        if (remain >= dl) return;
+        const overdue = dl - remain;
+        if (_isTaskDoneForOverdue(car, t, true)) return;
+        result.push({
+          taskId: t.id, name: t.name, icon: t.icon || '📋',
+          phase: 'delivery', deadline: dl, overdueDays: overdue, kind: 'delivery',
+        });
+      });
+    }
+  }
+
+  return result;
+}
+
+// 全車両を走査して、期日超過タスクを持つ車両のリストを返す
+// 戻り値：[{ car, overdueTasks: [...] }, ...]（overdueTasks.length>0 の車両のみ）
+function getCarsWithOverdueTasks() {
+  if (typeof cars === 'undefined' || !Array.isArray(cars)) return [];
+  const result = [];
+  cars.forEach(c => {
+    const overdue = getOverdueTasks(c);
+    if (overdue.length > 0) result.push({ car: c, overdueTasks: overdue });
+  });
+  return result;
+}

@@ -35,6 +35,15 @@ function renderActionChips() {
         chips.push(`<div class="chip chip-orange" onclick="openDetail('${car.id}')"><span class="chip-dot"></span>📦 ${car.maker} ${car.model} 在庫${inv}日</div>`);
       }
     }
+    // v1.0.35: タスク期限超過（粒度2 — 車両ごとに集約）
+    if (typeof getOverdueTasks === 'function') {
+      const overdue = getOverdueTasks(car);
+      if (overdue.length > 0) {
+        const phase = overdue[0].kind === 'delivery' ? '納車' : '再生';
+        const cnt = overdue.length;
+        chips.push(`<div class="chip chip-red" onclick="openDetail('${car.id}')"><span class="chip-dot"></span>⚠ ${car.maker} ${car.model} ${phase}期限超過 ${cnt}件</div>`);
+      }
+    }
   });
   document.getElementById('dash-actions').innerHTML = chips.length
     ? `<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:4px">${chips.join('')}</div>`
@@ -405,6 +414,20 @@ function renderActions() {
         const c = document.createElement('div');
         c.className = 'chip chip-orange';
         c.innerHTML = `<span class="chip-dot"></span>📦 ${car.maker} ${car.model} 在庫${inv}日`;
+        c.onclick = () => openDetail(car.id);
+        chips.appendChild(c);
+        any = true;
+      }
+    }
+    // v1.0.35: タスク期限超過
+    if (typeof getOverdueTasks === 'function') {
+      const overdue = getOverdueTasks(car);
+      if (overdue.length > 0) {
+        const phase = overdue[0].kind === 'delivery' ? '納車' : '再生';
+        const cnt = overdue.length;
+        const c = document.createElement('div');
+        c.className = 'chip chip-red';
+        c.innerHTML = `<span class="chip-dot"></span>⚠ ${car.maker} ${car.model} ${phase}期限超過 ${cnt}件`;
         c.onclick = () => openDetail(car.id);
         chips.appendChild(c);
         any = true;

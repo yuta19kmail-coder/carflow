@@ -219,3 +219,20 @@
   font-family:inherit;line-height:1.55;resize:vertical;min-height:80px
 }
 .work-memo-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+
+/* v1.0.35: 期限超過バッジ（詳細モーダルのタスク行） */
+.task-overdue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--red);
+  border-radius: 999px;
+  margin-right: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}

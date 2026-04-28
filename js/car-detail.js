@@ -146,6 +146,15 @@ function renderDetailBody(car) {
       <div class="detail-overall-bar"><div class="detail-overall-fill" style="width:${prog.pct}%;background:${prog.pct>=100?'var(--green)':prog.pct>0?'var(--orange)':'var(--bg4)'}"></div></div>
     </div>
     <div class="task-items">`;
+  // v1.0.35: 期日超過タスクのマップを準備
+  const _overdueList = (typeof getOverdueTasks === 'function') ? getOverdueTasks(car) : [];
+  const _overdueMap = {};
+  _overdueList.forEach(o => { _overdueMap[o.taskId] = o; });
+  function _overdueBadge(taskId) {
+    const o = _overdueMap[taskId];
+    if (!o) return '';
+    return `<span class="task-overdue-badge" title="期限超過">⚠ 超過${o.overdueDays}日</span>`;
+  }
   tasks.forEach(task => {
     const p = calcSingleProg(car, task.id, tasks);
     const isDone = p.pct === 100, isPartial = p.pct > 0 && p.pct < 100;
@@ -157,7 +166,7 @@ function renderDetailBody(car) {
           ${checked ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
         </div>
         <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${checked?'完了':'未完了'}</div></div>
-        <div class="task-item-pct" style="margin-left:auto">${checked?'100':'0'}%</div>
+        ${_overdueBadge(task.id)}<div class="task-item-pct" style="margin-left:auto">${checked?'100':'0'}%</div>
       </div></div>`;
     } else if (task.id === 't_equip') {
       // v1.0.24: γ方針 — _completed フラグは ✓ マークだけに使い、％は常に入力比例
@@ -175,7 +184,7 @@ function renderDetailBody(car) {
       html += `<div class="task-item"><div class="task-item-row">
         <div class="task-chk${chkCls}">${chkInner}</div>
         <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${subText}</div></div>
-        <div class="task-item-pct">${eqProg.pct}%</div>
+        ${_overdueBadge(task.id)}<div class="task-item-pct">${eqProg.pct}%</div>
         <button class="task-open-btn" onclick="openEquipmentCheck('${car.id}')">開く →</button>
       </div></div>`;
     } else {
@@ -184,7 +193,7 @@ function renderDetailBody(car) {
           ${isDone ? '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : isPartial ? '<div style="width:7px;height:7px;border-radius:50%;background:#fff"></div>' : ''}
         </div>
         <div><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${p.done}/${p.total} 完了</div></div>
-        <div class="task-item-pct">${p.pct}%</div>
+        ${_overdueBadge(task.id)}<div class="task-item-pct">${p.pct}%</div>
         <button class="task-open-btn" onclick="openWorkflow('${car.id}','${task.id}',${isD})">開く →</button>
       </div></div>`;
     }

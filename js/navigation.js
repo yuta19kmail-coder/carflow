@@ -23,7 +23,7 @@ function showPanel(name, el) {
     renderSizeEditor();
     renderInvWarnEditor();
     renderDelWarnEditor();
-    renderNotifEditor();
+    // v1.0.35: 通知・アラート設定セクションは廃止（要対応アクション C に統合）
     renderClosedRulesList();
     renderGoalsEditor();
     refreshLeadDaysUI();
