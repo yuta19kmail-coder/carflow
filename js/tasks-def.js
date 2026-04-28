@@ -125,7 +125,16 @@ let appTaskOrder = { regen: [], delivery: [] };
 // v1.0.33: タスク期日（フェーズごと、{taskId: 日数 or null}）
 // 再生：仕入れから N 日以内（N = 数値）
 // 納車：納車まで N 日前まで（N = 数値）
-let appTaskDeadline = { regen: {}, delivery: {} };
+// v1.0.37: 納車側はデフォルトで従来 SCHED_POINTS と同じ位置を埋めて、初回起動でもカレンダーマーカーが出るようにする
+let appTaskDeadline = {
+  regen: {},
+  delivery: {
+    d_docs:  5,  // 書類：納車5日前まで
+    d_maint: 3,  // 整備：納車3日前まで
+    d_reg:   2,  // 登録：納車2日前まで
+    d_prep:  1,  // 納車準備：納車1日前まで
+  },
+};
 
 // タスクが有効か判定（未定義は true 扱い）
 function isTaskActive(taskId, phase) {

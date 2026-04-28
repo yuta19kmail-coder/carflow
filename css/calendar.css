@@ -151,3 +151,17 @@
 .countdown-label{font-size:11px;color:var(--text3);margin-top:2px}
 .countdown-car{font-size:12px;font-weight:600;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .countdown-type{font-size:10px;color:var(--text2);margin-top:2px}
+
+
+/* v1.0.37: カウントダウンカードに「本日期限タスク N件」バッジ */
+.countdown-today-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--red);
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}

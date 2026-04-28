@@ -4,31 +4,68 @@
 // v0.8.2: 警告カードを上に・今月ボタン・ラベルを最終日（マイルストーン日）に表示
 // ========================================
 
-// マイルストーンの完了判定
-function isMilestoneDone(car, offset) {
+// v1.0.37: 納車カレンダーのマイルストーン定義は「設定UIの期日」から動的生成
+// 納車日（offset=0）は固定、それ以外は appTaskDeadline.delivery + 有効タスクから生成
+//   - 期日設定がないタスク／無効化タスク はマーカーに出さない（A方針）
+//   - ラベル/色はタスクの icon と name を使う
+//   - 期日(offset)が同日のタスクは1本にまとめる
+
+// 各タスクの完了判定（汎用）
+// task: { id, type, sections? }, state: car.deliveryTasks
+function _isDeliveryTaskDone(car, taskId) {
+  if (taskId === '__deliver') return car.col === 'done';
+  const tasks = (typeof DELIVERY_TASKS !== 'undefined') ? DELIVERY_TASKS : [];
+  const t = tasks.find(x => x.id === taskId);
   const dt = car.deliveryTasks || {};
-  switch (offset) {
-    case 0:
-      return car.col === 'done';
-    case 1: {
-      const t = (DELIVERY_TASKS || []).find(x => x.id === 'd_prep');
-      if (!t || !t.sections) return false;
-      const st = dt.d_prep || {};
-      return t.sections.every(sec => sec.items.every(i => st[i.id]));
-    }
-    case 2:
-      return !!dt.d_reg;
-    case 3: {
-      const t = (DELIVERY_TASKS || []).find(x => x.id === 'd_maint');
-      if (!t || !t.sections) return false;
-      const st = dt.d_maint || {};
-      return t.sections.every(sec => sec.items.every(i => st[i.id]));
-    }
-    case 5:
-      return !!dt.d_docs;
-    default:
-      return false;
+  if (!t) {
+    // カスタムタスク（toggle 型）
+    return !!dt[taskId];
   }
+  if (t.type === 'workflow' && Array.isArray(t.sections)) {
+    const st = dt[taskId] || {};
+    return t.sections.every(sec => sec.items.every(i => st[i.id]));
+  }
+  return !!dt[taskId];
+}
+
+// 後方互換：他から呼ばれている可能性に備えてラッパーを残す
+function isMilestoneDone(car, offset) {
+  if (offset === 0) return _isDeliveryTaskDone(car, '__deliver');
+  return false;
+}
+
+// マーカー色をフォールバック決定（タスクIDに応じて）
+function _markerStyleFor(taskId) {
+  // 既存 SCHED_POINTS の色味と整合（後方互換）
+  const map = {
+    d_docs:  { bg:'#f9a825', color:'#333' },
+    d_maint: { bg:'#e65100', color:'#fff' },
+    d_reg:   { bg:'#6a1b9a', color:'#fff' },
+    d_prep:  { bg:'#1565c0', color:'#fff' },
+  };
+  return map[taskId] || { bg:'var(--blue)', color:'#fff' };
+}
+
+// 設定UIから動的にマイルストーン点を生成
+// 戻り値：[{ offset, label, bg, color, taskId, isFinal? }, ...]
+function _getDeliveryMilestonePoints() {
+  const points = [];
+  // 納車当日（固定・必須）
+  points.push({ offset:0, label:'🚗 納車日', bg:'#388e3c', color:'#fff', bold:true, taskId:'__deliver', isFinal:true });
+  // 設定UIから期日付き有効タスクを取得
+  const tasks = (typeof getActiveDeliveryTasks === 'function') ? getActiveDeliveryTasks() : [];
+  tasks.forEach(t => {
+    const dl = (typeof getTaskDeadline === 'function') ? getTaskDeadline(t.id, 'delivery') : null;
+    if (dl == null) return;
+    const style = _markerStyleFor(t.id);
+    points.push({
+      offset: dl,
+      label: `${t.icon || '📋'} ${t.name}`,
+      bg: style.bg, color: style.color, bold: false,
+      taskId: t.id, isFinal: false,
+    });
+  });
+  return points;
 }
 
 // 1台あたりの「1本バー」のセグメント配列
@@ -36,7 +73,10 @@ function buildBarSegments(car, todayStr) {
   const del = car.deliveryDate;
   if (!del || del < todayStr) return [];
 
-  const pointsByDateAsc = [...SCHED_POINTS]
+  // v1.0.37: 動的マイルストーン
+  const SCHED = _getDeliveryMilestonePoints();
+
+  const pointsByDateAsc = [...SCHED]
     .map(sp => ({...sp, date: dateAddDays(del, -sp.offset)}))
     .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -55,9 +95,10 @@ function buildBarSegments(car, todayStr) {
       color: sp.color,
       startDate: cursor,
       endDate: sp.date,
-      isFinal: sp.offset === 0,
+      isFinal: !!sp.isFinal,
       milestoneOffset: sp.offset,
-      isDone: isMilestoneDone(car, sp.offset),
+      taskId: sp.taskId,
+      isDone: _isDeliveryTaskDone(car, sp.taskId),
     });
     cursor = dateAddDays(sp.date, 1);
   }
@@ -351,22 +392,39 @@ function renderCalendar() {
 }
 
 // カウントダウンカード（1車種1個）
+// v1.0.37: SCHED_POINTS の代わりに動的マイルストーン点を使う＋「本日期限タスク」件数を表示
 function renderCountdown() {
   const el = document.getElementById('cal-countdown');
   if (!el) return;
   const ts = todayStr();
 
+  // 動的マイルストーン点（納車日含む）
+  const SCHED = (typeof _getDeliveryMilestonePoints === 'function') ? _getDeliveryMilestonePoints() : [];
+
   const byCarId = {};
   cars.filter(c => c.col === 'delivery' && c.deliveryDate).forEach(car => {
-    SCHED_POINTS.forEach(sp => {
+    // 各タスクの期限日との差分から、最も近い未完了マイルストーンを選ぶ
+    SCHED.forEach(sp => {
       const date = dateAddDays(car.deliveryDate, -sp.offset);
       const diff = Math.ceil((new Date(date) - new Date(ts)) / 86400000);
       if (diff < 0) return;
-      if (isMilestoneDone(car, sp.offset)) return;
-      const cand = {car, label: sp.label, date, diff, bg: sp.bg, color: sp.color, offset: sp.offset};
+      // 完了済みマイルストーンはスキップ
+      if (sp.taskId && _isDeliveryTaskDone(car, sp.taskId)) return;
+      const cand = {car, label: sp.label, date, diff, bg: sp.bg, color: sp.color, offset: sp.offset, taskId: sp.taskId};
       const cur = byCarId[car.id];
       if (!cur || cand.diff < cur.diff) byCarId[car.id] = cand;
     });
+
+    // 本日期限の未完了タスク件数を集計（このカードに表示する）
+    let todayDueCount = 0;
+    SCHED.forEach(sp => {
+      if (sp.offset === 0) return; // 納車日自体は除外
+      const date = dateAddDays(car.deliveryDate, -sp.offset);
+      if (date !== ts) return;
+      if (sp.taskId && _isDeliveryTaskDone(car, sp.taskId)) return;
+      todayDueCount++;
+    });
+    if (byCarId[car.id]) byCarId[car.id].todayDueCount = todayDueCount;
   });
 
   const items = Object.values(byCarId).sort((a, b) => a.diff - b.diff);
@@ -375,7 +433,11 @@ function renderCountdown() {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:8px 0">納車準備中の車両がありません</div>';
     return;
   }
-  el.innerHTML = items.map(it => `
+  el.innerHTML = items.map(it => {
+    const todayBadge = it.todayDueCount > 0
+      ? `<div class="countdown-today-badge" title="本日期限のタスク">⚠ 本日期限 ${it.todayDueCount}件</div>`
+      : '';
+    return `
     <div class="countdown-card" onclick="openDetail('${it.car.id}')">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <div style="width:9px;height:9px;border-radius:50%;background:${it.bg};flex-shrink:0"></div>
@@ -385,7 +447,9 @@ function renderCountdown() {
       <div class="countdown-label">${fmtDate(it.date)}</div>
       <div class="countdown-car">${it.car.model}</div>
       <div class="countdown-type" style="color:var(--text3)">${it.car.maker} · ${it.car.num}</div>
-    </div>`).join('');
+      ${todayBadge}
+    </div>`;
+  }).join('');
 }
 
 // 前月へ
