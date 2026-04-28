@@ -207,11 +207,9 @@ function renderDetailBody(car) {
 function _renderEqDetailButton(car) {
   if (typeof calcEquipmentProgress !== 'function') return '';
   // v1.0.33: 装備品チェックタスクが OFF なら、ボタン自体を出さない
-  // 再生・納車 どちらかのフェーズで t_equip が有効なら表示する
-  if (typeof isTaskActive === 'function') {
-    const onRegen    = isTaskActive('t_equip', 'regen');
-    const onDelivery = isTaskActive('t_equip', 'delivery');
-    if (!onRegen && !onDelivery) return '';
+  // t_equip は再生フェーズの組み込みタスクなので、再生で OFF なら隠す
+  if (typeof isTaskActive === 'function' && !isTaskActive('t_equip', 'regen')) {
+    return '';
   }
   const p = calcEquipmentProgress(car);
   const completed = !!(car.equipment && car.equipment._completed);
