@@ -281,21 +281,14 @@ function clearFormPhoto() {
 
 function saveCarModal(initialCol) {
   // 新規登録時は initialCol で 'purchase' か 'other' を指定。編集時は無視。
-  // v1.0.43: 管理番号は必須を解除。空ならIDから自動採番（KM-xxxx）
-  let num = document.getElementById('inp-num').value.trim();
+  // v1.0.43: 管理番号は必須を解除（空欄でもOK）
+  // v1.0.44: 自動採番もやめ、空欄なら空欄のまま保存
+  const num = document.getElementById('inp-num').value.trim();
   const maker = document.getElementById('inp-maker').value.trim();
   const model = document.getElementById('inp-model').value.trim();
   if (!maker || !model) {
     showToast('メーカー・車種は必須です');
     return;
-  }
-  if (!num) {
-    // 自動採番：KM + 4桁ランダム数字（重複チェック簡易）
-    let tries = 0;
-    do {
-      num = 'KM' + String(Math.floor(1000 + Math.random()*9000));
-      tries++;
-    } while (tries < 20 && cars.some(c => c.num === num && c.id !== editingCarId));
   }
   const sellOn = document.getElementById('sell-switch').classList.contains('on');
   const contractDate = sellOn ? (document.getElementById('inp-contract-date').value || todayStr()) : '';
