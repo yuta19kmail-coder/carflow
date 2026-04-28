@@ -534,12 +534,18 @@
   flex: 1;
   min-width: 0;
 }
-/* v1.0.28: 色分けは廃止、装備名と値だけのプレーン表示 */
+/* v1.0.29: ○×・色分け復活 */
 .eq-view-row .val {
-  color: var(--text);
-  font-weight: 600;
+  font-weight: 700;
   white-space: nowrap;
 }
+.eq-view-row .val.on  { color: #16a34a; }
+.eq-view-row .val.off { color: #dc2626; }
+.eq-view-row .val.none{ color: var(--text3); font-weight: 500; }
+.eq-view-row .val.ok  { color: #16a34a; }
+.eq-view-row .val.ng  { color: #dc2626; }
+.eq-view-row .val.sel { color: #3b82f6; }
+.eq-view-row .val.txt { color: var(--text); font-weight: 500; font-size: 12px; }
 
 .eq-view-empty {
   padding: 30px 10px;

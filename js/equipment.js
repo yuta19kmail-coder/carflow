@@ -488,27 +488,31 @@ function renderEquipmentView(car, opts) {
   }
 
   EQUIPMENT_CATEGORIES.forEach(cat => {
-    // v1.0.28: ○×・色分けは廃止。装備名: 値（あり/なし/—/値）のプレーン一覧
+    // v1.0.29: ○×・色分けを復活（サマリーだけ v1.0.28 で廃止のまま）
     const rows = cat.items.map(it => {
       const v = eq[it.id];
-      let valHtml = '—';
+      let valHtml = '';
+      let cls = '';
       if (v == null || v === '') {
         valHtml = '—';
+        cls = 'none';
       } else if (it.type === 'tri') {
-        if (v === 'on') valHtml = 'あり';
-        else if (v === 'off') valHtml = 'なし';
-        else valHtml = '—';
+        if (v === 'on')  { valHtml = '○'; cls = 'on'; }
+        else if (v === 'off') { valHtml = '×'; cls = 'off'; }
+        else { valHtml = '—'; cls = 'none'; }
       } else if (it.type === 'status') {
-        if (v === 'ok') valHtml = 'OK';
-        else if (v === 'ng') valHtml = 'NG';
-        else valHtml = '—';
+        if (v === 'ok')  { valHtml = 'OK'; cls = 'ok'; }
+        else if (v === 'ng') { valHtml = 'NG'; cls = 'ng'; }
+        else { valHtml = '—'; cls = 'none'; }
       } else if (it.type === 'select') {
         valHtml = escapeHtml(v);
+        cls = 'sel';
       } else if (it.type === 'text') {
         const t = (v || '').trim();
-        valHtml = t ? escapeHtml(t) : '—';
+        if (!t) { valHtml = '—'; cls = 'none'; }
+        else { valHtml = escapeHtml(t); cls = 'txt'; }
       }
-      return `<div class="eq-view-row"><span class="label">${escapeHtml(it.label)}</span><span class="val">${valHtml}</span></div>`;
+      return `<div class="eq-view-row"><span class="label">${escapeHtml(it.label)}</span><span class="val ${cls}">${valHtml}</span></div>`;
     }).join('');
 
     html += `
