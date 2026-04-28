@@ -329,3 +329,150 @@ if (document.readyState === 'loading') {
 } else {
   bindSettingsNav();
 }
+
+// ========================================
+// v1.0.32: タスク ON/OFF ＋ カスタムタスク追加 UI
+// ========================================
+function renderTasksEditor() {
+  const root = document.getElementById('tasks-editor');
+  if (!root) return;
+
+  const phases = [
+    { key: 'regen',    label: '🔧 再生フェーズ' },
+    { key: 'delivery', label: '📦 納車フェーズ' },
+  ];
+
+  let html = '';
+  phases.forEach(ph => {
+    const tasks = (typeof getAllTasksForUI === 'function') ? getAllTasksForUI(ph.key) : [];
+    html += `<div class="task-edit-phase"><div class="task-edit-phase-head">${ph.label}</div>`;
+    if (!tasks.length) {
+      html += '<div class="task-edit-empty">タスクが定義されていません</div>';
+    } else {
+      tasks.forEach(t => {
+        const customCls = t.builtin ? '' : ' task-edit-custom';
+        html += `
+          <div class="task-edit-row${customCls}" data-task-id="${escapeHtml(t.id)}" data-phase="${ph.key}">
+            <span class="task-edit-icon">${t.icon || '📋'}</span>
+            <span class="task-edit-name">${escapeHtml(t.name)}</span>
+            ${t.builtin ? '<span class="task-edit-tag">組込</span>' : '<span class="task-edit-tag custom">追加</span>'}
+            <label class="task-edit-toggle">
+              <input type="checkbox" ${t.enabled ? 'checked' : ''}
+                     onchange="toggleTaskEnabled('${escapeHtml(t.id)}', '${ph.key}', this.checked)">
+              <span class="task-edit-toggle-slider"></span>
+            </label>
+            ${t.builtin ? '' : `<button class="task-edit-del" onclick="deleteCustomTask('${escapeHtml(t.id)}')" title="削除">✕</button>`}
+          </div>`;
+      });
+    }
+    html += `</div>`;
+  });
+
+  // 追加フォーム
+  html += `
+    <div class="task-edit-add">
+      <div class="task-edit-add-title">＋ チェック型タスクを追加</div>
+      <div class="task-edit-add-row">
+        <input type="text" id="new-task-icon" class="settings-input task-edit-add-icon" placeholder="🔧" maxlength="4">
+        <input type="text" id="new-task-name" class="settings-input task-edit-add-name" placeholder="タスク名（例：鈑金見積）" maxlength="20">
+      </div>
+      <div class="task-edit-add-phase-row">
+        <span class="task-edit-add-phase-label">適用フェーズ：</span>
+        <label class="task-edit-add-phase">
+          <input type="checkbox" id="new-task-phase-regen" checked> 再生
+        </label>
+        <label class="task-edit-add-phase">
+          <input type="checkbox" id="new-task-phase-delivery"> 納車
+        </label>
+        <button class="btn-sm" onclick="addCustomTask()" style="margin-left:auto">追加する</button>
+      </div>
+    </div>`;
+
+  root.innerHTML = html;
+}
+
+// 組み込み・カスタム両方共通の ON/OFF 切替
+function toggleTaskEnabled(taskId, phase, enabled) {
+  if (!appTaskEnabled[phase]) appTaskEnabled[phase] = {};
+  appTaskEnabled[phase][taskId] = !!enabled;
+  // 永続化
+  if (typeof appSettings !== 'undefined') {
+    if (!appSettings.taskEnabled) appSettings.taskEnabled = { regen:{}, delivery:{} };
+    appSettings.taskEnabled[phase] = { ...appTaskEnabled[phase] };
+    if (typeof saveAppSettings === 'function') saveAppSettings();
+  }
+  // 全ビュー再描画（タスク追加/削除と同じく、設定パネル中なので display:none ビューも更新）
+  if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
+  showToast(enabled ? 'タスクを有効化しました' : 'タスクを無効化しました');
+}
+
+// カスタムタスク追加
+function addCustomTask() {
+  const icon = (document.getElementById('new-task-icon').value || '').trim() || '📋';
+  const name = (document.getElementById('new-task-name').value || '').trim();
+  const useRegen    = document.getElementById('new-task-phase-regen').checked;
+  const useDelivery = document.getElementById('new-task-phase-delivery').checked;
+  if (!name) { showToast('タスク名を入力してください'); return; }
+  if (!useRegen && !useDelivery) { showToast('適用フェーズを選んでください'); return; }
+  // ID 生成（重複しないよう time+random）
+  const id = 'c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const phases = [];
+  if (useRegen) phases.push('regen');
+  if (useDelivery) phases.push('delivery');
+  appCustomTasks.push({ id, name, icon, phases });
+  // 永続化
+  if (typeof appSettings !== 'undefined') {
+    appSettings.customTasks = appCustomTasks.slice();
+    if (typeof saveAppSettings === 'function') saveAppSettings();
+  }
+  // フォームクリア
+  document.getElementById('new-task-icon').value = '';
+  document.getElementById('new-task-name').value = '';
+  // 既存車両の状態オブジェクトに該当キーを追加（後方互換）
+  cars.forEach(c => {
+    if (useRegen    && c.regenTasks    && !(id in c.regenTasks))    c.regenTasks[id] = false;
+    if (useDelivery && c.deliveryTasks && !(id in c.deliveryTasks)) c.deliveryTasks[id] = false;
+  });
+  renderTasksEditor();
+  if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
+  showToast(`「${name}」を追加しました`);
+}
+
+// カスタムタスク削除
+function deleteCustomTask(taskId) {
+  const t = appCustomTasks.find(x => x.id === taskId);
+  if (!t) return;
+  if (!confirm(`「${t.name}」を削除しますか？\n（既に進捗が入っていても消えます）`)) return;
+  appCustomTasks = appCustomTasks.filter(x => x.id !== taskId);
+  // 既存車両の状態からも削除
+  cars.forEach(c => {
+    if (c.regenTasks)    delete c.regenTasks[taskId];
+    if (c.deliveryTasks) delete c.deliveryTasks[taskId];
+  });
+  // taskEnabled からも削除
+  if (appTaskEnabled.regen)    delete appTaskEnabled.regen[taskId];
+  if (appTaskEnabled.delivery) delete appTaskEnabled.delivery[taskId];
+  // 永続化
+  if (typeof appSettings !== 'undefined') {
+    appSettings.customTasks = appCustomTasks.slice();
+    appSettings.taskEnabled = { regen: {...appTaskEnabled.regen}, delivery: {...appTaskEnabled.delivery} };
+    if (typeof saveAppSettings === 'function') saveAppSettings();
+  }
+  renderTasksEditor();
+  if (typeof _refreshSizesDependentViews === 'function') _refreshSizesDependentViews();
+  showToast('タスクを削除しました');
+}
+
+// アプリ起動時の復元（appSettings 読込後に呼ぶ想定）
+function restoreTasksFromSettings() {
+  if (typeof appSettings === 'undefined') return;
+  if (appSettings.taskEnabled) {
+    appTaskEnabled = {
+      regen:    appSettings.taskEnabled.regen    || {},
+      delivery: appSettings.taskEnabled.delivery || {},
+    };
+  }
+  if (Array.isArray(appSettings.customTasks)) {
+    appCustomTasks = appSettings.customTasks.slice();
+  }
+}

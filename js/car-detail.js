@@ -81,7 +81,7 @@ function renderDetailBody(car) {
   if (car.col === 'other') return _renderDetailBodyOther(car);
 
   const isD = car.col === 'delivery' || car.col === 'done';
-  const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
+  const tasks = (isD ? getActiveDeliveryTasks() : getActiveRegenTasks());
   const prog = calcProg(car);
   const inv = daysSince(car.purchaseDate);
   const contractedDays = daysSinceContract(car);

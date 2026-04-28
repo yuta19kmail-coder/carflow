@@ -34,7 +34,8 @@ function _isTaskComplete(car, task, tasks) {
 //   ウエイト調整は v1.0.30 ぐらいで設定UI追加予定
 function calcProg(car) {
   const isD = car.col === 'delivery' || car.col === 'done';
-  const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
+  // v1.0.32: 有効なタスクだけで全体進捗を計算（無効化タスクはカウントしない）
+  const tasks = isD ? getActiveDeliveryTasks() : getActiveRegenTasks();
   let total = 0, done = 0;
   tasks.forEach(t => {
     total++;

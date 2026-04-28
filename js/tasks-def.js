@@ -103,3 +103,59 @@ const DELIVERY_TASKS = [
   {id:'d_docs', name:'書類', icon:'📄', type:'toggle'},
   {id:'d_reg',  name:'登録', icon:'📝', type:'toggle'},
 ];
+
+// ========================================
+// v1.0.32: タスク ON/OFF ＋ カスタムタスク追加
+// 設定UIで管理。appSettings.taskEnabled / appSettings.customTasks に永続化
+// ========================================
+
+// 組み込みタスクの enabled 状態（true=有効、false=無効）
+// 形：{ regen: { t_equip:true, t_regen:true, ... }, delivery: {...} }
+// 未定義キーは「有効」扱い（後方互換）
+let appTaskEnabled = { regen: {}, delivery: {} };
+
+// ユーザー追加のチェック型タスク
+// 形：[{ id, name, icon, phases:['regen'|'delivery'] }]
+let appCustomTasks = [];
+
+// タスクが有効か判定（未定義は true 扱い）
+function isTaskActive(taskId, phase) {
+  const map = (appTaskEnabled && appTaskEnabled[phase]) || {};
+  if (taskId in map) return map[taskId] !== false;
+  return true; // 未定義は有効
+}
+
+// 再生フェーズで有効なタスクのリスト（組み込み＋カスタム）
+function getActiveRegenTasks() {
+  const builtin = REGEN_TASKS.filter(t => isTaskActive(t.id, 'regen'));
+  const custom  = (appCustomTasks || []).filter(t =>
+    (t.phases || []).includes('regen') && isTaskActive(t.id, 'regen')
+  ).map(t => ({ id: t.id, name: t.name, icon: t.icon, type: 'toggle', _custom: true }));
+  return builtin.concat(custom);
+}
+
+// 納車フェーズで有効なタスクのリスト
+function getActiveDeliveryTasks() {
+  const builtin = DELIVERY_TASKS.filter(t => isTaskActive(t.id, 'delivery'));
+  const custom  = (appCustomTasks || []).filter(t =>
+    (t.phases || []).includes('delivery') && isTaskActive(t.id, 'delivery')
+  ).map(t => ({ id: t.id, name: t.name, icon: t.icon, type: 'toggle', _custom: true }));
+  return builtin.concat(custom);
+}
+
+// 設定UI用：組み込み＋カスタムを enabled 状態付きで全部返す（フェーズ別）
+function getAllTasksForUI(phase) {
+  const builtin = (phase === 'delivery' ? DELIVERY_TASKS : REGEN_TASKS).map(t => ({
+    id: t.id, name: t.name, icon: t.icon, type: t.type,
+    enabled: isTaskActive(t.id, phase),
+    builtin: true,
+  }));
+  const custom = (appCustomTasks || [])
+    .filter(t => (t.phases || []).includes(phase))
+    .map(t => ({
+      id: t.id, name: t.name, icon: t.icon, type: 'toggle',
+      enabled: isTaskActive(t.id, phase),
+      builtin: false,
+    }));
+  return builtin.concat(custom);
+}

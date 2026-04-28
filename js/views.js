@@ -335,7 +335,7 @@ function _makeProgressCardOther(car, compact) {
 function _makeProgressCard(car, compact) {
   if (car.col === 'other') return _makeProgressCardOther(car, compact);
   const isD = car.col === 'delivery';
-  const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
+  const tasks = (isD ? getActiveDeliveryTasks() : getActiveRegenTasks());
   const prog = calcProg(car);
   const colLabel = COLS.find(c => c.id === car.col)?.label || car.col;
   const card = document.createElement('div');

@@ -412,3 +412,163 @@
   .settings-nav-item.active .settings-nav-label { display: inline; }
   .settings-content { padding: 16px; }
 }
+
+
+/* ========================================
+   v1.0.32: タスク ON/OFF ＋ カスタムタスク追加 UI
+   ======================================== */
+.task-edit-phase {
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.task-edit-phase-head {
+  padding: 8px 12px;
+  background: var(--bg3);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+}
+.task-edit-empty {
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+}
+.task-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.task-edit-row:last-child { border-bottom: none; }
+.task-edit-row.task-edit-custom {
+  background: rgba(55,138,221,.06);
+}
+.task-edit-icon {
+  font-size: 18px;
+  width: 26px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.task-edit-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.task-edit-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg3);
+  color: var(--text3);
+  font-weight: 600;
+}
+.task-edit-tag.custom {
+  background: rgba(55,138,221,.18);
+  color: var(--blue);
+}
+
+/* トグルスイッチ */
+.task-edit-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.task-edit-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.task-edit-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: 0.18s;
+}
+.task-edit-toggle-slider::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  width: 14px;
+  height: 14px;
+  background: var(--text2);
+  border-radius: 50%;
+  transition: 0.18s;
+}
+.task-edit-toggle input:checked + .task-edit-toggle-slider {
+  background: var(--green);
+  border-color: var(--green);
+}
+.task-edit-toggle input:checked + .task-edit-toggle-slider::before {
+  transform: translateX(16px);
+  background: #fff;
+}
+
+.task-edit-del {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.task-edit-del:hover {
+  background: rgba(239,68,68,.12);
+  border-color: rgba(239,68,68,.4);
+  color: var(--red);
+}
+
+/* 追加フォーム */
+.task-edit-add {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.task-edit-add-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.task-edit-add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.task-edit-add-icon { width: 60px; text-align: center; font-size: 18px; }
+.task-edit-add-name { flex: 1; }
+.task-edit-add-phase-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.task-edit-add-phase-label {
+  font-size: 11px;
+  color: var(--text3);
+}
+.task-edit-add-phase {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+}

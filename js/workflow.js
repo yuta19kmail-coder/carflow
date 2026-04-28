@@ -7,7 +7,7 @@
 function openWorkflow(carId, taskId, isD) {
   const car = cars.find(c => c.id === carId);
   if (!car) return;
-  const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
+  const tasks = (isD ? getActiveDeliveryTasks() : getActiveRegenTasks());
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
   wfState = {carId, taskId, isDelivery:isD};
@@ -31,7 +31,7 @@ function renderWfBody(car, task, isD) {
   const taskState = state[task.id] || {};
   const body = document.getElementById('wf-body');
   body.innerHTML = '';
-  const p = calcSingleProg(car, task.id, isD ? DELIVERY_TASKS : REGEN_TASKS);
+  const p = calcSingleProg(car, task.id, (isD ? getActiveDeliveryTasks() : getActiveRegenTasks()));
   const pd = document.createElement('div');
   pd.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:13px;margin-bottom:14px';
   pd.innerHTML = `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:7px"><span>このタスクの進捗</span><span>${p.done}/${p.total}</span></div><div class="pbar" style="height:7px"><div class="pfill" id="wf-tb" style="width:${p.pct}%"></div></div><div style="font-size:11px;color:var(--text3);margin-top:4px">${p.pct}%</div>`;
@@ -81,7 +81,7 @@ function toggleWfStep(itemId) {
   const state = isDelivery ? car.deliveryTasks : car.regenTasks;
   if (!state[taskId]) state[taskId] = {};
   state[taskId][itemId] = !state[taskId][itemId];
-  const tasks = isDelivery ? DELIVERY_TASKS : REGEN_TASKS;
+  const tasks = (isDelivery ? getActiveDeliveryTasks() : getActiveRegenTasks());
   const task = tasks.find(t => t.id === taskId);
   const itemName = task.sections.flatMap(s => s.items).find(i => i.id === itemId)?.name || itemId;
   addLog(carId, `[${task.name}]「${itemName}」を${state[taskId][itemId]?'完了':'未完了に戻す'}`);
@@ -111,7 +111,7 @@ function toggleWfStep(itemId) {
 
 // 完了ボタンの有効/無効更新
 function updateWfBtn(car, task, isD) {
-  const p = calcSingleProg(car, task.id, isD ? DELIVERY_TASKS : REGEN_TASKS);
+  const p = calcSingleProg(car, task.id, (isD ? getActiveDeliveryTasks() : getActiveRegenTasks()));
   const btn = document.getElementById('wf-done-btn');
   btn.disabled = p.pct < 100;
   btn.textContent = p.pct === 100 ? '✓ 全完了！ボードに戻る' : '全ステップを完了してから戻る';

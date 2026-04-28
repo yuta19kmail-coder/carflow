@@ -30,6 +30,8 @@ function showPanel(name, el) {
     // v0.9.6: テーマ・フォントサイズの選択状態を反映
     if (typeof refreshThemePickerUI === 'function') refreshThemePickerUI();
     if (typeof refreshFontSizePickerUI === 'function') refreshFontSizePickerUI();
+    // v1.0.32: タスクエディタ
+    if (typeof renderTasksEditor === 'function') renderTasksEditor();
   }
 }
 
@@ -50,7 +52,6 @@ function switchTab(name, el) {
   if (name === 'progress')  renderProgress();
   if (name === 'table')     renderTable();
   if (name === 'inventory') renderInventory();
-  // v1.0.16: 商談モード切替
   if (name === 'deal') {
     if (typeof renderDeal === 'function') renderDeal();
     if (typeof enterDealMode === 'function') enterDealMode();
