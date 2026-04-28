@@ -361,8 +361,16 @@ const DELIVERY_TASKS = [
 let appTaskEnabled = { regen: {}, delivery: {} };
 let appCustomTasks = [];
 let appTaskOrder = { regen: [], delivery: [] };
+// v1.2.5: 再生フェーズのデフォルト期日を入れて、期限超過アラートが発火する状態に
 let appTaskDeadline = {
-  regen: {},
+  regen: {
+    t_equip:   3,
+    t_regen:  14,
+    t_photo:   5,
+    t_estim:   7,
+    t_webup:   7,
+    t_exhibit:14,
+  },
   delivery: {
     d_docs:     5,
     d_maint:    3,
