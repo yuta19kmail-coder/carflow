@@ -21,8 +21,9 @@ function getCarEquipment(car) {
 
 // 値を保存（自動保存トリガー）
 function setEquipmentValue(carId, itemId, value) {
+  console.log('[EQ-DEBUG] setEquipmentValue called', {carId, itemId, value, _eqActiveCarId});
   const car = cars.find(c => c.id === carId);
-  if (!car) return;
+  if (!car) { console.warn('[EQ-DEBUG] car not found for', carId); return; }
   const eq = getCarEquipment(car);
   if (value == null || value === '') {
     delete eq[itemId];
@@ -34,6 +35,7 @@ function setEquipmentValue(carId, itemId, value) {
   if (eq._completed) eq._completed = false;
   _showEqSavedHint();
   _updateEqProgressBadge();
+  console.log('[EQ-DEBUG] saved. car.equipment now =', JSON.parse(JSON.stringify(car.equipment)));
 }
 
 // 全項目数と入力済み数（_completed と _updatedAt を除外）
@@ -77,6 +79,7 @@ function openEquipmentCheck(carId) {
 }
 
 function closeEquipmentCheck() {
+  console.log('[EQ-DEBUG] closeEquipmentCheck. _eqActiveCarId=', _eqActiveCarId);
   document.getElementById('eq-page').classList.remove('open');
   document.body.style.overflow = '';
   // 詳細を再描画（ボタンの色など更新）
@@ -84,8 +87,11 @@ function closeEquipmentCheck() {
   if (_eqActiveCarId) {
     const car = cars.find(c => c.id === _eqActiveCarId);
     if (car) {
+      console.log('[EQ-DEBUG] car.equipment at close =', JSON.parse(JSON.stringify(car.equipment || {})));
       // detail-body が DOM 上にあれば再描画。display:none でも次回開いた時に最新値が反映される
-      if (document.getElementById('detail-body')) {
+      const dbody = document.getElementById('detail-body');
+      console.log('[EQ-DEBUG] detail-body exists?', !!dbody, 'modal-detail open?', document.getElementById('modal-detail')?.classList.contains('open'));
+      if (dbody) {
         try { renderDetailBody(car); } catch(e) { console.warn('renderDetailBody error', e); }
       }
     }
@@ -283,9 +289,10 @@ function onEqSelectClick(el) {
 // ====================================================================
 
 function cycleEqTri(itemId) {
-  if (!_eqActiveCarId) return;
+  console.log('[EQ-DEBUG] cycleEqTri called', {itemId, _eqActiveCarId});
+  if (!_eqActiveCarId) { console.warn('[EQ-DEBUG] no _eqActiveCarId, abort'); return; }
   const car = cars.find(c => c.id === _eqActiveCarId);
-  if (!car) return;
+  if (!car) { console.warn('[EQ-DEBUG] car not found in cycleEqTri'); return; }
   const cur = getCarEquipment(car)[itemId] || 'none';
   // none → on → off → none
   const next = cur === 'none' ? 'on' : cur === 'on' ? 'off' : 'none';
@@ -533,7 +540,6 @@ function toggleEquipmentAccordion(carId, forceOpen) {
     btn.setAttribute('data-open', '1');
   } else {
     wrap.setAttribute('data-open', '0');
-    btn.setAttribute('data-open', '0');
     // 中身は残しても閉じれば見えないが、再展開時に最新値で描き直すので消しておく
     wrap.innerHTML = '';
   }
