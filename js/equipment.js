@@ -542,6 +542,8 @@ function toggleEquipmentAccordion(carId, forceOpen) {
     btn.setAttribute('data-open', '1');
   } else {
     wrap.setAttribute('data-open', '0');
+    // v1.0.30: 閉じる時もボタン側の data-open を 0 に戻す（漏れていたバグ修正）
+    btn.setAttribute('data-open', '0');
     // 中身は残しても閉じれば見えないが、再展開時に最新値で描き直すので消しておく
     wrap.innerHTML = '';
   }

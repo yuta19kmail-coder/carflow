@@ -291,3 +291,41 @@ function applyBulkGoal() {
   renderGoalsEditor();
   renderDashboard();
 }
+
+// ========================================
+// v1.0.30: 設定パネル サイドバー型ナビ切替
+// 左の項目をクリックすると、対応する section.active を切り替える
+// ========================================
+function selectSettingsSection(sectionId) {
+  // 全 nav-item の active 解除
+  document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+  // 全 section の active 解除
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  // 該当を active 化
+  const navBtn = document.querySelector(`.settings-nav-item[data-section="${sectionId}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  const section = document.querySelector(`.settings-section[data-section="${sectionId}"]`);
+  if (section) section.classList.add('active');
+  // 右コンテンツのスクロール位置をトップに戻す
+  const content = document.querySelector('.settings-content');
+  if (content) content.scrollTop = 0;
+}
+
+// ナビボタンのクリックハンドラを設定（DOMContentLoaded 後 / または開く時）
+function bindSettingsNav() {
+  document.querySelectorAll('.settings-nav-item').forEach(btn => {
+    if (btn._bound) return;
+    btn._bound = true;
+    btn.addEventListener('click', () => {
+      const sec = btn.getAttribute('data-section');
+      if (sec) selectSettingsSection(sec);
+    });
+  });
+}
+
+// ページロード後に1回バインド
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindSettingsNav);
+} else {
+  bindSettingsNav();
+}
