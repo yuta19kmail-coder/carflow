@@ -388,51 +388,19 @@ function renderMembers() {
   ).join('');
 }
 
-// 下部アクションチップ（通知設定に従う）
+// 下部アクションチップ（v1.1.1: ダッシュボードの「🚨 要対応アクション」と完全に同内容）
+// renderActionChips() が #dash-actions に書き出した HTML を、そのまま #action-chips にコピー
 function renderActions() {
   const chips = document.getElementById('action-chips');
   if (!chips) return;
-  chips.innerHTML = '';
-  const notif = appSettings.notif;
-  let any = false;
-  cars.forEach(car => {
-    if (car.col === 'done') return;
-    if (notif.pre.on && car.contract && car.deliveryDate) {
-      const d = daysDiff(car.deliveryDate);
-      if (d !== null && d <= notif.pre.days && d >= 0) {
-        const c = document.createElement('div');
-        c.className = 'chip chip-red';
-        c.innerHTML = `<span class="chip-dot"></span>🚨 ${car.maker} ${car.model} 納車${d===0?'本日':d+'日後'}`;
-        c.onclick = () => openDetail(car.id);
-        chips.appendChild(c);
-        any = true;
-      }
-    }
-    if (notif.stock.on) {
-      const inv = daysSince(car.purchaseDate);
-      if (inv >= notif.stock.days) {
-        const c = document.createElement('div');
-        c.className = 'chip chip-orange';
-        c.innerHTML = `<span class="chip-dot"></span>📦 ${car.maker} ${car.model} 在庫${inv}日`;
-        c.onclick = () => openDetail(car.id);
-        chips.appendChild(c);
-        any = true;
-      }
-    }
-    // v1.0.35: タスク期限超過
-    if (typeof getOverdueTasks === 'function') {
-      const overdue = getOverdueTasks(car);
-      if (overdue.length > 0) {
-        const phase = overdue[0].kind === 'delivery' ? '納車' : '再生';
-        const cnt = overdue.length;
-        const c = document.createElement('div');
-        c.className = 'chip chip-red';
-        c.innerHTML = `<span class="chip-dot"></span>⚠ ${car.maker} ${car.model} ${phase}期限超過 ${cnt}件`;
-        c.onclick = () => openDetail(car.id);
-        chips.appendChild(c);
-        any = true;
-      }
-    }
-  });
-  if (!any) chips.innerHTML = '<div style="font-size:12px;color:var(--text3)">緊急アクションなし ✓</div>';
+  // 先に dash-actions を最新化してから複製（タイミング保険）
+  if (typeof renderActionChips === 'function') {
+    try { renderActionChips(); } catch(e) {}
+  }
+  const dash = document.getElementById('dash-actions');
+  if (dash && dash.innerHTML) {
+    chips.innerHTML = dash.innerHTML;
+  } else {
+    chips.innerHTML = '<div style="font-size:12px;color:var(--text3)">要対応アクションなし ✓</div>';
+  }
 }

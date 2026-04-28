@@ -1,0 +1,326 @@
+/* ============================================================
+   worksheet.css (v1.2.0)
+   中古車作業管理票（再生 / 納車時）専用画面
+   equipment.css のテイストに合わせつつ、項目はチェック2状態のみ
+   ============================================================ */
+
+/* フルスクリーン土台 */
+#ws-page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 220;
+  flex-direction: column;
+}
+#ws-page.open { display: flex; }
+
+/* トップバー */
+.ws-topbar {
+  height: var(--topbar);
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.ws-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: none;
+  font-family: inherit;
+}
+.ws-back:hover { color: var(--text); }
+.ws-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+.ws-progress-badge {
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--bg3);
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+/* 車両ヘッダー */
+.ws-vehicle {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.ws-thumb {
+  width: 54px;
+  height: 42px;
+  border-radius: 7px;
+  background: var(--bg3) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.ws-vehicle-info { flex: 1; min-width: 0; }
+.ws-vehicle-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws-vehicle-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* 進捗バー（細線） */
+.ws-progress-bar {
+  height: 3px;
+  background: var(--bg4);
+  flex-shrink: 0;
+}
+.ws-progress-fill {
+  height: 100%;
+  background: var(--orange);
+  width: 0;
+  transition: width .3s;
+}
+
+/* タブ（セクション切替） */
+.ws-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+}
+.ws-tab {
+  flex: 1 0 auto;
+  min-width: 110px;
+  padding: 9px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: inherit;
+  transition: .15s;
+}
+.ws-tab:hover { background: var(--bg4); color: var(--text); }
+.ws-tab.active {
+  background: rgba(55, 138, 221, 0.18);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.ws-tab-label {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.ws-tab-count {
+  font-size: 10px;
+  color: var(--text3);
+  font-weight: 700;
+}
+.ws-tab.active .ws-tab-count { color: var(--blue); }
+
+/* 本体スクロール領域 */
+.ws-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+#ws-body-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 1項目カード */
+.ws-item {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition: .15s;
+}
+.ws-item.done {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.45);
+}
+.ws-item-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--text);
+}
+.ws-item-toggle:hover { background: rgba(255,255,255,.02); }
+
+.ws-item-chk {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  background: var(--bg3);
+  transition: .2s;
+}
+.ws-item.done .ws-item-chk {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.ws-item-body { flex: 1; min-width: 0; }
+.ws-item-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.ws-item.done .ws-item-name {
+  color: var(--text2);
+  text-decoration: line-through;
+  text-decoration-color: rgba(255,255,255,.3);
+}
+.ws-item-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+
+/* 注意点（detail / points） */
+.ws-item-detail {
+  border-top: 1px dashed var(--border);
+  padding: 10px 16px 12px 60px;
+  background: rgba(0, 0, 0, 0.12);
+}
+.ws-item-detail p {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin: 0 0 6px 0;
+}
+.ws-item-detail ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ws-item-detail li {
+  font-size: 11px;
+  color: var(--text3);
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.5;
+}
+.ws-item-detail li::before {
+  content: "•";
+  color: var(--orange);
+  position: absolute;
+  left: 4px;
+  top: 0;
+}
+
+/* フッター（戻る・進む・完了） */
+.ws-footer {
+  padding: 12px 14px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.ws-nav-btn {
+  padding: 11px 14px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.ws-nav-btn:hover:not(:disabled) {
+  background: var(--bg4);
+  color: var(--text);
+}
+.ws-nav-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.ws-complete-btn {
+  flex: 1;
+  padding: 13px 14px;
+  background: var(--green);
+  border: none;
+  border-radius: var(--r);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: .15s;
+}
+.ws-complete-btn:hover:not(.disabled) { filter: brightness(1.1); }
+.ws-complete-btn.disabled,
+.ws-complete-btn:disabled {
+  background: var(--bg4);
+  color: var(--text3);
+  cursor: not-allowed;
+}
+
+/* スマホ用調整 */
+body.mobile .ws-topbar { padding: 0 11px; }
+body.mobile .ws-title { font-size: 13px; }
+body.mobile .ws-vehicle { padding: 9px 12px; gap: 10px; }
+body.mobile .ws-tab { min-width: 100px; padding: 8px 10px; }
+body.mobile .ws-body { padding: 10px; }
+body.mobile .ws-item-toggle { padding: 13px 12px; gap: 11px; }
+body.mobile .ws-item-chk { width: 30px; height: 30px; font-size: 15px; }
+body.mobile .ws-item-name { font-size: 14px; }
+body.mobile .ws-item-detail { padding: 10px 14px 12px 53px; }
+body.mobile .ws-footer { padding: 11px; gap: 6px; }
+body.mobile .ws-nav-btn { padding: 11px 12px; font-size: 12px; }
+body.mobile .ws-complete-btn { font-size: 14px; padding: 13px; }

@@ -211,7 +211,7 @@ function renderDetailBody(car) {
         <div class="task-item-info"><div class="task-item-name">${task.icon} ${task.name}</div><div class="task-item-sub">${p.done}/${p.total} 完了</div></div>
         ${_badgeCol(task.id)}
         <div class="task-item-pct">${p.pct}%</div>
-        <div class="task-item-open"><button class="task-open-btn" onclick="openWorkflow('${car.id}','${task.id}',${isD})">開く →</button></div>
+        <div class="task-item-open"><button class="task-open-btn" onclick="${(task.id==='t_regen'||task.id==='d_prep')?`openWorksheet('${car.id}','${task.id}')`:`openWorkflow('${car.id}','${task.id}',${isD})`}">開く →</button></div>
       </div></div>`;
     }
   });
