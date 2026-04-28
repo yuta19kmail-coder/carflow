@@ -462,7 +462,7 @@
   color: var(--text3);
 }
 
-/* v1.0.21: 装備詳細アコーディオン */
+/* v1.0.21: 装備詳細アコーディオン / v1.0.27: 閉時の角丸保持＋下マージン強化 */
 .detail-eq-accordion {
   display: none;
   background: var(--bg2);
@@ -470,19 +470,21 @@
   border-top: none;
   border-radius: 0 0 var(--r) var(--r);
   padding: 10px 12px 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   margin-top: -2px;
 }
 .detail-eq-accordion[data-open="1"] {
   display: block;
 }
+/* 閉じてる時：四隅すべて角丸を維持、下マージンを確保してメモとの隙間を作る */
+.detail-eq-btn[data-open="0"] {
+  border-radius: var(--r);
+  margin-bottom: 14px;
+}
+/* 開いてる時：下角を flat にしてアコーディオンと繋げる */
 .detail-eq-btn[data-open="1"] {
   border-radius: var(--r) var(--r) 0 0;
   margin-bottom: 0;
-}
-/* アコーディオン展開時の閉じてないボタンの下マージンを 0 にして繋がって見せる */
-.detail-eq-btn:not([data-open="1"]) {
-  margin-bottom: 12px;
 }
 
 /* 閲覧モーダル */

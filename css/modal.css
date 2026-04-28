@@ -49,8 +49,9 @@
 .task-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .task-item-row{display:flex;align-items:center;gap:11px;padding:12px 14px}
 .task-chk{width:30px;height:30px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
-.task-chk.done{background:var(--orange);border-color:var(--orange)}
+/* v1.0.27: 状態色の統一基準  未着手=グレー（既定） / 途中=オレンジ / 完了=緑 */
 .task-chk.partial{background:var(--orange);border-color:var(--orange)}
+.task-chk.done{background:var(--green);border-color:var(--green)}
 .task-item-name{flex:1;font-size:14px;font-weight:600}
 .task-item-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .task-item-pct{font-size:13px;font-weight:700;color:var(--text2);margin-right:4px}

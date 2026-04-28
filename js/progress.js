@@ -20,30 +20,25 @@ function _calcEquipProgUnified(car) {
   return { pct: 0, done: 0, total: 1 };
 }
 
+// タスクが「完了」かどうかの判定（全体進捗用、二値）
+// v1.0.27: t_equip は _completed フラグを見る。それ以外は pct === 100。
+function _isTaskComplete(car, task, tasks) {
+  if (task.id === 't_equip') return _isEquipmentCompleted(car);
+  const p = calcSingleProg(car, task.id, tasks);
+  return p.pct >= 100;
+}
+
 // 車両全体の進捗を計算
+// v1.0.27: シンプルB方式 — 完了タスク数 / 全タスク数（タスク単位の二値判定）
+//   例：6タスクで装備品チェック「完了する」押下＋他全部未 → 1/6 ≒ 17%
+//   ウエイト調整は v1.0.30 ぐらいで設定UI追加予定
 function calcProg(car) {
   const isD = car.col === 'delivery' || car.col === 'done';
   const tasks = isD ? DELIVERY_TASKS : REGEN_TASKS;
-  const state = isD ? car.deliveryTasks : car.regenTasks;
   let total = 0, done = 0;
   tasks.forEach(t => {
-    // v1.0.24: t_equip は装備品チェックの全項目を1項目1カウントで集計
-    // → タスク行の％（calcSingleProg）と全体進捗バーの分母・分子を一致させる
-    if (t.id === 't_equip') {
-      const ep = _calcEquipProgUnified(car);
-      total += ep.total;
-      done += ep.done;
-      return;
-    }
-    if (t.type === 'toggle') {
-      total++;
-      if (state[t.id]) done++;
-    } else {
-      t.sections.forEach(s => s.items.forEach(i => {
-        total++;
-        if (state[t.id] && state[t.id][i.id]) done++;
-      }));
-    }
+    total++;
+    if (_isTaskComplete(car, t, tasks)) done++;
   });
   return {pct: total ? Math.round(done/total*100) : 0, done, total};
 }

@@ -143,7 +143,7 @@ function renderDetailBody(car) {
     <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${isD?'納車準備':'業務タスク'}</div>
     <div class="detail-overall">
       <div class="detail-overall-label"><span>全体進捗</span><span>${prog.done}/${prog.total} (${prog.pct}%)</span></div>
-      <div class="detail-overall-bar"><div class="detail-overall-fill" style="width:${prog.pct}%"></div></div>
+      <div class="detail-overall-bar"><div class="detail-overall-fill" style="width:${prog.pct}%;background:${prog.pct>=100?'var(--green)':prog.pct>0?'var(--orange)':'var(--bg4)'}"></div></div>
     </div>
     <div class="task-items">`;
   tasks.forEach(task => {
