@@ -31,7 +31,20 @@ function addSizeOption() {
   SIZES.push(v);
   inp.value = '';
   renderSizeEditor();
+  // v1.0.31: 即時反映 — renderAll はアクティブビューのみだが、SIZES依存ビューは強制再描画
+  _refreshSizesDependentViews();
   showToast(`「${v}」を追加しました`);
+}
+
+// v1.0.31: SIZES（ボディサイズ区分）に依存する全ビューを強制再描画
+// 設定パネルは display:none の他ビューを再描画しないので、SIZES変更時はここで明示的に呼ぶ
+function _refreshSizesDependentViews() {
+  if (typeof renderExhibit === 'function') try { renderExhibit(); } catch(e){}
+  if (typeof renderDeal === 'function')    try { renderDeal(); } catch(e){}
+  if (typeof renderKanban === 'function')  try { renderKanban(); } catch(e){}
+  if (typeof renderInventory === 'function') try { renderInventory(); } catch(e){}
+  if (typeof renderTable === 'function')    try { renderTable(); } catch(e){}
+  if (typeof renderProgress === 'function') try { renderProgress(); } catch(e){}
 }
 
 function renameSizeOption(i, newName) {
@@ -42,7 +55,7 @@ function renameSizeOption(i, newName) {
   SIZES[i] = v;
   cars.forEach(c => { if (c.size === old) c.size = v; });
   renderSizeEditor();
-  renderAll();
+  _refreshSizesDependentViews();
 }
 
 function moveSizeOption(i, dir) {
@@ -50,6 +63,7 @@ function moveSizeOption(i, dir) {
   if (j < 0 || j >= SIZES.length) return;
   [SIZES[i], SIZES[j]] = [SIZES[j], SIZES[i]];
   renderSizeEditor();
+  _refreshSizesDependentViews();
 }
 
 function removeSizeOption(i) {
@@ -59,7 +73,7 @@ function removeSizeOption(i) {
   SIZES.splice(i, 1);
   if (used) cars.forEach(c => { if (c.size === name) c.size = SIZES[0] || ''; });
   renderSizeEditor();
-  renderAll();
+  _refreshSizesDependentViews();
   showToast('区分を削除しました');
 }
 
@@ -68,7 +82,7 @@ function resetSizeOptions() {
   SIZES.length = 0;
   SIZES_DEFAULT.forEach(s => SIZES.push(s));
   renderSizeEditor();
-  renderAll();
+  _refreshSizesDependentViews();
   showToast('初期値に戻しました');
 }
 
