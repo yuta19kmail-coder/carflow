@@ -37,8 +37,9 @@ function setEquipmentValue(carId, itemId, value) {
 }
 
 // 全項目数と入力済み数（_completed と _updatedAt を除外）
+// v1.0.26: const 宣言は window プロパティにならないため、typeof で存在確認
 function calcEquipmentProgress(car) {
-  if (!car || !window.EQUIPMENT_CATEGORIES) return { total: 0, filled: 0, pct: 0 };
+  if (!car || typeof EQUIPMENT_CATEGORIES === 'undefined') return { total: 0, filled: 0, pct: 0 };
   let total = 0, filled = 0;
   const eq = getCarEquipment(car);
   EQUIPMENT_CATEGORIES.forEach(cat => {
@@ -54,7 +55,7 @@ function calcEquipmentProgress(car) {
 
 // マスターから item を取得（古いID参照用）
 function findEqItem(itemId) {
-  if (!window.EQUIPMENT_CATEGORIES) return null;
+  if (typeof EQUIPMENT_CATEGORIES === 'undefined') return null;
   for (const cat of EQUIPMENT_CATEGORIES) {
     const it = cat.items.find(i => i.id === itemId);
     if (it) return { item: it, category: cat };
@@ -192,7 +193,7 @@ function _renderCatItems(car, cat) {
         groupOpen = false;
       }
       if (grp) {
-        const lbl = (window.EQUIPMENT_GROUP_LABELS && EQUIPMENT_GROUP_LABELS[grp]) || '';
+        const lbl = (typeof EQUIPMENT_GROUP_LABELS !== 'undefined' && EQUIPMENT_GROUP_LABELS[grp]) || '';
         if (lbl) html += `<div class="eq-group-head">${escapeHtml(lbl)}</div>`;
         html += `<div class="eq-group">`;
         groupOpen = true;
@@ -448,7 +449,7 @@ function _eqViewSummary(car) {
 function renderEquipmentView(car, opts) {
   opts = opts || {};
   const eq = getCarEquipment(car);
-  if (!window.EQUIPMENT_CATEGORIES) return '';
+  if (typeof EQUIPMENT_CATEGORIES === 'undefined') return '';
   const sum = _eqViewSummary(car);
 
   let html = '';
