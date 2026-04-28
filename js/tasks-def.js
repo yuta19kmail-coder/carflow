@@ -30,22 +30,129 @@ const REGEN_TASKS = [
     ]},
   ]},
 
+  // v1.1.0: 中古車作業管理票（再生）に丸ごと差し替え
+  // 外装26項目＋内装13項目＝39項目
   {id:'t_regen', name:'再生', icon:'🔧', type:'workflow', sections:[
-    {title:'01 エンジン・機関', items:[
-      {id:'r1', name:'エンジンオイル交換', sub:'量・色・漏れ確認',
-       detail:'オイル量・色・漏れを確認し交換します。',
-       points:['交換推奨距離確認']},
-      {id:'r2', name:'下回り点検', sub:'ブレーキ・足回り',
-       detail:'リフトアップして下回りを確認します。',
-       points:['パッド残量3mm以下は交換']},
-      {id:'r3', name:'消耗品交換', sub:'バッテリー・ワイパー',
-       detail:'バッテリー電圧・ワイパーゴムを確認し交換。',
-       points:['12.4V以下は交換']},
+    {title:'01 外装', items:[
+      {id:'r1',  name:'車内のゴミ捨て', sub:'★重要',
+       detail:'車内に残っているゴミ・前オーナーの私物を全部撤去します。',
+       points:['シート下・ドアポケット・グローブBOXも見る','灰皿の中身も忘れずに']},
+      {id:'r2',  name:'フロアマットをはずす、洗い', sub:'★重要',
+       detail:'フロアマットを外して水洗い。乾燥もしっかり。',
+       points:['泥を払ってから水洗い','戻し忘れ注意']},
+      {id:'r3',  name:'タイヤホイール', sub:'',
+       detail:'タイヤとホイールを洗浄します。',
+       points:['鉄粉除去剤を使う','ナット周りも入念に']},
+      {id:'r4',  name:'ガラスの水垢', sub:'※Fガラスだめ',
+       detail:'ガラスの水垢落とし。フロントガラスはコンパウンド禁止。',
+       points:['Fガラスはケミカルのみ','コーティング前提なら脱脂もここで']},
+      {id:'r5',  name:'すき間（外装全体からドア内まで）', sub:'',
+       detail:'外装の隙間・ドア内側の汚れを徹底清掃します。',
+       points:['ドア開口部のゴム周り','ヒンジ・ストライカー周辺']},
+      {id:'r6',  name:'エンジンルーム', sub:'※専務確認 ※ヘリも',
+       detail:'エンジンルーム洗浄。専務確認してから着手。ヘリ部分も忘れず。',
+       points:['電装に水かけない','専務に一声']},
+      {id:'r7',  name:'シャンプー', sub:'★重要',
+       detail:'外装をシャンプー洗車します。',
+       points:['上から下に','すすぎ残し注意','日光厳禁']},
+      {id:'r8',  name:'鉄粉', sub:'',
+       detail:'鉄粉除去剤で鉄粉を浮かせて落とします。',
+       points:['ボディ全体ムラなく','洗い流し徹底']},
+      {id:'r9',  name:'ガラスにガラスコート', sub:'',
+       detail:'ガラスにコーティング剤を施工。',
+       points:['脱脂後に施工','水弾き確認']},
+      {id:'r10', name:'ポリッシャー', sub:'',
+       detail:'ポリッシャーで磨きを実施。',
+       points:['粗目→中目→仕上げ','エッジ部分は手磨き']},
+      {id:'r11', name:'ヘッドライト磨き', sub:'',
+       detail:'ヘッドライトの黄ばみ・くもりを磨いて除去。',
+       points:['仕上げにコーティング推奨']},
+      {id:'r12', name:'GYEON', sub:'',
+       detail:'GYEONコーティングを施工。',
+       points:['ムラなく薄く塗る','拭き上げタイミング厳守']},
+      {id:'r13', name:'タイヤWAX', sub:'',
+       detail:'タイヤワックスを塗布。',
+       points:['side wallに均一に','地面にはつけない']},
+      {id:'r14', name:'外装艶出し', sub:'',
+       detail:'樹脂部・モール類の艶出し。',
+       points:['ボディ部分とつや具合を合わせる']},
+      {id:'r15', name:'ドアヒンジグリスアップ', sub:'',
+       detail:'ドアヒンジ・ストライカーへグリス塗布。',
+       points:['動きが渋い箇所優先']},
+      {id:'r16', name:'タッチペン', sub:'',
+       detail:'小傷をタッチアップで補修。',
+       points:['色コード合っているか','在庫確認']},
+      {id:'r17', name:'ビニールマットシートカバー', sub:'★重要',
+       detail:'納車までシートを汚さないようビニールマット・シートカバーを装着。',
+       points:['乗車時は外す手順を共有','破れに注意']},
+      {id:'r18', name:'D席ステップ保護フィルム', sub:'',
+       detail:'運転席ステップに保護フィルムを貼る。',
+       points:['気泡が入らないように']},
+      {id:'r19', name:'化粧プレート', sub:'★重要',
+       detail:'化粧プレート（ナンバープレート枠など）を装着。',
+       points:['取り付けゆるみなし']},
+      {id:'r20', name:'プライス貼り付け', sub:'',
+       detail:'プライス・装備表示シール貼り付け。',
+       points:['位置揃え','曲げて貼らない']},
+      {id:'r21', name:'ホイールキャップ塗る', sub:'',
+       detail:'ホイールキャップに艶出しを塗布。',
+       points:['取り外して塗ると楽']},
+      {id:'r22', name:'ワイパーアーム塗る', sub:'',
+       detail:'ワイパーアームの色褪せ補修。',
+       points:['乾燥時間しっかり']},
+      {id:'r23', name:'グローブBOXの中を整理', sub:'',
+       detail:'グローブボックス内を整理し不要物を撤去。',
+       points:['取説・点検整備記録簿は残す']},
+      {id:'r24', name:'ウェザーゴムの清掃、潤滑', sub:'',
+       detail:'ドア・トランクのウェザーゴムを清掃しシリコン塗布。',
+       points:['切れ・はがれもチェック']},
+      {id:'r25', name:'社外パーツ、配線、ネジ等処分の判断', sub:'※専務確認',
+       detail:'前オーナーの社外パーツ・余分な配線・ネジ類を処分するか判断。専務確認。',
+       points:['勝手に捨てない','判断ついたものから処分']},
+      {id:'r26', name:'ガソリン給油', sub:'',
+       detail:'最後にガソリン給油して再生完了。',
+       points:['指定量入れる','給油キャップしめ忘れ注意']},
     ]},
-    {title:'02 板金・塗装', items:[
-      {id:'r4', name:'板金・塗装', sub:'へこみ・傷修理',
-       detail:'板金カルテに基づき修理を実施します。',
-       points:['優先度の高い箇所から']},
+    {title:'02 内装', items:[
+      {id:'r27', name:'天井を拭く', sub:'',
+       detail:'天井を拭き上げ。',
+       points:['内装用クリーナー使用','力入れすぎない']},
+      {id:'r28', name:'不要なステッカーを剥がす', sub:'※専務確認',
+       detail:'前オーナーが貼ったステッカー類を判断して剥がす。専務確認。',
+       points:['業者ステッカーは残すか相談']},
+      {id:'r29', name:'掃除機', sub:'',
+       detail:'車内全体を掃除機掛け。',
+       points:['シートレール下も忘れずに']},
+      {id:'r30', name:'洗剤を使った水拭き、激落ちくん', sub:'',
+       detail:'内装の汚れを水拭き・激落ちくんで落とす。',
+       points:['ダッシュボード・センターコンソール念入りに']},
+      {id:'r31', name:'ドアポケットのねじ', sub:'',
+       detail:'ドアポケット内のねじ・小物を整理。',
+       points:['異物が無いか']},
+      {id:'r32', name:'シートを拭く、シミ取り', sub:'',
+       detail:'シートを拭いてシミを取る。',
+       points:['素材に合った洗剤','濡らしすぎ注意']},
+      {id:'r33', name:'内装全体艶出し', sub:'',
+       detail:'内装全体に艶出し剤を塗布。',
+       points:['ハンドル・ペダルには塗らない']},
+      {id:'r34', name:'ガラスを拭く', sub:'※ガラスを下げて拭く',
+       detail:'内側からガラスを拭く。サイドガラスは少し下げて拭く。',
+       points:['上端の拭き残しに注意']},
+      {id:'r35', name:'ルームミラー、バイザーミラーを拭く', sub:'',
+       detail:'ルームミラー・サンバイザーミラーを拭く。',
+       points:['指紋残さない']},
+      {id:'r36', name:'シートベルトを整える', sub:'',
+       detail:'シートベルトを引き出して伸ばし、整える。',
+       points:['よじれていないか']},
+      {id:'r37', name:'車載工具やパンク修理剤を整える', sub:'',
+       detail:'車載工具・パンク修理剤を所定位置に整える。',
+       points:['期限切れの修理剤は交換']},
+      {id:'r38', name:'ホイールキャップやワイパーアームの取付', sub:'',
+       detail:'外していたホイールキャップ・ワイパーアームを取り付ける。',
+       points:['ゆるみなし']},
+      {id:'r39', name:'ペーパーマット', sub:'★重要',
+       detail:'ペーパーマットをセット。納車までの仮マット。',
+       points:['ズレない位置に','枚数確認']},
     ]},
   ]},
 
@@ -75,14 +182,154 @@ const REGEN_TASKS = [
 
 // 納車準備工程のタスク定義
 const DELIVERY_TASKS = [
+  // v1.1.0: 中古車作業管理票（納車時）に丸ごと差し替え
+  // 外装26＋内装13＋納車オプション3＋ステッカー4＝46項目
   {id:'d_prep', name:'納車準備', icon:'📦', type:'workflow', sections:[
-    {title:'01 最終確認', items:[
-      {id:'dp1', name:'最終外観チェック', sub:'傷・汚れの最終確認',
-       detail:'納車前の最終外観チェックを実施します。',
-       points:['新たな傷がないか確認']},
-      {id:'dp2', name:'室内最終クリーニング', sub:'納車前清掃',
-       detail:'室内を最終クリーニングします。',
-       points:['フロアマットの清掃']},
+    {title:'01 外装', items:[
+      {id:'dp1',  name:'車内のゴミ捨て', sub:'★重要',
+       detail:'納車前に車内ゴミを再確認し撤去。',
+       points:['再生時から増えていないか確認']},
+      {id:'dp2',  name:'フロアマットをはずす、洗い', sub:'★重要',
+       detail:'フロアマットを再度洗浄。納車前のひと手間。',
+       points:['乾燥もしっかり']},
+      {id:'dp3',  name:'タイヤホイール', sub:'',
+       detail:'タイヤ・ホイールを最終仕上げ。',
+       points:['ブレーキダストを再除去']},
+      {id:'dp4',  name:'ガラスの水垢', sub:'※Fガラスだめ',
+       detail:'ガラス水垢の最終チェック・追加除去。',
+       points:['Fガラスはケミカルのみ']},
+      {id:'dp5',  name:'すき間（外装全体からドア内まで）', sub:'',
+       detail:'隙間の汚れを最終確認し清掃。',
+       points:['ドア開口部のゴム周り']},
+      {id:'dp6',  name:'エンジンルーム', sub:'※専務確認 ※ヘリも',
+       detail:'エンジンルームの最終確認。',
+       points:['オイル滴下・水滴のあとなし']},
+      {id:'dp7',  name:'シャンプー', sub:'★重要',
+       detail:'納車前の最終シャンプー洗車。',
+       points:['日光厳禁','水滴を残さない']},
+      {id:'dp8',  name:'鉄粉', sub:'',
+       detail:'再生から納車までの間に付いた鉄粉を再除去。',
+       points:['気になる箇所中心']},
+      {id:'dp9',  name:'ガラスにガラスコート', sub:'',
+       detail:'ガラスコートの再施工（必要に応じて）。',
+       points:['水弾き状態確認']},
+      {id:'dp10', name:'ポリッシャー', sub:'',
+       detail:'必要に応じて再ポリッシュ。',
+       points:['再生時の仕上がりが落ちていないか']},
+      {id:'dp11', name:'ヘッドライト磨き', sub:'',
+       detail:'ヘッドライトの状態確認。曇っていたら再磨き。',
+       points:['コーティング再施工も検討']},
+      {id:'dp12', name:'GYEON', sub:'',
+       detail:'GYEONメンテナンス施工。',
+       points:['ムラなく薄く']},
+      {id:'dp13', name:'タイヤWAX', sub:'',
+       detail:'納車前のタイヤワックス再塗布。',
+       points:['side wallに均一']},
+      {id:'dp14', name:'外装艶出し', sub:'',
+       detail:'樹脂部・モール類の艶出し再塗布。',
+       points:['色合わせ確認']},
+      {id:'dp15', name:'ドアヒンジグリスアップ', sub:'',
+       detail:'ドアヒンジへ追加グリス。',
+       points:['動きスムーズか']},
+      {id:'dp16', name:'タッチペン', sub:'',
+       detail:'小傷の再確認・タッチアップ。',
+       points:['納車直前の小傷も忘れずに']},
+      {id:'dp17', name:'ビニールマットシートカバー', sub:'★重要',
+       detail:'納車時にビニール・シートカバーを撤去。',
+       points:['撤去忘れ注意']},
+      {id:'dp18', name:'D席ステップ保護フィルム', sub:'',
+       detail:'保護フィルムを撤去（または納車後にお客様で剥がす指示）。',
+       points:['粘着残しに注意']},
+      {id:'dp19', name:'化粧プレート', sub:'★重要',
+       detail:'化粧プレートが綺麗か最終確認。',
+       points:['緩み・傷なし']},
+      {id:'dp20', name:'プライス貼り付け', sub:'',
+       detail:'プライスシール撤去（納車時は剥がす）。',
+       points:['粘着残しに注意']},
+      {id:'dp21', name:'ホイールキャップ塗る', sub:'',
+       detail:'ホイールキャップの艶出し再塗布。',
+       points:['']},
+      {id:'dp22', name:'ワイパーアーム塗る', sub:'',
+       detail:'ワイパーアーム再仕上げ。',
+       points:['乾燥時間しっかり']},
+      {id:'dp23', name:'グローブBOXの中を整理', sub:'',
+       detail:'納車書類・取説をグローブBOXに整理。',
+       points:['お客様への引き渡し物が揃っているか']},
+      {id:'dp24', name:'ウェザーゴムの清掃、潤滑', sub:'',
+       detail:'ウェザーゴムを再清掃・潤滑。',
+       points:['切れ・はがれの最終確認']},
+      {id:'dp25', name:'社外パーツ、配線、ネジ等処分の判断', sub:'※専務確認',
+       detail:'判断保留分の最終処理。',
+       points:['納車時に渡すかどうか']},
+      {id:'dp26', name:'ガソリン給油', sub:'',
+       detail:'納車直前のガソリン給油（指定量）。',
+       points:['給油キャップしめ忘れ注意']},
+    ]},
+    {title:'02 内装', items:[
+      {id:'dp27', name:'天井を拭く', sub:'',
+       detail:'天井の最終拭き上げ。',
+       points:['内装用クリーナー']},
+      {id:'dp28', name:'不要なステッカーを剥がす', sub:'※専務確認',
+       detail:'残ったステッカーの最終判断・除去。',
+       points:['粘着残しに注意']},
+      {id:'dp29', name:'掃除機', sub:'',
+       detail:'納車前の最終掃除機掛け。',
+       points:['シート溝・シートレール下']},
+      {id:'dp30', name:'洗剤を使った水拭き、激落ちくん', sub:'',
+       detail:'納車前の最終水拭き。',
+       points:['ダッシュボード・センターコンソール']},
+      {id:'dp31', name:'ドアポケットのねじ', sub:'',
+       detail:'ドアポケット内最終確認。',
+       points:['ゴミ・異物なし']},
+      {id:'dp32', name:'シートを拭く、シミ取り', sub:'',
+       detail:'シート最終拭き上げ。',
+       points:['シミ残りなし']},
+      {id:'dp33', name:'内装全体艶出し', sub:'',
+       detail:'内装全体の艶出し再塗布。',
+       points:['ハンドル・ペダルには塗らない']},
+      {id:'dp34', name:'ガラスを拭く', sub:'※ガラスを下げて拭く',
+       detail:'納車前の最終ガラス拭き。',
+       points:['指紋残さない']},
+      {id:'dp35', name:'ルームミラー、バイザーミラーを拭く', sub:'',
+       detail:'ミラー類の最終拭き。',
+       points:['指紋残さない']},
+      {id:'dp36', name:'シートベルトを整える', sub:'',
+       detail:'シートベルトの引き出し・整え。',
+       points:['よじれなし']},
+      {id:'dp37', name:'車載工具やパンク修理剤を整える', sub:'',
+       detail:'車載工具一式の最終確認。',
+       points:['期限切れの修理剤は交換']},
+      {id:'dp38', name:'ホイールキャップやワイパーアームの取付', sub:'',
+       detail:'納車前最終取り付け確認。',
+       points:['ゆるみなし']},
+      {id:'dp39', name:'ペーパーマット', sub:'★重要',
+       detail:'ペーパーマットを撤去し、純正/新品マットをセット。',
+       points:['納車後はマット忘れずに']},
+    ]},
+    {title:'03 納車オプション', items:[
+      {id:'dp40', name:'GYEON or 3M or 1Y', sub:'',
+       detail:'契約に応じて GYEON / 3M / 1年保証コーティング を施工。',
+       points:['契約内容を再確認']},
+      {id:'dp41', name:'消臭', sub:'',
+       detail:'スチーム消臭・消臭剤施工。',
+       points:['内装全体に行き渡らせる']},
+      {id:'dp42', name:'エアコンフィルター', sub:'',
+       detail:'エアコンフィルター交換。',
+       points:['品番確認','在庫確認']},
+    ]},
+    {title:'04 ステッカー類', items:[
+      {id:'dp43', name:'車検ステッカー', sub:'',
+       detail:'車検ステッカーをフロントガラスに貼付。',
+       points:['位置厳守']},
+      {id:'dp44', name:'車庫ステッカー', sub:'',
+       detail:'車庫証明ステッカーを貼付。',
+       points:['']},
+      {id:'dp45', name:'点検ステッカー', sub:'',
+       detail:'点検ステッカーを貼付。',
+       points:['次回点検日記入']},
+      {id:'dp46', name:'オイルステッカー', sub:'',
+       detail:'オイル交換ステッカーを貼付。',
+       points:['交換距離・日付記入']},
     ]},
   ]},
 
@@ -111,42 +358,26 @@ const DELIVERY_TASKS = [
 // 設定UIで管理（メモリ上、リロードで初期化）
 // ========================================
 
-// 組み込みタスクの enabled 状態（true=有効、false=無効）
-// 形：{ regen: { t_equip:true, t_regen:true, ... }, delivery: {...} }
-// 未定義キーは「有効」扱い（後方互換）
 let appTaskEnabled = { regen: {}, delivery: {} };
-
-// ユーザー追加のチェック型タスク
-// 形：[{ id, name, icon, phases:['regen'|'delivery'] }]
 let appCustomTasks = [];
-
-// v1.0.33: タスク並び順（フェーズごと、ID配列）
-// 配列に無い ID は末尾に元の定義順で追加される
 let appTaskOrder = { regen: [], delivery: [] };
-
-// v1.0.33: タスク期日（フェーズごと、{taskId: 日数 or null}）
-// 再生：仕入れから N 日以内（N = 数値）
-// 納車：納車まで N 日前まで（N = 数値）
-// v1.0.37: 納車側はデフォルトで従来 SCHED_POINTS と同じ位置を埋めて、初回起動でもカレンダーマーカーが出るようにする
 let appTaskDeadline = {
   regen: {},
   delivery: {
-    d_docs:     5,  // 書類：納車5日前まで
-    d_maint:    3,  // 整備：納車3日前まで
-    d_reg:      2,  // 登録：納車2日前まで
-    d_prep:     1,  // 納車準備：納車1日前まで
-    d_complete: 1,  // 完全完了：納車1日前まで（v1.0.38）
+    d_docs:     5,
+    d_maint:    3,
+    d_reg:      2,
+    d_prep:     1,
+    d_complete: 1,
   },
 };
 
-// タスクが有効か判定（未定義は true 扱い）
 function isTaskActive(taskId, phase) {
   const map = (appTaskEnabled && appTaskEnabled[phase]) || {};
   if (taskId in map) return map[taskId] !== false;
-  return true; // 未定義は有効
+  return true;
 }
 
-// v1.0.33: タスク期日を取得（数値 or null）
 function getTaskDeadline(taskId, phase) {
   const map = (appTaskDeadline && appTaskDeadline[phase]) || {};
   const v = map[taskId];
@@ -155,8 +386,6 @@ function getTaskDeadline(taskId, phase) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
-// v1.0.33: 並び順を反映してタスク配列をソート
-// order 配列に書かれている順を優先、未記載のものは元の定義順で末尾
 function _sortByTaskOrder(tasks, phase) {
   const order = (appTaskOrder && appTaskOrder[phase]) || [];
   if (!order.length) return tasks;
@@ -168,7 +397,6 @@ function _sortByTaskOrder(tasks, phase) {
   return indexed.map(x => x.t);
 }
 
-// 組み込み＋カスタム の合体配列を作る（フェーズ別）
 function _allTasksForPhase(phase) {
   const builtin = (phase === 'delivery' ? DELIVERY_TASKS : REGEN_TASKS).map(t => ({
     id: t.id, name: t.name, icon: t.icon, type: t.type, sections: t.sections, builtin: true,
@@ -179,17 +407,14 @@ function _allTasksForPhase(phase) {
   return _sortByTaskOrder(builtin.concat(custom), phase);
 }
 
-// 再生フェーズで有効なタスクのリスト（組み込み＋カスタム、並び順反映）
 function getActiveRegenTasks() {
   return _allTasksForPhase('regen').filter(t => isTaskActive(t.id, 'regen'));
 }
 
-// 納車フェーズで有効なタスクのリスト
 function getActiveDeliveryTasks() {
   return _allTasksForPhase('delivery').filter(t => isTaskActive(t.id, 'delivery'));
 }
 
-// 設定UI用：組み込み＋カスタムを enabled 状態付きで全部返す（並び順反映）
 function getAllTasksForUI(phase) {
   return _allTasksForPhase(phase).map(t => ({
     id: t.id, name: t.name, icon: t.icon, type: t.type,
@@ -199,9 +424,7 @@ function getAllTasksForUI(phase) {
   }));
 }
 
-// v1.0.33: 並び替え（1個分上下）
 function moveTaskOrder(taskId, phase, dir) {
-  // 現在の表示順を取得
   const cur = _allTasksForPhase(phase).map(t => t.id);
   const i = cur.indexOf(taskId);
   if (i < 0) return;
