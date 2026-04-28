@@ -94,6 +94,8 @@ function doLogin() {
   applyMobileClass();
   renderAll();
   renderDashboard();
+  // v1.2.1: 初期表示はダッシュボード → 下部要対応エリアを隠すクラスを付与
+  document.body.classList.add('panel-dashboard-active');
   if (typeof refreshTopbarFontSizeLabel === 'function') refreshTopbarFontSizeLabel();
   if (isMobileMode()) {
     forceProgressView();
@@ -113,6 +115,8 @@ function forceProgressView() {
     view.style.display = 'flex';
     view.classList.add('active');
   }
+  // v1.2.1: 進捗ビュー（タブ）に切替＝ダッシュボードフラグは外す
+  document.body.classList.remove('panel-dashboard-active');
   if (typeof renderProgress === 'function') renderProgress();
 }
 

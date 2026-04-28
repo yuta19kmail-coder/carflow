@@ -42,35 +42,45 @@
 .view{display:none;flex:1;overflow:auto;padding:14px;flex-direction:column}
 .view.active{display:flex}
 
-/* アクションエリア（下部） v1.2.1：1〜2行で自動表示、3行目以降は2行のまま横スクロール */
+/* アクションエリア（下部）
+   v1.2.2: 1行→2行までは自然折り返し、それ以上は2行維持で横スクロール
+   方針：外側 .action-chips は overflow-x:auto / 内側 .chips-inner は flex-wrap で2行までwrap
+        chips-inner の max-height を 2行分にし、超えるとはみ出す（実際は inline-flex 幅で横スクロール）
+*/
 .action-area{
   background:var(--bg2);
   border-top:1px solid var(--border);
   display:flex;
   align-items:center;
   gap:10px;
-  padding:8px 14px;
+  padding:6px 14px;
   flex-shrink:0;
   min-height:var(--action);
-  max-height:84px; /* 2行ぶん */
+  max-height:88px;
 }
 .action-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
 .action-chips{
   flex:1;
   min-width:0;
-  display:grid;
-  grid-auto-flow:column;          /* 横方向に追加 */
-  grid-auto-columns:max-content;
-  grid-template-rows:repeat(2, min-content);  /* 2行固定 */
-  gap:6px 7px;
   overflow-x:auto;
   overflow-y:hidden;
-  align-content:start;
+  display:flex;
   align-items:center;
   padding:2px 0;
 }
 .action-chips::-webkit-scrollbar{height:4px}
 .action-chips::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+/* 内側ラッパ：自然な2行wrapを実現する。inline-flex で内容に合わせた幅、wrap で折り返し */
+.action-chips-inner{
+  display:flex;
+  flex-wrap:wrap;
+  align-content:flex-start;
+  gap:6px 7px;
+  /* 2行をアッパーに：要素が増えると右側にあふれて横スクロールに切り替わる */
+  max-height:74px;        /* 2行ぶん（chip≈30px×2 + gap） */
+  /* 親が overflow-x:auto なので、内容幅は親の幅を超えてOK */
+  min-width:100%;
+}
 /* チップ自体は折り返さない */
 .action-chips .chip{white-space:nowrap}
 

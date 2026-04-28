@@ -389,17 +389,26 @@ function renderMembers() {
 }
 
 // 下部アクションチップ（v1.1.1: ダッシュボードの「🚨 要対応アクション」と完全に同内容）
-// renderActionChips() が #dash-actions に書き出した HTML を、そのまま #action-chips にコピー
+// v1.2.2: chip だけ抜き出して .action-chips-inner で包む（2行wrap+横スクロール用）
 function renderActions() {
   const chips = document.getElementById('action-chips');
   if (!chips) return;
-  // 先に dash-actions を最新化してから複製（タイミング保険）
   if (typeof renderActionChips === 'function') {
     try { renderActionChips(); } catch(e) {}
   }
   const dash = document.getElementById('dash-actions');
-  if (dash && dash.innerHTML) {
-    chips.innerHTML = dash.innerHTML;
+  // dash 側の chip 群を抜き出す
+  let chipsHtml = '';
+  if (dash) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = dash.innerHTML;
+    const items = tmp.querySelectorAll('.chip');
+    if (items.length > 0) {
+      chipsHtml = Array.from(items).map(el => el.outerHTML).join('');
+    }
+  }
+  if (chipsHtml) {
+    chips.innerHTML = `<div class="action-chips-inner">${chipsHtml}</div>`;
   } else {
     chips.innerHTML = '<div style="font-size:12px;color:var(--text3)">要対応アクションなし ✓</div>';
   }
