@@ -76,22 +76,18 @@ function _getDeliveryMilestonePoints() {
   return points;
 }
 
-// v1.0.41: 定休日・祝日判定（カレンダー内部用）
-// closedDays, customHolidays, jpHolidays, isClosedByRules を見る
+// v1.0.46: マイルストーン前倒し判定は「定休日」だけを対象にする
+// 設定の定休日ルール（isClosedByRules / closedDays）＋カレンダー画面で追加した単発休業日（customHolidays）のみ。
+// 祝日（jpHolidays）や日曜の強制扱いは除外（定休にしたい曜日は設定で closedDays に入れてもらう）。
 function _isCalendarOff(dateStr) {
-  // 定休日ルール
+  // 設定の定休日ルール
   if (typeof isClosedByRules === 'function') {
     if (isClosedByRules(dateStr)) return true;
-  } else {
+  } else if (Array.isArray(closedDays)) {
     const dow = new Date(dateStr + 'T00:00:00').getDay();
-    if (Array.isArray(closedDays) && closedDays.includes(dow)) return true;
+    if (closedDays.includes(dow)) return true;
   }
-  // 日曜
-  const dow2 = new Date(dateStr + 'T00:00:00').getDay();
-  if (dow2 === 0) return true;
-  // 日本の祝日
-  if (typeof jpHolidays !== 'undefined' && jpHolidays[dateStr]) return true;
-  // カスタム休業日
+  // カレンダー画面で追加した単発の休業日
   if (Array.isArray(customHolidays) && customHolidays.find(h => h.date === dateStr)) return true;
   return false;
 }
