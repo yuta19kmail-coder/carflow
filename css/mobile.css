@@ -101,7 +101,8 @@ body.mobile .mhdr { padding: 12px 14px; position: sticky; top: 0; z-index: 5; ba
 body.mobile .mbody { padding: 14px; }
 
 body.mobile #detail-body button[onclick^="openCarModal"] { display: none !important; }
-body.mobile .detail-photo-edit { display: none !important; }
+/* v1.0.45: スマホでこそ写真変更したい（現場でカメラ撮影）。非表示ルール削除 */
+/* 旧: body.mobile .detail-photo-edit { display: none !important; } */
 
 /* 車両編集モーダル：開かせない */
 body.mobile #modal-car { display: none !important; }
@@ -290,4 +291,17 @@ body.mobile .pv-drag {
 }
 body.mobile .pv-head {
   padding-right: 13px;
+}
+
+/* v1.0.45: スマホ用に写真変更ボタンを大きく押しやすく */
+body.mobile .detail-photo {
+  height: 220px !important;
+}
+body.mobile .detail-photo-edit {
+  bottom: 12px !important;
+  right: 12px !important;
+  font-size: 13px !important;
+  padding: 8px 14px !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  font-weight: 600 !important;
 }
