@@ -43,9 +43,11 @@
 .view.active{display:flex}
 
 /* アクションエリア（下部）
-   v1.2.2: 1行→2行までは自然折り返し、それ以上は2行維持で横スクロール
-   方針：外側 .action-chips は overflow-x:auto / 内側 .chips-inner は flex-wrap で2行までwrap
-        chips-inner の max-height を 2行分にし、超えるとはみ出す（実際は inline-flex 幅で横スクロール）
+   v1.2.6: 「2行までは縦に積む → それ以上は2行を維持して横方向に追加（横スクロール）」
+   方針：
+     外側 .action-chips … overflow-x:auto / overflow-y:hidden（横スクロール枠）
+     内側 .action-chips-inner … flex-direction:column + flex-wrap:wrap + max-height で
+       縦方向に2行ぶん埋まると次の列にwrapする＝横方向に列が増える
 */
 .action-area{
   background:var(--bg2);
@@ -64,25 +66,22 @@
   min-width:0;
   overflow-x:auto;
   overflow-y:hidden;
-  display:flex;
-  align-items:center;
   padding:2px 0;
 }
 .action-chips::-webkit-scrollbar{height:4px}
 .action-chips::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-/* 内側ラッパ：自然な2行wrapを実現する。inline-flex で内容に合わせた幅、wrap で折り返し */
+/* 内側ラッパ：column + wrap で 2行詰めの横スクロール */
 .action-chips-inner{
   display:flex;
+  flex-direction:column;
   flex-wrap:wrap;
   align-content:flex-start;
   gap:6px 7px;
-  /* 2行をアッパーに：要素が増えると右側にあふれて横スクロールに切り替わる */
-  max-height:74px;        /* 2行ぶん（chip≈30px×2 + gap） */
-  /* 親が overflow-x:auto なので、内容幅は親の幅を超えてOK */
-  min-width:100%;
+  height:74px;            /* 2行ぶん（chip≈32px×2 + gap） */
+  /* 縦が埋まると次の列にwrap。column+wrap は内容に応じて幅が広がる */
 }
 /* チップ自体は折り返さない */
-.action-chips .chip{white-space:nowrap}
+.action-chips .chip{white-space:nowrap;flex:0 0 auto}
 
 /* v1.2.1: ダッシュボード表示中は下部アクションエリアを非表示（C と被るため） */
 body.panel-dashboard-active .action-area{display:none !important;}
